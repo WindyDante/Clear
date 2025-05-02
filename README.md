@@ -1,16 +1,14 @@
 # Clear
 
-# Clear
-
 A minimalist and customizable Todo List application for managing your daily tasks with ease.
 
 ## Features
 
-- ? Add, edit, and delete tasks
-- ? Mark tasks as completed
-- ? Simple and clean interface
-- ? Light/dark mode support *(if applicable)*
-- ? Local storage or backend-ready *(if applicable)*
+- ğŸ“ Add, edit, and delete tasks
+- âœ… Mark tasks as completed
+- ğŸ“… Simple and clean interface
+- ğŸŒ™ Light/dark mode support *(if applicable)*
+- ğŸ’¾ Local storage or backend-ready *(if applicable)*
 
 ## Getting Started
 
@@ -21,7 +19,7 @@ npm install
 npm run dev
 ```
 
-ÏîÄ¿»ùÓÚ[Tika](https://github.com/lin-snow/Tika)Ä£°å½øĞĞĞŞ¸Ä¿ª·¢¡£ÔÚ´ËÌØ±ğ¸ĞĞ»Ô­×÷Õß[lin-snow](https://github.com/lin-snow)µÄ¿ªÔ´¹±Ï×£¬Ìá¹©ÁËÕâ¸öÓÅĞãµÄÏîÄ¿Ä£°å¡£
+é¡¹ç›®åŸºäº[Tika](https://github.com/lin-snow/Tika)æ¨¡æ¿è¿›è¡Œä¿®æ”¹å¼€å‘ã€‚åœ¨æ­¤ç‰¹åˆ«æ„Ÿè°¢åŸä½œè€…[lin-snow](https://github.com/lin-snow)çš„å¼€æºè´¡çŒ®ï¼Œæä¾›äº†è¿™ä¸ªä¼˜ç§€çš„é¡¹ç›®æ¨¡æ¿ã€‚
 
-±¾ÏîÄ¿ÔÚTikaµÄ»ù´¡ÉÏ½øĞĞÁË¸öĞÔ»¯¶¨ÖÆºÍ¹¦ÄÜÀ©Õ¹£¬Ö¼ÔÚÂú×ãÌØ¶¨ĞèÇó¡£±£ÁôÁËÔ­ÏîÄ¿µÄ¾«Ëè£¬Í¬Ê±ÈÚÈëÁËĞÂµÄÉè¼ÆÀíÄîºÍ¹¦ÄÜÌØĞÔ¡£
+æœ¬é¡¹ç›®åœ¨Tikaçš„åŸºç¡€ä¸Šè¿›è¡Œäº†ä¸ªæ€§åŒ–å®šåˆ¶å’ŒåŠŸèƒ½æ‰©å±•ï¼Œæ—¨åœ¨æ»¡è¶³ç‰¹å®šéœ€æ±‚ã€‚ä¿ç•™äº†åŸé¡¹ç›®çš„ç²¾é«“ï¼ŒåŒæ—¶èå…¥äº†æ–°çš„è®¾è®¡ç†å¿µå’ŒåŠŸèƒ½ç‰¹æ€§ã€‚
 
