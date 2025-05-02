@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.soopy.tika.mapper.TodoMapper">
+    <insert id="insert">
+        INSERT INTO todo (user_id, title, content, status, category_id, due_date, created_at, updated_at)
+        VALUES (#{userId}, #{title}, #{content}, #{status}, #{categoryId}, #{dueDate}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <select id="pageQuery" resultType="cn.wind.clear.vo.TodoVO">
+        SELECT
+            t.id AS todoId,
+            t.user_id AS userId,
+            t.title AS title,
+            t.content AS content,
+            t.category_id AS categoryId,
+            t.status AS status,
+            t.due_date AS dueDate,
+            t.created_at AS createdAt,
+            t.updated_at AS updatedAt,
+            c.id AS categoryId,
+            c.name AS  categoryName
+        FROM todo t LEFT OUTER JOIN category c ON t.category_id = c.id
+        <where>
+            <if test="userId != null">
+                AND t.user_id = #{userId}
+            </if>
+            <if test="status != null">
+                AND t.status = #{status}
+            </if>
+        </where>
+        ORDER BY t.created_at DESC
+    </select>
+
+    <update id="update">
+        UPDATE todo
+        <set>
+            <if test="title != null"> title = #{title}, </if>
+            <if test="content != null"> content = #{content}, </if>
+            <if test="dueDate != null"> due_date = #{dueDate}, </if>
+            <if test="categoryId != null"> category_id = #{categoryId}, </if>
+            <if test="status != null"> status = #{status}, </if>
+            <if test="updatedAt != null"> updated_at = #{updatedAt}, </if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

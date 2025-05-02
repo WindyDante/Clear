@@ -1,0 +1,59 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: Clear
+    networks:
+      - clear-network
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: always
+    command: redis-server --requirepass redis
+    networks:
+      - clear-network
+
+  backend:
+    build: 
+      context: ./Clear-Backend
+      dockerfile: Dockerfile
+    container_name: clear-backend
+    networks:
+      - clear-network
+    depends_on:
+      - mysql
+      - redis
+
+  frontend:
+    build:
+      context: ./Clear-Web
+      dockerfile: Dockerfile
+    container_name: clear-frontend
+    networks:
+      - clear-network
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:latest
+    container_name: clear-nginx
+    restart: always
+    ports:
+      - "4088:80"
+    networks:
+      - clear-network
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+
+networks:
+  tika-network:
+    driver: bridge
