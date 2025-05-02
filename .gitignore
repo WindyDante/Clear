@@ -58,5 +58,3 @@ build/
 ### VS Code ###
 .vscode/
 
-### Tika ###
-application-dev.yml
