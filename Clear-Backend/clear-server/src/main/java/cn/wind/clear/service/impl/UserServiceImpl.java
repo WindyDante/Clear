@@ -14,6 +14,7 @@ import cn.wind.clear.mapper.TodoMapper;
 import cn.wind.clear.mapper.UserMapper;
 import cn.wind.clear.service.UserService;
 import cn.wind.clear.vo.UserStatusVO;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ import java.time.LocalDateTime;
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
+    @Resource
     UserMapper userMapper;
     @Autowired
     TodoMapper todoMapper;

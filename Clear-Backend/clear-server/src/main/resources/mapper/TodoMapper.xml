@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="cn.soopy.tika.mapper.TodoMapper">
+<mapper namespace="cn.wind.clear.mapper.TodoMapper">
     <insert id="insert">
         INSERT INTO todo (user_id, title, content, status, category_id, due_date, created_at, updated_at)
         VALUES (#{userId}, #{title}, #{content}, #{status}, #{categoryId}, #{dueDate}, #{createdAt}, #{updatedAt})
