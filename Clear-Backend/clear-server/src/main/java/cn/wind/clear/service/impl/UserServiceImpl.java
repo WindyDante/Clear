@@ -20,8 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
-import java.time.LocalDateTime;
-
 @Slf4j
 @Service
 public class UserServiceImpl implements UserService {
@@ -89,16 +87,12 @@ public class UserServiceImpl implements UserService {
         }
 
         // 2. 不冲突, 添加到数据库中
-        newUser.setCreatedAt(LocalDateTime.now());
-        newUser.setUpdatedAt(LocalDateTime.now());
         userMapper.insert(newUser);
 
         // 3. 为用户创建默认分类
         Category category = Category.builder()
                 .userId(newUser.getId())
                 .name(CategoryConstant.DEFAULT_CATEGORY)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
         categoryMapper.insert(category);
