@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>cn.soopy.tika</groupId>
-        <artifactId>Tika</artifactId>
+        <groupId>cn.wind.clear</groupId>
+        <artifactId>Clear</artifactId>
         <version>1.0.0</version>
     </parent>
 
@@ -19,12 +19,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>cn.soopy.tika</groupId>
+            <groupId>cn.wind.clear</groupId>
             <artifactId>clear-common</artifactId>
             <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>cn.soopy.tika</groupId>
+            <groupId>cn.wind.clear</groupId>
             <artifactId>clear-pojo</artifactId>
             <version>1.0.0</version>
         </dependency>

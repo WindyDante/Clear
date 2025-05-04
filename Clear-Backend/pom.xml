@@ -8,12 +8,12 @@
         <version>3.4.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>cn.soopy.tika</groupId>
-    <artifactId>Tika</artifactId>
+    <groupId>cn.wind.clear</groupId>
+    <artifactId>Clear</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
-    <name>Tika</name>
-    <description>Tika</description>
+    <name>Clear</name>
+    <description>Clear</description>
 
     <modules>
         <module>clear-common</module>
