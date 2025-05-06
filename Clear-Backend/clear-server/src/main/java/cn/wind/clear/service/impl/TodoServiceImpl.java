@@ -10,33 +10,36 @@ import cn.wind.clear.dto.UpdateTodoDTO;
 import cn.wind.clear.entity.Category;
 import cn.wind.clear.entity.Todo;
 import cn.wind.clear.exception.BaseException;
-import cn.wind.clear.mapper.CategoryMapper;
 import cn.wind.clear.mapper.TodoMapper;
 import cn.wind.clear.result.PageResult;
+import cn.wind.clear.service.CategoryService;
 import cn.wind.clear.service.TodoService;
 import cn.wind.clear.vo.CategoryVO;
 import cn.wind.clear.vo.TodoVO;
-import com.github.pagehelper.Page;
-import com.github.pagehelper.PageHelper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class TodoServiceImpl implements TodoService {
-    @Autowired
-    CategoryMapper categoryMapper;
-    @Autowired
-    TodoMapper todoMapper;
+public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
+        implements TodoService {
+    @Resource
+    CategoryService categoryService;
+    @Resource
+    TodoService todoService;
 
 
     /**
      * 添加to do
+     *
      * @param todoDTO
      */
     public void addTodo(TodoDTO todoDTO) {
@@ -44,65 +47,90 @@ public class TodoServiceImpl implements TodoService {
             throw new BaseException(MessageConstant.EMPTY_TITLE);
         }
 
-        Todo todo = Todo.builder()
-                .title(todoDTO.getTitle())
-                .content(todoDTO.getContent())
-                .categoryId(todoDTO.getCategoryId() != null ? todoDTO.getCategoryId() : categoryMapper.getDefaultCategoryId(BaseContext.getCurrentId(), CategoryConstant.DEFAULT_CATEGORY))
-                .dueDate(todoDTO.getDueDate() == null ? null : todoDTO.getDueDate())
-                .status(StatusConstant.ENABLED)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .userId(BaseContext.getCurrentId())
-                .build();
+        Todo todo = new Todo();
+        BeanUtils.copyProperties(todoDTO, todo);
+        todo.setCategoryId(todoDTO.getCategoryId() != null
+                ? todoDTO.getCategoryId()
+                : categoryService.getDefaultCategoryId(BaseContext.getCurrentId(), CategoryConstant.DEFAULT_CATEGORY));
+        todo.setDueDate(todoDTO.getDueDate() == null ? null : todoDTO.getDueDate());
+        todo.setStatus(StatusConstant.ENABLED);
+        todo.setUserId(BaseContext.getCurrentId());
 
-        todoMapper.insert(todo);
+        boolean isOk = this.save(todo);
+        if (!isOk) {
+            throw new BaseException(MessageConstant.SYSTEM_ERROR);
+        }
     }
 
     @Override
     public PageResult<TodoVO> pageQuery(TodoPageQueryDTO todoPageQueryDTO) {
         log.info("Todo分页查询: {}", todoPageQueryDTO);
         todoPageQueryDTO.setUserId(BaseContext.getCurrentId());
-        PageHelper.startPage(todoPageQueryDTO.getPage(), todoPageQueryDTO.getPageSize());
-        Page<TodoVO> page = todoMapper.pageQuery(todoPageQueryDTO);
-        return new PageResult<TodoVO>(page.getTotal(), page.getResult());
+        LambdaQueryWrapper<Todo> queryWrapper = new LambdaQueryWrapper<>();
+        Long userId = todoPageQueryDTO.getUserId();
+        Integer status = todoPageQueryDTO.getStatus();
+        queryWrapper.eq(userId != null, Todo::getUserId, userId)
+                .eq(status != null, Todo::getStatus, status)
+                .orderByDesc(Todo::getCreatedAt);
+        Page<Todo> page =
+                new Page<>(todoPageQueryDTO.getPage(), todoPageQueryDTO.getPageSize());
+        Page<Todo> res = this.page(page, queryWrapper);
+        List<TodoVO> todoList = res.getRecords().stream()
+                .map(todo -> {
+                    TodoVO todoVO = new TodoVO();
+                    BeanUtils.copyProperties(todo, todoVO);
+                    // 如果需要设置 categoryName，可以在此处处理
+                    return todoVO;
+                })
+                .toList();
+        return new PageResult<TodoVO>(res.getTotal(), todoList);
     }
 
     /**
      * 删除to do
+     *
      * @param id
      */
     public void deleteTodo(Long id) {
-        todoMapper.deleteTodo(id);
+        boolean isOk = this.removeById(id);
+        if (!isOk) {
+            throw new BaseException(MessageConstant.SYSTEM_ERROR);
+        }
     }
 
     /**
      * 更新to do
+     *
      * @param updateTodoDTO
      */
     public void udpateTodo(UpdateTodoDTO updateTodoDTO) {
-        Todo todo = Todo.builder()
-                .id(updateTodoDTO.getId())
-                .title(updateTodoDTO.getTitle())
-                .content(updateTodoDTO.getContent())
-                .status(updateTodoDTO.getStatus())
-                .dueDate(updateTodoDTO.getDueDate())
-                .updatedAt(LocalDateTime.now())
-                .categoryId(updateTodoDTO.getCategoryId())
-                .userId(BaseContext.getCurrentId())
-                .build();
-
-        todoMapper.update(todo);
+        Todo todo = new Todo();
+        BeanUtils.copyProperties(updateTodoDTO, todo);
+        todo.setUserId(BaseContext.getCurrentId());
+        boolean isOk = this.updateById(todo);
+        if (!isOk) {
+            throw new BaseException(MessageConstant.SYSTEM_ERROR);
+        }
     }
 
     /**
      * 获取用户的分类数据
+     *
      * @return
      */
     public List<CategoryVO> getCategories() {
-        List<Category> categories = categoryMapper.getCategoriesByUserId(BaseContext.getCurrentId());
+        List<Category> categories = categoryService.getCategoriesByUserId(BaseContext.getCurrentId());
 
         return categories.stream()
                 .map(category -> new CategoryVO(category.getId(), category.getName()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Long getNumOfDoneOrUndone(Long currentId, Integer enabled) {
+        return this.lambdaQuery()
+                .eq(Todo::getUserId, currentId)
+                .eq(Todo::getStatus, enabled)
+                .count();
     }
 }

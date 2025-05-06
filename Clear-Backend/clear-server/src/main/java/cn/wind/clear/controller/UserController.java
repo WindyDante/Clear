@@ -10,8 +10,8 @@ import cn.wind.clear.service.UserService;
 import cn.wind.clear.utils.JwtUtil;
 import cn.wind.clear.vo.UserLoginVO;
 import cn.wind.clear.vo.UserStatusVO;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -21,9 +21,9 @@ import java.util.HashMap;
 @Slf4j
 public class UserController {
 
-    @Autowired
+    @Resource
     UserService userService;
-    @Autowired
+    @Resource
     private JwtProperties jwtProperties;
 
     /**

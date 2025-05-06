@@ -4,8 +4,9 @@ import cn.wind.clear.dto.UserDTO;
 import cn.wind.clear.dto.UserLoginDTO;
 import cn.wind.clear.entity.User;
 import cn.wind.clear.vo.UserStatusVO;
+import com.baomidou.mybatisplus.extension.service.IService;
 
-public interface UserService {
+public interface UserService extends IService<User> {
 
     /**
      * 用户登陆

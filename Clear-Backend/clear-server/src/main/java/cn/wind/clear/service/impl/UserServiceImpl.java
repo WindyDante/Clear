@@ -9,27 +9,29 @@ import cn.wind.clear.dto.UserLoginDTO;
 import cn.wind.clear.entity.Category;
 import cn.wind.clear.entity.User;
 import cn.wind.clear.exception.BaseException;
-import cn.wind.clear.mapper.CategoryMapper;
-import cn.wind.clear.mapper.TodoMapper;
 import cn.wind.clear.mapper.UserMapper;
+import cn.wind.clear.service.CategoryService;
+import cn.wind.clear.service.TodoService;
 import cn.wind.clear.service.UserService;
 import cn.wind.clear.vo.UserStatusVO;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 @Slf4j
 @Service
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, User>
+        implements UserService {
 
     @Resource
-    UserMapper userMapper;
-    @Autowired
-    TodoMapper todoMapper;
-    @Autowired
-    CategoryMapper categoryMapper;
+    private UserMapper userMapper;
+    @Resource
+    private TodoService todoService;
+    @Resource
+    private CategoryService categoryService;
 
     /**
      * 用户登陆
@@ -43,13 +45,13 @@ public class UserServiceImpl implements UserService {
             throw new BaseException(MessageConstant.EMPTY_NAME);
         }
 
-        User user = User.builder()
-                .username(userLoginDTO.getUsername())
-                .password(DigestUtils.md5DigestAsHex(userLoginDTO.getPassword().getBytes()))
-                .build();
+        userLoginDTO.setPassword(DigestUtils.md5DigestAsHex(userLoginDTO.getPassword().getBytes()));
+        User user = new User();
+        BeanUtils.copyProperties(userLoginDTO, userLoginDTO);
 
         // 1. 检查用户登陆凭证是否有效
-        User userToLogin = userMapper.getUserByUsername(user);
+
+        User userToLogin = this.lambdaQuery().eq(User::getUsername, userLoginDTO.getUsername()).one();
 
         // 2. 无效
         if (userToLogin == null) {
@@ -80,14 +82,18 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         // 1. 查找数据库中是否与已有的用户名冲突
-        User userByInfo = userMapper.getUserByUsername(newUser);
+        User userByInfo = this.lambdaQuery().eq(User::getUsername, username).one();
         if (userByInfo != null) {
             // 已存在相同用户名的用户
             throw new BaseException(MessageConstant.CONFLICT_USERNAME);
         }
 
         // 2. 不冲突, 添加到数据库中
-        userMapper.insert(newUser);
+        boolean isOk = this.save(newUser);
+        if (!isOk) {
+            // 添加失败
+            throw new BaseException(MessageConstant.SYSTEM_ERROR);
+        }
 
         // 3. 为用户创建默认分类
         Category category = Category.builder()
@@ -95,7 +101,11 @@ public class UserServiceImpl implements UserService {
                 .name(CategoryConstant.DEFAULT_CATEGORY)
                 .build();
 
-        categoryMapper.insert(category);
+        boolean isOkToCategory = categoryService.save(category);
+        if (!isOkToCategory) {
+            // 添加失败
+            throw new BaseException(MessageConstant.SYSTEM_ERROR);
+        }
     }
 
     /**
@@ -103,10 +113,16 @@ public class UserServiceImpl implements UserService {
      * @return
      */
     public UserStatusVO getStatus() {
+        log.info("获取当前用户相关信息");
         return UserStatusVO.builder()
-                .username(userMapper.getUserById(BaseContext.getCurrentId()).getUsername())
-                .numOfUndone(todoMapper.getNumOfDoneOrUndone(BaseContext.getCurrentId(), StatusConstant.ENABLED))
-                .numOfDone(todoMapper.getNumOfDoneOrUndone(BaseContext.getCurrentId(), StatusConstant.DISABLED))
+                .username(this.lambdaQuery()
+                        .eq(User::getId, BaseContext.getCurrentId())
+                        .one()
+                        .getUsername())
+                .numOfUndone(
+                        todoService.getNumOfDoneOrUndone(BaseContext.getCurrentId(), StatusConstant.ENABLED)
+                )
+                .numOfDone(todoService.getNumOfDoneOrUndone(BaseContext.getCurrentId(), StatusConstant.DISABLED))
                 .build();
     }
 

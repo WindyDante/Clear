@@ -3,13 +3,15 @@ package cn.wind.clear.service;
 import cn.wind.clear.dto.TodoDTO;
 import cn.wind.clear.dto.TodoPageQueryDTO;
 import cn.wind.clear.dto.UpdateTodoDTO;
+import cn.wind.clear.entity.Todo;
 import cn.wind.clear.result.PageResult;
 import cn.wind.clear.vo.CategoryVO;
 import cn.wind.clear.vo.TodoVO;
+import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
 
-public interface TodoService {
+public interface TodoService extends IService<Todo> {
     /**
      * 添加to do
      * @param todoDTO
@@ -40,4 +42,6 @@ public interface TodoService {
      * @return
      */
     List<CategoryVO> getCategories();
+
+    Long getNumOfDoneOrUndone(Long currentId, Integer enabled);
 }
