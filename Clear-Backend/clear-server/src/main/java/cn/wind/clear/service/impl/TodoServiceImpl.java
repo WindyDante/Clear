@@ -33,9 +33,6 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
         implements TodoService {
     @Resource
     CategoryService categoryService;
-    @Resource
-    TodoService todoService;
-
 
     /**
      * 添加to do

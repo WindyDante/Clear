@@ -5,7 +5,7 @@
       <div class="text-2xl text">
         欢迎使用
         <span style="color: rgb(0 193 106)" class="text-2xl italic font-bold">
-          Tika
+          Clear
         </span>
       </div>
 

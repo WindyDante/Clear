@@ -47,7 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         userLoginDTO.setPassword(DigestUtils.md5DigestAsHex(userLoginDTO.getPassword().getBytes()));
         User user = new User();
-        BeanUtils.copyProperties(userLoginDTO, userLoginDTO);
+        BeanUtils.copyProperties(userLoginDTO, user);
 
         // 1. 检查用户登陆凭证是否有效
 

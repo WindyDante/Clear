@@ -4,8 +4,5 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="cn.wind.clear.mapper.UserMapper">
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO user (username, password, created_at, updated_at)
-        VALUES (#{username}, #{password}, #{createdAt}, #{updatedAt})
-    </insert>
+
 </mapper>

@@ -9,6 +9,7 @@ import cn.wind.clear.result.Result;
 import cn.wind.clear.service.TodoService;
 import cn.wind.clear.vo.CategoryVO;
 import cn.wind.clear.vo.TodoVO;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,9 +25,9 @@ import java.util.Set;
 @Slf4j
 public class TodoController {
 
-    @Autowired
+    @Resource
     TodoService todoService;
-    @Autowired
+    @Resource
     private RedisTemplate<Object, Object> redisTemplate;
 
     /**
