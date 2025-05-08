@@ -20,6 +20,18 @@ function handleDeleteTask(taskId: string) {
   taskStore.deleteTask(taskId)
 }
 
+// 格式化创建时间的函数
+function formatCreatedAt(dateString: string) {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
 // For pagination
 function goToPreviousPage() {
   taskStore.prevPage()
@@ -52,7 +64,7 @@ function goToNextPage() {
       >
         <div class="task-content">
           <div class="task-header">
-            <div class="task-number">#{{ task.id }}</div>
+            <div class="task-time">{{ formatCreatedAt(task.createdAt) }}</div>
             <div class="task-actions">
               <button class="action-btn edit-btn" @click="handleToggleCompletion(task.id)">
                 <span class="icon">✓</span>
@@ -132,7 +144,7 @@ function goToNextPage() {
   margin-bottom: 8px;
 }
 
-.task-number {
+.task-time {
   font-size: 12px;
   color: var(--text-secondary);
 }
