@@ -106,11 +106,7 @@ async function handleSubmit() {
     <div v-if="activeTab === 'category'" class="tab-content">
       <p class="field-label">选择分类：</p>
       <div class="category-selector">
-<<<<<<< HEAD
         <select v-model="newTask.category" class="form-control select-control">
-=======
-        <select v-model="newTask.category" class="form-control">
->>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
           <option
             v-for="category in categories"
             :key="category"
@@ -119,10 +115,7 @@ async function handleSubmit() {
             {{ category }}
           </option>
         </select>
-<<<<<<< HEAD
         <span class="select-arrow">▼</span>
-=======
->>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
       </div>
     </div>
 
@@ -169,10 +162,6 @@ async function handleSubmit() {
         <span class="icon">✓</span>
         添加
       </button>
-
-      <button class="icon-button">
-        <span class="icon">+</span>
-      </button>
     </div>
   </div>
 </template>
@@ -203,13 +192,10 @@ async function handleSubmit() {
   font-weight: 500;
 }
 
-<<<<<<< HEAD
 .task-content {
   resize: vertical;
 }
 
-=======
->>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
 .field-label {
   margin-bottom: 8px;
   font-size: 14px;
@@ -290,7 +276,6 @@ async function handleSubmit() {
 
 .submit-btn {
   flex-grow: 1;
-  margin-right: 12px;
 }
 
 .icon-button {
@@ -311,7 +296,6 @@ async function handleSubmit() {
 .tab-content {
   padding: 12px 0;
 }
-<<<<<<< HEAD
 
 /* 自定义下拉箭头相关样式 */
 .select-control {
@@ -347,6 +331,4 @@ async function handleSubmit() {
   position: relative;
   overflow: visible;
 }
-=======
->>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
 </style>

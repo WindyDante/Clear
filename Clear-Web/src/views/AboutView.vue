@@ -15,11 +15,7 @@ onMounted(() => {
 
 <template>
   <div class="about-view">
-<<<<<<< HEAD
     <AppHeader title="关于" :show-home-icon="true" :show-logout-icon="true" />
-=======
-    <AppHeader title="关于" :show-home-icon="true" />
->>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
     
     <div class="about-content">
       <div class="stats-card card">

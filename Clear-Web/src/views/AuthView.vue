@@ -80,15 +80,10 @@ async function handleRegister() {
   <div class="auth-view">
     <AppHeader title="欢迎使用 Clear">
       <template #right-actions>
-<<<<<<< HEAD
         <button class="icon-button github-button">
           <span class="material-icon">
             <a href="https://github.com/WindyDante/Clear" class="github-link" target="_blank" rel="noopener noreferrer">Github</a>
           </span>
-=======
-        <button class="icon-button">
-          <span class="material-icon">🏠</span>
->>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
         </button>
       </template>
     </AppHeader>
@@ -228,7 +223,6 @@ async function handleRegister() {
   font-size: 14px;
   margin-bottom: 16px;
 }
-<<<<<<< HEAD
 
 .github-button {
   background-color: transparent !important; /* 移除默认背景色 */
@@ -248,6 +242,4 @@ async function handleRegister() {
 .github-link:hover {
   color: #333333; /* 鼠标悬停时颜色略微变淡 */
 }
-=======
->>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
 </style>

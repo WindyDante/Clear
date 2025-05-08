@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /* 引入霞鹜文楷字体 */
 @import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css');
 
@@ -20,6 +19,3 @@ button,
   font-family: var(--font-family);
 }
 
-=======
->>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
-/* Additional global styles */

@@ -1,10 +1,18 @@
-<<<<<<< HEAD
+# Clear Web 应用
+
+这是一个基于 Vue 3 + TypeScript + Vite 构建的待办清单应用。
+
+## 开发指南
+
+```
 pnpm i
 pnpm run dev
-=======
-# Vue 3 + TypeScript + Vite
+```
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## 技术栈
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
->>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
+- Vue 3 使用 `<script setup>` SFC，详见[script setup 文档](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup)
+- TypeScript 支持
+- Vite 构建工具
+
+更多关于项目设置和IDE支持的信息，请参考 [Vue 文档 TypeScript 指南](https://vuejs.org/guide/typescript/overview.html#project-setup)。
