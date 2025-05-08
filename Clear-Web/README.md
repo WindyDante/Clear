@@ -1,3 +1,2 @@
-启动流程
-npm i
-npm run dev
+pnpm i
+pnpm run dev

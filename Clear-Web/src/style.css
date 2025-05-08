@@ -1,0 +1,22 @@
+/* 引入霞鹜文楷字体 */
+@import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css');
+
+/* 应用全局字体 */
+:root {
+  --font-family: "LXGW WenKai Screen", sans-serif;
+}
+
+body {
+  font-family: var(--font-family);
+}
+
+/* 确保输入框元素也使用同样的字体 */
+input, 
+textarea, 
+select, 
+button,
+.form-control {
+  font-family: var(--font-family);
+}
+
+/* Additional global styles */
