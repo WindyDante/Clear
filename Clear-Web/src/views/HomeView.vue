@@ -21,6 +21,7 @@ onMounted(() => {
 <template>
   <div class="home-view">
     <AppHeader :show-logout-icon="true">
+<<<<<<< HEAD
       <template #left-actions>
         <button class="icon-button about-button" @click="navigateToAbout">
           <span class="material-icon">About</span>
@@ -29,6 +30,16 @@ onMounted(() => {
       <template #default>
         <h1 class="app-title">Clear</h1>
       </template>
+=======
+      <template #default>
+        <h1 class="app-title">Clear</h1>
+      </template>
+      <template #right-actions>
+        <button class="icon-button" @click="navigateToAbout">
+          <span class="material-icon">📊</span>
+        </button>
+      </template>
+>>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
     </AppHeader>
     
     <div class="task-container">
@@ -46,7 +57,11 @@ onMounted(() => {
 }
 
 .app-title {
+<<<<<<< HEAD
   font-size: 18px;
+=======
+  font-size: 20px;
+>>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
   font-weight: 600;
   color: var(--primary-color);
 }
@@ -58,6 +73,7 @@ onMounted(() => {
   flex-direction: column;
 }
 
+<<<<<<< HEAD
 .about-button {
   font-size: 14px;
   width: auto;
@@ -81,6 +97,8 @@ onMounted(() => {
   white-space: nowrap;
 }
 
+=======
+>>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
 @media (min-width: 768px) {
   .task-container {
     padding: 24px;

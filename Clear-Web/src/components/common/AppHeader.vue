@@ -25,10 +25,16 @@ function logout() {
   <header class="app-header">
     <div class="header-content">
       <div class="left-actions">
+<<<<<<< HEAD
         <button v-if="showHomeIcon" class="icon-button home-button" @click="navigateHome">
           <span class="material-icon">🏠 首页</span>
         </button>
         <slot name="left-actions"></slot>
+=======
+        <button v-if="showHomeIcon" class="icon-button" @click="navigateHome">
+          <span class="material-icon">🏠</span>
+        </button>
+>>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
       </div>
       
       <h1 class="header-title">
@@ -36,8 +42,13 @@ function logout() {
       </h1>
       
       <div class="right-actions">
+<<<<<<< HEAD
         <button v-if="showLogoutIcon" class="icon-button logout-button" @click="logout">
           <span class="material-icon">⬅️ 退出</span>
+=======
+        <button v-if="showLogoutIcon" class="icon-button" @click="logout">
+          <span class="material-icon">📋</span>
+>>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
         </button>
         <slot name="right-actions"></slot>
       </div>
@@ -59,7 +70,11 @@ function logout() {
 }
 
 .header-title {
+<<<<<<< HEAD
   font-size: 16px;
+=======
+  font-size: 18px;
+>>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
   font-weight: 600;
   color: var(--text-color);
   margin: 0;
@@ -82,12 +97,19 @@ function logout() {
   display: flex;
   align-items: center;
   justify-content: center;
+<<<<<<< HEAD
   width: auto;
   height: auto;
   min-height: 32px;
   border-radius: 16px;
   transition: background-color var(--transition-speed);
   padding: 0 10px;
+=======
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: background-color var(--transition-speed);
+>>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
 }
 
 .icon-button:hover {
@@ -95,6 +117,7 @@ function logout() {
 }
 
 .material-icon {
+<<<<<<< HEAD
   font-size: 14px;
 }
 
@@ -142,5 +165,8 @@ function logout() {
 
 .home-button:hover {
   background-color: var(--background-color);
+=======
+  font-size: 20px;
+>>>>>>> 649911e37deed67f4a8fd7afbdc44ba6cb39cda0
 }
 </style>
