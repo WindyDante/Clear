@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 
 const props = defineProps<{
-  tabs: { id: string; name: string }[]
+  tabs: { id: string; name: string; icon?: string }[] // Add icon property
   activeTab?: string
 }>()
 
@@ -20,14 +20,10 @@ function setActiveTab(tabId: string) {
 
 <template>
   <div class="tab-navigation">
-    <button
-      v-for="tab in tabs"
-      :key="tab.id"
-      class="tab-button"
-      :class="{ active: currentTab === tab.id }"
-      @click="setActiveTab(tab.id)"
-    >
-      {{ tab.name }}
+    <button v-for="tab in tabs" :key="tab.id" class="tab-button" :class="{ active: currentTab === tab.id }"
+      @click="setActiveTab(tab.id)">
+      <img v-if="tab.icon" :src="tab.icon" :alt="tab.name" class="tab-icon" />
+      <span v-else>{{ tab.name }}</span>
     </button>
   </div>
 </template>
@@ -58,6 +54,15 @@ function setActiveTab(tabId: string) {
   color: var(--primary-color);
   background-color: var(--primary-light);
   font-weight: 600;
+}
+
+.tab-icon {
+  width: 16px;
+  /* Adjust as needed */
+  height: 16px;
+  /* Adjust as needed */
+  margin-right: 5px;
+  /* Adjust as needed */
 }
 
 .tab-button:hover:not(.active) {

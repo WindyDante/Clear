@@ -34,16 +34,16 @@ async function handleLogin() {
     loginForm.error = '请输入用户名和密码'
     return
   }
-  
+
   loginForm.loading = true
   loginForm.error = ''
-  
+
   try {
     const userData = await authStore.login({
       username: loginForm.username,
       password: loginForm.password
     })
-    
+
     router.push('/')
   } catch (error) {
     loginForm.error = '登录失败，请检查用户名和密码'
@@ -57,16 +57,16 @@ async function handleRegister() {
     registerForm.error = '请输入用户名和密码'
     return
   }
-  
+
   registerForm.loading = true
   registerForm.error = ''
-  
+
   try {
     await authStore.register({
       username: registerForm.username,
       password: registerForm.password
     })
-    
+
     router.push('/')
   } catch (error) {
     registerForm.error = '注册失败，请稍后再试'
@@ -78,100 +78,70 @@ async function handleRegister() {
 
 <template>
   <div class="auth-view">
-    <AppHeader title="欢迎使用 Clear">
+    <AppHeader>
+      <template #default>
+        <h1 class="auth-header-title">
+          欢迎使用 <span class="clear-text">Clear</span>
+        </h1>
+      </template>
       <template #right-actions>
         <button class="icon-button github-button">
           <span class="material-icon">
-            <a href="https://github.com/WindyDante/Clear" class="github-link" target="_blank" rel="noopener noreferrer">Github</a>
+            <a href="https://github.com/WindyDante/Clear" class="github-link" target="_blank"
+              rel="noopener noreferrer">Github</a>
           </span>
         </button>
       </template>
     </AppHeader>
-    
+
     <div class="auth-container">
       <div class="auth-card">
-        <TabNavigation
-          :tabs="tabs"
-          :active-tab="activeTab"
-          @change="tab => activeTab = tab"
-        />
-        
+        <TabNavigation :tabs="tabs" :active-tab="activeTab" @change="tab => activeTab = tab" />
+
         <div v-if="activeTab === 'login'" class="auth-form">
           <p class="auth-description">请输入账号密码登录</p>
-          
+
           <div class="form-group">
-            <label for="username">用户名 *</label>
-            <input
-              id="username"
-              v-model="loginForm.username"
-              type="text"
-              class="form-control"
-              placeholder="输入用户名"
-              :disabled="loginForm.loading"
-            />
+            <label for="username">用户名</label>
+            <input id="username" v-model="loginForm.username" type="text" class="form-control" placeholder="输入用户名"
+              :disabled="loginForm.loading" />
           </div>
-          
+
           <div class="form-group">
-            <label for="password">密码 *</label>
-            <input
-              id="password"
-              v-model="loginForm.password"
-              type="password"
-              class="form-control"
-              placeholder="输入密码"
-              :disabled="loginForm.loading"
-            />
+            <label for="password">密码</label>
+            <input id="password" v-model="loginForm.password" type="password" class="form-control" placeholder="输入密码"
+              :disabled="loginForm.loading" />
           </div>
-          
+
           <p v-if="loginForm.error" class="error-message">
             {{ loginForm.error }}
           </p>
-          
-          <button
-            class="btn btn-primary full-width"
-            :disabled="loginForm.loading"
-            @click="handleLogin"
-          >
+
+          <button class="btn btn-primary full-width" :disabled="loginForm.loading" @click="handleLogin">
             {{ loginForm.loading ? '正在登录...' : '登录' }}
           </button>
         </div>
-        
+
         <div v-else-if="activeTab === 'register'" class="auth-form">
           <p class="auth-description">创建一个新账户</p>
-          
+
           <div class="form-group">
-            <label for="register-username">用户名 *</label>
-            <input
-              id="register-username"
-              v-model="registerForm.username"
-              type="text"
-              class="form-control"
-              placeholder="输入用户名"
-              :disabled="registerForm.loading"
-            />
+            <label for="register-username">用户名</label>
+            <input id="register-username" v-model="registerForm.username" type="text" class="form-control"
+              placeholder="输入用户名" :disabled="registerForm.loading" />
           </div>
-          
+
           <div class="form-group">
-            <label for="register-password">密码 *</label>
-            <input
-              id="register-password"
-              v-model="registerForm.password"
-              type="password"
-              class="form-control"
-              placeholder="输入密码"
-              :disabled="registerForm.loading"
-            />
+            <label for="register-password">密码</label>
+            <input id="register-password" v-model="registerForm.password" type="password" class="form-control"
+              placeholder="输入密码" :disabled="registerForm.loading" />
           </div>
-          
+
           <p v-if="registerForm.error" class="error-message">
             {{ registerForm.error }}
           </p>
-          
-          <button
-            class="btn btn-primary full-width"
-            :disabled="registerForm.loading"
-            @click="handleRegister"
-          >
+
+          <button class="btn btn-primary full-width" :disabled="registerForm.loading" @click="handleRegister">
             {{ registerForm.loading ? '正在注册...' : '注册' }}
           </button>
         </div>
@@ -225,21 +195,44 @@ async function handleRegister() {
 }
 
 .github-button {
-  background-color: transparent !important; /* 移除默认背景色 */
+  background-color: transparent !important;
+  /* 移除默认背景色 */
   transition: background-color 0.3s ease;
 }
 
 .github-button:hover {
-  background-color: var(--background-color) !important; /* 保留鼠标悬停效果 */
+  background-color: var(--background-color) !important;
+  /* 保留鼠标悬停效果 */
 }
 
 .github-link {
-  color: #000000; /* 设置链接文字为黑色 */
-  text-decoration: none; /* 移除下划线 */
-  font-weight: 500; /* 稍微加粗文字 */
+  color: #000000;
+  /* 设置链接文字为黑色 */
+  text-decoration: none;
+  /* 移除下划线 */
+  font-weight: 500;
+  /* 稍微加粗文字 */
 }
 
 .github-link:hover {
-  color: #333333; /* 鼠标悬停时颜色略微变淡 */
+  color: #333333;
+  /* 鼠标悬停时颜色略微变淡 */
+}
+
+.auth-header-title {
+  font-size: 16px;
+  /* Match AppHeader's default title font-size */
+  font-weight: 600;
+  /* Match AppHeader's default title font-weight */
+  color: var(--text-color);
+  /* Default text color */
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clear-text {
+  color: var(--primary-color);
 }
 </style>

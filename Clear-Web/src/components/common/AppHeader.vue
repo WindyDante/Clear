@@ -26,18 +26,18 @@ function logout() {
     <div class="header-content">
       <div class="left-actions">
         <button v-if="showHomeIcon" class="icon-button home-button" @click="navigateHome">
-          <span class="material-icon">🏠 首页</span>
+          <img src="/primary.svg" alt="首页" class="icon-img" />
         </button>
         <slot name="left-actions"></slot>
       </div>
-      
+
       <h1 class="header-title">
         <slot>{{ title }}</slot>
       </h1>
-      
+
       <div class="right-actions">
         <button v-if="showLogoutIcon" class="icon-button logout-button" @click="logout">
-          <span class="material-icon">⬅️ 退出</span>
+          <img src="/exit.svg" alt="退出" class="icon-img" />
         </button>
         <slot name="right-actions"></slot>
       </div>
@@ -94,8 +94,11 @@ function logout() {
   background-color: var(--background-color);
 }
 
-.material-icon {
-  font-size: 14px;
+.icon-img {
+  width: 20px;
+  /* 你可以根据需要调整图标大小 */
+  height: 20px;
+  /* 你可以根据需要调整图标大小 */
 }
 
 .logout-button {

@@ -23,14 +23,14 @@ onMounted(() => {
     <AppHeader :show-logout-icon="true">
       <template #left-actions>
         <button class="icon-button about-button" @click="navigateToAbout">
-          <span class="material-icon">📊 统计</span>
+          <img src="/about.svg" alt="关于" class="icon-img" />
         </button>
       </template>
       <template #default>
         <h1 class="app-title">Clear</h1>
       </template>
     </AppHeader>
-    
+
     <div class="task-container">
       <TaskForm />
       <TaskList title="待办清单" />
@@ -66,11 +66,20 @@ onMounted(() => {
   height: auto;
   min-height: 32px;
   white-space: nowrap;
-  background-color: transparent !important; /* 强制移除默认背景色 */
+  background-color: transparent !important;
+  /* 强制移除默认背景色 */
+}
+
+.icon-img {
+  width: 20px;
+  /* 你可以根据需要调整图标大小 */
+  height: 20px;
+  /* 你可以根据需要调整图标大小 */
 }
 
 .about-button:hover {
-  background-color: var(--background-color) !important; /* 恢复悬停时的背景效果 */
+  background-color: var(--background-color) !important;
+  /* 恢复悬停时的背景效果 */
 }
 
 .about-button .material-icon {
