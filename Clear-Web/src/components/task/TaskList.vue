@@ -201,12 +201,18 @@ function goToNextPage() {
   font-size: 15px;
   font-weight: 500;
   margin-bottom: 4px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .task-description {
   font-size: 13px;
   color: var(--text-secondary);
   margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .loading-indicator, 
