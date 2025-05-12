@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
+import AppToast from './components/common/AppToast.vue'; // Import AppToast
 </script>
 
 <template>
   <div class="app-container">
     <RouterView />
+    <AppToast /> <!-- Add AppToast component here -->
   </div>
 </template>
 

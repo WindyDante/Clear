@@ -1,23 +1,44 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useTaskStore, Task } from '../../store/task'
+import { useToast } from '../../composables/useToast' // 引入 Toast 功能
 
 defineProps<{
   title: string
 }>()
 
 const taskStore = useTaskStore()
+const { showToast } = useToast() // 使用 Toast 功能
 
 const tasksToShow = computed(() => {
   return taskStore.pendingTasks
 })
 
-function handleToggleCompletion(taskId: string) {
-  taskStore.toggleTaskCompletion(taskId)
+async function handleToggleCompletion(taskId: string) {
+  try {
+    const task = taskStore.getTaskById(taskId)
+    await taskStore.toggleTaskCompletion(taskId)
+    
+    if (task) {
+      // 根据任务是否完成显示对应的 Toast
+      showToast(`任务"${task.title}"已标记为完成`, 'success')
+    }
+  } catch (error) {
+    showToast('操作失败，请重试', 'error')
+  }
 }
 
-function handleDeleteTask(taskId: string) {
-  taskStore.deleteTask(taskId)
+async function handleDeleteTask(taskId: string) {
+  try {
+    const task = taskStore.getTaskById(taskId)
+    await taskStore.deleteTask(taskId)
+    
+    if (task) {
+      showToast(`任务"${task.title}"已删除`, 'info')
+    }
+  } catch (error) {
+    showToast('删除失败，请重试', 'error')
+  }
 }
 
 // 格式化创建时间的函数

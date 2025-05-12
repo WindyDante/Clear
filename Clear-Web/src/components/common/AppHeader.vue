@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
+import { useToast } from '../../composables/useToast' // 引入 Toast 功能
 
 defineProps<{
   title?: string
@@ -10,6 +11,7 @@ defineProps<{
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { showToast } = useToast() // 使用 Toast 功能
 
 function navigateHome() {
   router.push('/')
@@ -17,6 +19,7 @@ function navigateHome() {
 
 function logout() {
   authStore.logout()
+  showToast('您已成功退出登录', 'info') // 添加退出时的 Toast 通知
   router.push('/auth')
 }
 </script>

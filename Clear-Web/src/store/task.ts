@@ -21,12 +21,12 @@ export const useTaskStore = defineStore('task', () => {
   const itemsPerPage = 10
 
   const authStore = useAuthStore()
-  
-  const pendingTasks = computed(() => 
+
+  const pendingTasks = computed(() =>
     tasks.value.filter(task => !task.completed)
   )
-  
-  const completedTasks = computed(() => 
+
+  const completedTasks = computed(() =>
     tasks.value.filter(task => task.completed)
   )
 
@@ -35,7 +35,7 @@ export const useTaskStore = defineStore('task', () => {
 
   async function fetchTasks() {
     if (!authStore.isAuthenticated) return
-    
+
     loading.value = true
     try {
       const response = await api.getTasks(currentPage.value, itemsPerPage)
@@ -50,7 +50,7 @@ export const useTaskStore = defineStore('task', () => {
 
   async function addTask(task: Omit<Task, 'id' | 'completed' | 'createdAt'>) {
     if (!authStore.isAuthenticated) return
-    
+
     loading.value = true
     try {
       const response = await api.addTask(task)
@@ -64,7 +64,7 @@ export const useTaskStore = defineStore('task', () => {
 
   async function updateTask(taskId: string, updates: Partial<Task>) {
     if (!authStore.isAuthenticated) return
-    
+
     loading.value = true
     try {
       const response = await api.updateTask(taskId, updates)
@@ -81,7 +81,7 @@ export const useTaskStore = defineStore('task', () => {
 
   async function deleteTask(taskId: string) {
     if (!authStore.isAuthenticated) return
-    
+
     loading.value = true
     try {
       await api.deleteTask(taskId)
@@ -93,10 +93,15 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
+  // 根据ID获取任务的方法
+  function getTaskById(taskId: string): Task | undefined {
+    return tasks.value.find(task => task.id === taskId)
+  }
+
   async function toggleTaskCompletion(taskId: string) {
     const task = tasks.value.find(t => t.id === taskId)
     if (!task) return
-    
+
     await updateTask(taskId, { completed: !task.completed })
   }
 
@@ -129,6 +134,7 @@ export const useTaskStore = defineStore('task', () => {
     deleteTask,
     toggleTaskCompletion,
     nextPage,
-    prevPage
+    prevPage,
+    getTaskById // 导出新添加的方法
   }
 })

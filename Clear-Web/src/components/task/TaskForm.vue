@@ -2,8 +2,10 @@
 import { ref, reactive, onMounted, onUnmounted, computed } from "vue";
 import { useTaskStore } from "../../store/task";
 import TabNavigation from "../common/TabNavigation.vue";
+import { useToast } from "../../composables/useToast"; // 引入 Toast 功能
 
 const taskStore = useTaskStore();
+const { showToast } = useToast(); // 使用 Toast 功能
 
 const tabs = [
   { id: "category", name: "分类" },
@@ -147,20 +149,28 @@ onUnmounted(() => {
 async function handleSubmit() {
   if (!newTask.title.trim()) return;
 
-  await taskStore.addTask({
-    title: newTask.title,
-    content: newTask.content,
-    category: newTask.category,
-    dueDate: newTask.dueDate,
-  });
+  try {
+    await taskStore.addTask({
+      title: newTask.title,
+      content: newTask.content,
+      category: newTask.category,
+      dueDate: newTask.dueDate,
+    });
 
-  // Reset form
-  newTask.title = "";
-  newTask.content = "";
-  newTask.category = "默认";
-  newTask.dueDate = null;
-  newTask.dueTime = "12:00";
-  activeTab.value = "category";
+    // 显示添加成功的 Toast
+    showToast(`任务"${newTask.title}"添加成功`, "success");
+
+    // Reset form
+    newTask.title = "";
+    newTask.content = "";
+    newTask.category = "默认";
+    newTask.dueDate = null;
+    newTask.dueTime = "12:00";
+    activeTab.value = "category";
+  } catch (error) {
+    // 显示添加失败的 Toast
+    showToast("任务添加失败，请重试", "error");
+  }
 }
 </script>
 

@@ -4,9 +4,11 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 import AppHeader from '../components/common/AppHeader.vue'
 import TabNavigation from '../components/common/TabNavigation.vue'
+import { useToast } from '../composables/useToast' // 引入 Toast 功能
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { showToast } = useToast() // 使用 Toast 功能
 
 const tabs = [
   { id: 'login', name: '登录' },
@@ -32,6 +34,7 @@ const registerForm = reactive({
 async function handleLogin() {
   if (!loginForm.username || !loginForm.password) {
     loginForm.error = '请输入用户名和密码'
+    showToast('请输入用户名和密码', 'warning') // 显示警告 Toast
     return
   }
 
@@ -44,9 +47,11 @@ async function handleLogin() {
       password: loginForm.password
     })
 
+    showToast('登录成功，欢迎回来！', 'success') // 显示成功 Toast
     router.push('/')
   } catch (error) {
     loginForm.error = '登录失败，请检查用户名和密码'
+    showToast('登录失败，请检查用户名和密码', 'error') // 显示错误 Toast
   } finally {
     loginForm.loading = false
   }
@@ -55,6 +60,7 @@ async function handleLogin() {
 async function handleRegister() {
   if (!registerForm.username || !registerForm.password) {
     registerForm.error = '请输入用户名和密码'
+    showToast('请输入用户名和密码', 'warning') // 显示警告 Toast
     return
   }
 
@@ -67,9 +73,11 @@ async function handleRegister() {
       password: registerForm.password
     })
 
+    showToast('注册成功，欢迎加入！', 'success') // 显示成功 Toast
     router.push('/')
   } catch (error) {
     registerForm.error = '注册失败，请稍后再试'
+    showToast('注册失败，请稍后再试', 'error') // 显示错误 Toast
   } finally {
     registerForm.loading = false
   }
