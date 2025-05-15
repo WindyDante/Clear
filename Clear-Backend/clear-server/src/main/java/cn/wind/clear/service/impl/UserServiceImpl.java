@@ -67,7 +67,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public void register(UserDTO userDTO) {
+    public User register(UserDTO userDTO) {
         log.info("新用户注册: {}", userDTO);
         if (userDTO.getUsername() == null || userDTO.getUsername().isBlank()){
             throw new BaseException(MessageConstant.EMPTY_NAME);
@@ -106,6 +106,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             // 添加失败
             throw new BaseException(MessageConstant.SYSTEM_ERROR);
         }
+
+        return newUser;
     }
 
     /**

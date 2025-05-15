@@ -18,7 +18,7 @@ public interface UserService extends IService<User> {
      * 用户注册
      * @param userDTO
      */
-    void register(UserDTO userDTO);
+    User register(UserDTO userDTO);
 
     /**
      * 获取当前用户相关信息

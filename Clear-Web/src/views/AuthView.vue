@@ -38,15 +38,16 @@ async function handleLogin() {
   loginForm.loading = true
 
   try {
-    const userData = await authStore.login({
+    await authStore.login({
       username: loginForm.username,
       password: loginForm.password
     })
 
     showToast('登录成功，欢迎回来！', 'success') // 显示成功 Toast
     router.push('/')
-  } catch (error) {
-    showToast('登录失败，请检查用户名和密码', 'error') // 显示错误 Toast
+  } catch (error: any) {
+    // 显示来自API的错误消息
+    showToast(error.message || '登录失败，请检查用户名和密码', 'error')
   } finally {
     loginForm.loading = false
   }
@@ -68,8 +69,9 @@ async function handleRegister() {
 
     showToast('注册成功，欢迎加入！', 'success') // 显示成功 Toast
     router.push('/')
-  } catch (error) {
-    showToast('注册失败，请稍后再试', 'error') // 显示错误 Toast
+  } catch (error: any) {
+    // 显示来自API的错误消息
+    showToast(error.message || '注册失败，请稍后再试', 'error')
   } finally {
     registerForm.loading = false
   }

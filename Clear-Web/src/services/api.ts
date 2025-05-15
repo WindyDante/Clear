@@ -1,42 +1,64 @@
 import { Task } from '../store/task'
 
-// This is a mock API service that will be replaced with real API calls
-// when connecting to a backend
+// 从环境变量获取API基础URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
+// API服务
 const api = {
-  login(credentials: { username: string, password: string }) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          id: '1',
-          username: credentials.username,
-          token: 'mock-jwt-token'
-        })
-      }, 500)
-    })
+  async login(credentials: { username: string, password: string }) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(credentials)
+      })
+
+      const result = await response.json()
+
+      if (result.code !== 1) {
+        throw new Error(result.msg || '登录失败')
+      }
+
+      return result.data
+    } catch (error) {
+      throw error
+    }
   },
-  
-  register(userData: { username: string, password: string }) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          id: '1',
-          username: userData.username,
-          token: 'mock-jwt-token'
-        })
-      }, 500)
-    })
+
+  async register(userData: { username: string, password: string }) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      })
+
+      const result = await response.json()
+
+      if (result.code !== 1) {
+        throw new Error(result.msg || '注册失败')
+      }
+
+      return result.data
+    } catch (error) {
+      throw error
+    }
   },
-  
+
   getTasks(page: number, limit: number) {
     return new Promise<{ data: Task[], totalPages: number }>((resolve) => {
       setTimeout(() => {
         // This would normally come from the server
         const mockTasks = window.$mockTasks || []
-        
+
         const startIndex = (page - 1) * limit
         const endIndex = startIndex + limit
         const paginatedTasks = mockTasks.slice(startIndex, endIndex)
-        
+
         resolve({
           data: paginatedTasks,
           totalPages: Math.ceil(mockTasks.length / limit)
@@ -44,7 +66,7 @@ const api = {
       }, 500)
     })
   },
-  
+
   addTask(task: Omit<Task, 'id' | 'completed' | 'createdAt'>) {
     return new Promise<Task>((resolve) => {
       setTimeout(() => {
@@ -54,26 +76,26 @@ const api = {
           completed: false,
           createdAt: new Date().toISOString()
         }
-        
+
         // Add to our mock data
         window.$mockTasks = [newTask, ...(window.$mockTasks || [])]
-        
+
         resolve(newTask)
       }, 500)
     })
   },
-  
+
   updateTask(taskId: string, updates: Partial<Task>) {
     return new Promise<Task>((resolve) => {
       setTimeout(() => {
         const mockTasks = window.$mockTasks || []
         const taskIndex = mockTasks.findIndex((t: Task) => t.id === taskId)
-        
+
         if (taskIndex !== -1) {
           const updatedTask = { ...mockTasks[taskIndex], ...updates }
           mockTasks[taskIndex] = updatedTask
           window.$mockTasks = mockTasks
-          
+
           resolve(updatedTask)
         } else {
           throw new Error('Task not found')
@@ -81,7 +103,7 @@ const api = {
       }, 500)
     })
   },
-  
+
   deleteTask(taskId: string) {
     return new Promise<void>((resolve) => {
       setTimeout(() => {
