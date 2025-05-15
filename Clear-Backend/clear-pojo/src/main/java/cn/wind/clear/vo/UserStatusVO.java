@@ -13,6 +13,14 @@ import java.io.Serializable;
 @Builder
 public class UserStatusVO implements Serializable {
     private String username;
+    /**
+     * 已完成任务数量
+     */
     private Long numOfDone;
+
+    /**
+     * 未完成任务数量
+     */
     private Long numOfUndone;
+    private String theme;
 }

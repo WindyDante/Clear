@@ -114,15 +114,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     public UserStatusVO getStatus() {
         log.info("获取当前用户相关信息");
+        User user = this.lambdaQuery()
+                .eq(User::getId, BaseContext.getCurrentId())
+                .one();
         return UserStatusVO.builder()
-                .username(this.lambdaQuery()
-                        .eq(User::getId, BaseContext.getCurrentId())
-                        .one()
-                        .getUsername())
+                .username(user.getUsername())
                 .numOfUndone(
                         todoService.getNumOfDoneOrUndone(BaseContext.getCurrentId(), StatusConstant.ENABLED)
                 )
                 .numOfDone(todoService.getNumOfDoneOrUndone(BaseContext.getCurrentId(), StatusConstant.DISABLED))
+                .theme(user.getTheme())
                 .build();
     }
 
