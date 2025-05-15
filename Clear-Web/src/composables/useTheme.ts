@@ -3,7 +3,7 @@ import { ref } from 'vue'
 // 主题定义
 export const themes = [
     {
-        name: '月白', // 默认浅色
+        name: '天青',
         colors: {
             '--primary-color': '#3498db',
             '--primary-light': '#5dade2',
@@ -26,7 +26,7 @@ export const themes = [
         }
     },
     {
-        name: '玄青', // 深色模式
+        name: '墨玉', // 原"玄青"，更改为符合黑色调的名称
         colors: {
             '--primary-color': '#409eff',
             '--primary-light': '#66b1ff',

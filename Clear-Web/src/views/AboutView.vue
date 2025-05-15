@@ -11,6 +11,27 @@ const authStore = useAuthStore()
 const { showToast } = useToast()
 const { themes, activeThemeName, applyTheme } = useTheme() // 使用主题管理
 
+// 获取主题预览颜色
+function getThemePreviewColor(theme: any) {
+  // 根据主题名称返回合适的预览颜色
+  switch (theme.name) {
+    case '天青':
+      return '#f5f7fa'; // 月白的背景色
+    case '墨玉':
+      return '#1d1e20'; // 玄青的背景色
+    case '胭脂':
+      return '#c74c3c'; // 胭脂的主色调
+    case '藤黄':
+      return '#f39c12'; // 藤黄的主色调
+    case '紫棠':
+      return '#8e44ad'; // 紫棠的主色调
+    case '青碧':
+      return '#1abc9c'; // 青碧的主色调
+    default:
+      return theme.colors['--primary-color']; // 默认使用主色调
+  }
+}
+
 const totalCompleted = computed(() => taskStore.totalCompletedTasks)
 const totalPending = computed(() => taskStore.totalPendingTasks)
 
@@ -110,7 +131,7 @@ onMounted(() => {
           <div v-for="theme in themes" :key="theme.name" class="theme-option"
             :class="{ active: theme.name === activeThemeName }" @click="applyTheme(theme.name)">
             <div class="theme-preview" :style="{
-              backgroundColor: theme.name === '玄青' ? '#1d1e20' : theme.colors['--primary-color']
+              backgroundColor: getThemePreviewColor(theme)
             }"></div>
             <span>{{ theme.name }}</span>
           </div>
