@@ -62,7 +62,7 @@ onMounted(() => {
   font-size: 14px;
   width: auto;
   padding: 0 10px;
-  border-radius: 16px;
+  border: none;
   height: auto;
   min-height: 32px;
   white-space: nowrap;

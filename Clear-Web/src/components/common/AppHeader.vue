@@ -81,6 +81,7 @@ function logout() {
 .icon-button {
   background: none;
   border: none;
+  /* 移除边框 */
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -114,6 +115,8 @@ function logout() {
   min-height: 32px;
   white-space: nowrap;
   font-size: 14px;
+  border: none;
+  /* 确保这些按钮也没有边框 */
 }
 
 .logout-button .material-icon {
@@ -136,6 +139,8 @@ function logout() {
   min-height: 32px;
   white-space: nowrap;
   font-size: 14px;
+  border: none;
+  /* 确保这些按钮也没有边框 */
 }
 
 .home-button .material-icon {

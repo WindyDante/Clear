@@ -20,26 +20,22 @@ const activeTab = ref('login')
 const loginForm = reactive({
   username: '',
   password: '',
-  loading: false,
-  error: ''
+  loading: false
 })
 
 const registerForm = reactive({
   username: '',
   password: '',
-  loading: false,
-  error: ''
+  loading: false
 })
 
 async function handleLogin() {
   if (!loginForm.username || !loginForm.password) {
-    loginForm.error = '请输入用户名和密码'
     showToast('请输入用户名和密码', 'warning') // 显示警告 Toast
     return
   }
 
   loginForm.loading = true
-  loginForm.error = ''
 
   try {
     const userData = await authStore.login({
@@ -50,7 +46,6 @@ async function handleLogin() {
     showToast('登录成功，欢迎回来！', 'success') // 显示成功 Toast
     router.push('/')
   } catch (error) {
-    loginForm.error = '登录失败，请检查用户名和密码'
     showToast('登录失败，请检查用户名和密码', 'error') // 显示错误 Toast
   } finally {
     loginForm.loading = false
@@ -59,13 +54,11 @@ async function handleLogin() {
 
 async function handleRegister() {
   if (!registerForm.username || !registerForm.password) {
-    registerForm.error = '请输入用户名和密码'
     showToast('请输入用户名和密码', 'warning') // 显示警告 Toast
     return
   }
 
   registerForm.loading = true
-  registerForm.error = ''
 
   try {
     await authStore.register({
@@ -76,7 +69,6 @@ async function handleRegister() {
     showToast('注册成功，欢迎加入！', 'success') // 显示成功 Toast
     router.push('/')
   } catch (error) {
-    registerForm.error = '注册失败，请稍后再试'
     showToast('注册失败，请稍后再试', 'error') // 显示错误 Toast
   } finally {
     registerForm.loading = false
@@ -121,10 +113,6 @@ async function handleRegister() {
               :disabled="loginForm.loading" />
           </div>
 
-          <p v-if="loginForm.error" class="error-message">
-            {{ loginForm.error }}
-          </p>
-
           <button class="btn btn-primary full-width" :disabled="loginForm.loading" @click="handleLogin">
             {{ loginForm.loading ? '正在登录...' : '登录' }}
           </button>
@@ -144,10 +132,6 @@ async function handleRegister() {
             <input id="register-password" v-model="registerForm.password" type="password" class="form-control"
               placeholder="输入密码" :disabled="registerForm.loading" />
           </div>
-
-          <p v-if="registerForm.error" class="error-message">
-            {{ registerForm.error }}
-          </p>
 
           <button class="btn btn-primary full-width" :disabled="registerForm.loading" @click="handleRegister">
             {{ registerForm.loading ? '正在注册...' : '注册' }}
@@ -196,13 +180,8 @@ async function handleRegister() {
   width: 100%;
 }
 
-.error-message {
-  color: var(--danger-color);
-  font-size: 14px;
-  margin-bottom: 16px;
-}
-
 .github-button {
+  border: none;
   background-color: transparent !important;
   /* 移除默认背景色 */
   transition: background-color 0.3s ease;

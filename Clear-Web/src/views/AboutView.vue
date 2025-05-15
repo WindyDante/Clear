@@ -3,11 +3,13 @@ import { ref, computed, onMounted, reactive } from 'vue'
 import { useTaskStore } from '../store/task'
 import AppHeader from '../components/common/AppHeader.vue'
 import { useAuthStore } from '../store/auth'
-import { useToast } from '../composables/useToast' // 引入 useToast
+import { useToast } from '../composables/useToast'
+import { useTheme } from '../composables/useTheme' // 引入主题管理
 
 const taskStore = useTaskStore()
 const authStore = useAuthStore()
-const { showToast } = useToast() // 使用 useToast composable
+const { showToast } = useToast()
+const { themes, activeThemeName, applyTheme } = useTheme() // 使用主题管理
 
 const totalCompleted = computed(() => taskStore.totalCompletedTasks)
 const totalPending = computed(() => taskStore.totalPendingTasks)
@@ -17,114 +19,20 @@ const settingsForm = reactive({
   currentPassword: '',
   newPassword: '',
   confirmPassword: '',
-  email: authStore.user?.email || '', // Assuming user object has email
+  email: authStore.user?.email || '',
   loading: false,
-  error: '',
   success: ''
 })
 
-// 调色板相关
-const themes = [
-  {
-    name: '默认浅色',
-    colors: {
-      '--primary-color': '#3498db',
-      '--primary-light': '#5dade2',
-      '--primary-rgb': '52, 152, 219',
-      '--secondary-color': '#2ecc71',
-      '--background-color': '#ecf0f1',
-      '--card-color': '#ffffff',
-      '--text-color': '#2c3e50',
-      '--text-secondary': '#7f8c8d',
-      '--text-on-primary': '#ffffff',
-      '--border-color': '#dce4e8',
-      '--success-color': '#27ae60',
-      '--danger-color': '#e74c3c',
-      '--warning-color': '#f39c12',
-      '--info-color': '#3498db',
-      // Datepicker specific colors for light theme
-      '--datepicker-bg': '#ffffff',
-      '--datepicker-text-color': '#2c3e50',
-      '--datepicker-hover-bg': '#f0f0f0', // A slightly different hover for light mode date cells
-      '--datepicker-active-text-color': '#ffffff',
-    }
-  },
-  {
-    name: '深色模式',
-    colors: {
-      '--primary-color': '#3498db',
-      '--primary-light': '#5dade2',
-      '--primary-rgb': '52, 152, 219',
-      '--secondary-color': '#2ecc71',
-      '--background-color': '#2c3e50',
-      '--card-color': '#34495e',
-      '--text-color': '#ecf0f1', // 主要文本颜色，浅色
-      '--text-secondary': '#bdc3c7', // 次要文本颜色，稍暗的浅色
-      '--text-on-primary': '#ffffff',
-      '--border-color': '#4a6278',
-      '--success-color': '#27ae60',
-      '--danger-color': '#e74c3c',
-      '--warning-color': '#f39c12',
-      '--info-color': '#3498db',
-      // 为深色模式下的日期选择器特化一些颜色
-      '--datepicker-bg': '#3b5368', // 日期选择器背景
-      '--datepicker-text-color': '#dde4e8', // 日期选择器文字颜色
-      '--datepicker-hover-bg': '#4a6278', // 日期单元格悬浮背景
-      '--datepicker-active-text-color': '#ffffff', // 选中日期的文字颜色
-    }
-  },
-  {
-    name: '活力橙',
-    colors: {
-      '--primary-color': '#e67e22',
-      '--primary-light': '#f39c12',
-      '--primary-rgb': '230, 126, 34',
-      '--secondary-color': '#d35400',
-      '--background-color': '#fdf3e6',
-      '--card-color': '#ffffff',
-      '--text-color': '#50331c',
-      '--text-secondary': '#a0663a',
-      '--text-on-primary': '#ffffff',
-      '--border-color': '#fbe5d0',
-      '--success-color': '#27ae60',
-      '--danger-color': '#c0392b',
-      '--warning-color': '#f39c12',
-      '--info-color': '#e67e22',
-      // Datepicker specific colors for orange theme (example)
-      '--datepicker-bg': '#fff9f2',
-      '--datepicker-text-color': '#50331c',
-      '--datepicker-hover-bg': '#fbe5d0',
-      '--datepicker-active-text-color': '#ffffff',
-    }
-  }
-];
-
-const activeThemeName = ref(localStorage.getItem('active-theme-name') || themes[0].name);
-
-function applyTheme(themeName: string) {
-  const selectedTheme = themes.find(t => t.name === themeName);
-  if (selectedTheme) {
-    for (const [key, value] of Object.entries(selectedTheme.colors)) {
-      document.documentElement.style.setProperty(key, value);
-    }
-    activeThemeName.value = themeName;
-    localStorage.setItem('active-theme-name', themeName); // 保存主题选择
-    showToast(`已切换到 ${themeName} 主题`, 'info');
-  }
-}
-
 // Function to handle password change
 async function handleChangePassword() {
-  settingsForm.error = ''
   settingsForm.success = ''
   if (settingsForm.newPassword !== settingsForm.confirmPassword) {
-    settingsForm.error = '新密码和确认密码不匹配'
-    showToast('新密码和确认密码不匹配', 'error') // 显示 Toast
+    showToast('新密码和确认密码不匹配', 'error')
     return
   }
-  if (settingsForm.newPassword.length < 6) { // Example validation
-    settingsForm.error = '新密码长度至少为6位'
-    showToast('新密码长度至少为6位', 'error') // 显示 Toast
+  if (settingsForm.newPassword.length < 6) {
+    showToast('新密码长度至少为6位', 'error')
     return
   }
   settingsForm.loading = true
@@ -138,13 +46,12 @@ async function handleChangePassword() {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000))
     settingsForm.success = '密码修改成功'
-    showToast('密码修改成功', 'success') // 显示 Toast
+    showToast('密码修改成功', 'success')
     settingsForm.currentPassword = ''
     settingsForm.newPassword = ''
     settingsForm.confirmPassword = ''
   } catch (error: any) {
-    settingsForm.error = error.message || '密码修改失败，请重试'
-    showToast(error.message || '密码修改失败，请重试', 'error') // 显示 Toast
+    showToast(error.message || '密码修改失败，请重试', 'error')
   } finally {
     settingsForm.loading = false
   }
@@ -152,11 +59,9 @@ async function handleChangePassword() {
 
 // Function to handle email change
 async function handleChangeEmail() {
-  settingsForm.error = ''
   settingsForm.success = ''
-  if (!settingsForm.email) { // Example validation
-    settingsForm.error = '请输入邮箱地址'
-    showToast('请输入邮箱地址', 'error') // 显示 Toast
+  if (!settingsForm.email) {
+    showToast('请输入邮箱地址', 'error')
     return
   }
   settingsForm.loading = true
@@ -169,13 +74,12 @@ async function handleChangeEmail() {
     // Update email in auth store if your API confirms it
     if (authStore.user) {
       authStore.user.email = settingsForm.email
-      localStorage.setItem('user', JSON.stringify(authStore.user)) // Update local storage
+      localStorage.setItem('user', JSON.stringify(authStore.user))
     }
     settingsForm.success = '邮箱修改成功'
-    showToast('邮箱修改成功', 'success') // 显示 Toast
+    showToast('邮箱修改成功', 'success')
   } catch (error: any) {
-    settingsForm.error = error.message || '邮箱修改失败，请重试'
-    showToast(error.message || '邮箱修改失败，请重试', 'error') // 显示 Toast
+    showToast(error.message || '邮箱修改失败，请重试', 'error')
   } finally {
     settingsForm.loading = false
   }
@@ -187,13 +91,9 @@ onMounted(() => {
   if (authStore.user && !settingsForm.email) {
     settingsForm.email = authStore.user.email || ''
   }
-  // 应用保存的主题
-  const savedThemeName = localStorage.getItem('active-theme-name');
-  if (savedThemeName) {
-    applyTheme(savedThemeName);
-  } else {
-    applyTheme(themes[0].name); // 应用默认主题
-  }
+
+  // 主题已在应用启动时初始化，这里不需要再次初始化
+  // initTheme() - 移除
 })
 </script>
 
@@ -209,7 +109,9 @@ onMounted(() => {
         <div class="theme-selector">
           <div v-for="theme in themes" :key="theme.name" class="theme-option"
             :class="{ active: theme.name === activeThemeName }" @click="applyTheme(theme.name)">
-            <div class="theme-preview" :style="{ backgroundColor: theme.colors['--primary-color'] }"></div>
+            <div class="theme-preview" :style="{
+              backgroundColor: theme.name === '玄青' ? '#1d1e20' : theme.colors['--primary-color']
+            }"></div>
             <span>{{ theme.name }}</span>
           </div>
         </div>
@@ -251,7 +153,6 @@ onMounted(() => {
             {{ settingsForm.loading ? '处理中...' : '修改邮箱' }}
           </button>
         </form>
-        <p v-if="settingsForm.error" class="error-message">{{ settingsForm.error }}</p>
         <p v-if="settingsForm.success" class="success-message">{{ settingsForm.success }}</p>
       </div>
 
@@ -304,10 +205,6 @@ onMounted(() => {
   align-items: center;
 }
 
-.settings-card {
-  /* Styles for the settings card if needed */
-}
-
 .settings-form {
   margin-bottom: 24px;
 }
@@ -324,11 +221,7 @@ onMounted(() => {
   color: var(--text-secondary);
 }
 
-.error-message {
-  color: var(--danger-color);
-  font-size: 14px;
-  margin-top: 10px;
-}
+/* error-message style removed as we're using toast instead */
 
 .success-message {
   color: var(--success-color);
@@ -384,8 +277,10 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
+  /* 改为圆形预览 */
   margin-bottom: 8px;
   border: 1px solid var(--border-color);
+  /* 移除背景色，让它在循环中动态设置 */
 }
 
 .theme-option span {

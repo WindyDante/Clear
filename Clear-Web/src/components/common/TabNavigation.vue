@@ -51,7 +51,8 @@ function setActiveTab(tabId: string) {
 }
 
 .tab-button.active {
-  color: var(--primary-color);
+  color: var(--text-on-primary);
+  /* 将文字颜色调整为 --text-on-primary */
   background-color: var(--primary-light);
   font-weight: 600;
 }

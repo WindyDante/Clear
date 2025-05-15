@@ -1,27 +1,20 @@
 /* 引入霞鹜文楷字体 */
 @import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css');
 
-/* 应用全局字体和颜色变量 */
+/* 重置基础样式，确保应用可见 */
 :root {
-  --font-family: "LXGW WenKai Screen", sans-serif;
+  --primary-color: #3498db;
+  --background-color: #f5f7fa;
+  --card-color: #ffffff;
+  --text-color: #3c4858;
+  --text-secondary: #8492a6;
+  --border-color: #e0e6ed;
 
   /* 默认浅色主题变量 */
-  --primary-color: #3498db;
   --primary-light: #5dade2;
   --primary-rgb: 52, 152, 219;
   /* 用于 rgba */
   --secondary-color: #2ecc71;
-
-  --background-color: #ecf0f1;
-  --card-color: #ffffff;
-
-  --text-color: #2c3e50;
-  --text-secondary: #7f8c8d;
-  --text-on-primary: #ffffff;
-  /* 例如按钮内文字颜色 */
-
-  --border-color: #dce4e8;
-  --border-radius: 8px;
 
   --success-color: #27ae60;
   --success-rgb: 39, 174, 96;
@@ -36,6 +29,10 @@
   --transition-speed: 0.2s;
   /* 用于过渡效果 */
 
+  /* 字体设置 */
+  --font-family: 'LXGW WenKai Screen', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --border-radius: 4px;
+
   /* 其他可能的变量 */
   --button-text-color: var(--text-on-primary);
   --button-primary-bg: var(--primary-color);
@@ -48,12 +45,16 @@
   --placeholder-color: var(--text-secondary);
 }
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   font-family: var(--font-family);
   background-color: var(--background-color);
   color: var(--text-color);
-  margin: 0;
-  padding: 0;
   line-height: 1.6;
   transition: background-color var(--transition-speed), color var(--transition-speed);
 }

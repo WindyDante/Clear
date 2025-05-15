@@ -281,7 +281,7 @@ async function handleSubmit() {
 .calendar-icon {
   position: absolute;
   right: 12px;
-  top: 50%;
+  top: 39%;
   transform: translateY(-50%);
   pointer-events: none;
 }
@@ -456,7 +456,7 @@ async function handleSubmit() {
 .select-arrow {
   position: absolute;
   right: 12px;
-  top: 50%;
+  top: 39%;
   transform: translateY(-50%);
   pointer-events: none;
   /* 确保箭头不会干扰下拉框的点击 */
