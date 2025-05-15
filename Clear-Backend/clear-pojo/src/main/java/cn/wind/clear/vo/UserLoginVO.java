@@ -14,5 +14,6 @@ import java.io.Serializable;
 public class UserLoginVO implements Serializable {
     private Long id; // 用户id, 主键值
     private String username; // 用户名
-    private String token; // JWT令牌
+    private String tk; // JWT令牌
+    private String theme;
 }
