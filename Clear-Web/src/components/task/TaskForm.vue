@@ -34,7 +34,7 @@ function formatDateTime(dateString: string | null) {
   const day = String(date.getDate()).padStart(2, '0');
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
-  
+
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
@@ -62,7 +62,7 @@ const daysInMonth = computed(() => {
 
 // 月份名称
 const monthNames = [
-  "一月", "二月", "三月", "四月", "五月", "六月", 
+  "一月", "二月", "三月", "四月", "五月", "六月",
   "七月", "八月", "九月", "十月", "十一月", "十二月"
 ];
 
@@ -104,7 +104,7 @@ function handleDateSelect(day: number) {
   // 使用当前选择的时间
   const [hours, minutes] = newTask.dueTime.split(':').map(Number);
   date.setHours(hours, minutes);
-  
+
   // 格式化为ISO字符串并保存
   newTask.dueDate = date.toISOString();
 }
@@ -113,7 +113,7 @@ function handleDateSelect(day: number) {
 function handleTimeChange(event: Event) {
   const timeString = (event.target as HTMLInputElement).value;
   newTask.dueTime = timeString;
-  
+
   // 如果已经选择了日期，则更新日期时间
   if (newTask.dueDate) {
     const date = new Date(newTask.dueDate);
@@ -179,36 +179,19 @@ async function handleSubmit() {
     <h3 class="form-title"><span class="icon">📦</span> 添加任务</h3>
 
     <div class="task-inputs">
-      <input
-        v-model="newTask.title"
-        class="form-control task-title"
-        placeholder="输入任务标题..."
-        @keyup.enter="handleSubmit"
-      />
+      <input v-model="newTask.title" class="form-control task-title" placeholder="输入任务标题..."
+        @keyup.enter="handleSubmit" />
 
-      <textarea
-        v-model="newTask.content"
-        class="form-control task-content"
-        placeholder="输入任务内容..."
-        rows="3"
-      ></textarea>
+      <textarea v-model="newTask.content" class="form-control task-content" placeholder="输入任务内容..." rows="3"></textarea>
     </div>
 
-    <TabNavigation
-      :tabs="tabs"
-      :active-tab="activeTab"
-      @change="handleTabChange"
-    />
+    <TabNavigation :tabs="tabs" :active-tab="activeTab" @change="handleTabChange" />
 
     <div v-if="activeTab === 'category'" class="tab-content">
       <p class="field-label">选择分类：</p>
       <div class="category-selector">
         <select v-model="newTask.category" class="form-control select-control">
-          <option
-            v-for="category in categories"
-            :key="category"
-            :value="category"
-          >
+          <option v-for="category in categories" :key="category" :value="category">
             {{ category }}
           </option>
         </select>
@@ -219,12 +202,7 @@ async function handleSubmit() {
     <div v-else-if="activeTab === 'dueDate'" class="tab-content">
       <p class="field-label">截止日期 ({{ newTask.category }})：</p>
       <div class="date-picker-trigger" @click="showDatePicker = true">
-        <input
-          :value="formatDateTime(newTask.dueDate)"
-          class="form-control"
-          placeholder="选择日期和时间"
-          readonly
-        />
+        <input :value="formatDateTime(newTask.dueDate)" class="form-control" placeholder="选择日期和时间" readonly />
         <span class="calendar-icon">📅</span>
       </div>
 
@@ -237,13 +215,8 @@ async function handleSubmit() {
         </div>
         <div class="date-grid">
           <!-- A simple representation of the date picker UI -->
-          <div
-            v-for="day in daysInMonth"
-            :key="day"
-            class="date-cell"
-            :class="{ active: day === selectedDay }"
-            @click="handleDateSelect(day)"
-          >
+          <div v-for="day in daysInMonth" :key="day" class="date-cell" :class="{ active: day === selectedDay }"
+            @click="handleDateSelect(day)">
             {{ day }}
           </div>
         </div>
@@ -251,21 +224,12 @@ async function handleSubmit() {
 
       <div class="time-picker">
         <p class="field-label">选择时间：</p>
-        <input
-          type="time"
-          v-model="newTask.dueTime"
-          class="form-control"
-          @change="handleTimeChange"
-        />
+        <input type="time" v-model="newTask.dueTime" class="form-control" @change="handleTimeChange" />
       </div>
     </div>
 
     <div class="form-actions">
-      <button
-        class="btn btn-primary submit-btn"
-        :disabled="!newTask.title.trim()"
-        @click="handleSubmit"
-      >
+      <button class="btn btn-primary submit-btn" :disabled="!newTask.title.trim()" @click="handleSubmit">
         <span class="icon">✓</span>
         添加
       </button>
@@ -325,12 +289,14 @@ async function handleSubmit() {
 .date-picker-demo {
   position: absolute;
   z-index: 100;
-  background: white;
+  background: var(--datepicker-bg);
   border-radius: var(--border-radius);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  max-width: 320px; /* Constrain width to a more typical date picker size */
+  max-width: 320px;
+  /* Constrain width to a more typical date picker size */
   margin-top: 8px;
   padding: 16px;
+  color: var(--datepicker-text-color);
 }
 
 .date-picker-header {
@@ -338,16 +304,25 @@ async function handleSubmit() {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+  color: var(--datepicker-text-color);
 }
 
 .current-month {
   font-weight: 500;
+  color: var(--datepicker-text-color);
 }
 
 .picker-nav {
   background: none;
   border: none;
   cursor: pointer;
+  color: var(--datepicker-text-color);
+  padding: 4px 8px;
+  border-radius: var(--border-radius);
+}
+
+.picker-nav:hover {
+  background-color: var(--datepicker-hover-bg);
 }
 
 .date-grid {
@@ -364,20 +339,23 @@ async function handleSubmit() {
   width: 32px;
   border-radius: 50%;
   cursor: pointer;
+  color: var(--datepicker-text-color);
+  transition: background-color var(--transition-speed), color var(--transition-speed);
 }
 
 .date-cell:hover {
-  background-color: var(--background-color);
+  background-color: var(--datepicker-hover-bg);
 }
 
 .date-cell.active {
   background-color: var(--primary-color);
-  color: white;
+  color: var(--datepicker-active-text-color);
 }
 
 .time-picker {
   margin-top: 16px;
-  position: relative; /* 确保定位上下文 */
+  position: relative;
+  /* 确保定位上下文 */
 }
 
 .time-picker input[type="time"] {
@@ -401,8 +379,10 @@ async function handleSubmit() {
   position: absolute;
   right: 8px;
   opacity: 0.6;
-  padding: 0; /* 移除默认内边距 */
-  margin: 0; /* 移除默认外边距 */
+  padding: 0;
+  /* 移除默认内边距 */
+  margin: 0;
+  /* 移除默认外边距 */
 }
 
 /* 时间选择器弹出层样式修复 */
@@ -415,13 +395,16 @@ async function handleSubmit() {
 ::-webkit-datetime-edit-ampm-field {
   padding: 0;
   margin: 0;
-  position: static; /* 防止位置偏移 */
-  line-height: normal; /* 规范行高 */
+  position: static;
+  /* 防止位置偏移 */
+  line-height: normal;
+  /* 规范行高 */
 }
 
 /* 防止AMPM切换导致布局变化 */
 ::-webkit-datetime-edit-ampm-field {
-  min-width: 40px; /* 给AM/PM预留固定宽度 */
+  min-width: 40px;
+  /* 给AM/PM预留固定宽度 */
   text-align: center;
 }
 
@@ -463,7 +446,8 @@ async function handleSubmit() {
 /* 自定义下拉箭头相关样式 */
 .select-control {
   padding-right: 30px !important;
-  appearance: none !important; /* 移除浏览器原生下拉箭头 */
+  appearance: none !important;
+  /* 移除浏览器原生下拉箭头 */
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
   background-image: none !important;
@@ -474,14 +458,17 @@ async function handleSubmit() {
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  pointer-events: none; /* 确保箭头不会干扰下拉框的点击 */
+  pointer-events: none;
+  /* 确保箭头不会干扰下拉框的点击 */
   font-size: 12px;
   color: var(--text-secondary);
 }
 
 .select-control {
-  background-color: var(--card-color) !important; /* 设置背景色 */
-  border: 1px solid var(--border-color) !important; /* 确保边框正确显示 */
+  background-color: var(--card-color) !important;
+  /* 设置背景色 */
+  border: 1px solid var(--border-color) !important;
+  /* 确保边框正确显示 */
 }
 
 /* 单独为IE设置下拉箭头 */
