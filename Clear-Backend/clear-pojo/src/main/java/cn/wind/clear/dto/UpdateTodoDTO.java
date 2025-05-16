@@ -7,11 +7,11 @@ import java.time.LocalDate;
 
 @Data
 public class UpdateTodoDTO implements Serializable {
-    private Long id;
+    private String id;
     private String title;
     private String content;
-    private Long categoryId;
+    private String categoryId;
     private Integer status;
     private LocalDate dueDate;
-    private Long userId;
+    private String userId;
 }

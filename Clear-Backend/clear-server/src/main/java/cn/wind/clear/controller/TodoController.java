@@ -1,28 +1,20 @@
 package cn.wind.clear.controller;
 
-import cn.wind.clear.context.BaseContext;
 import cn.wind.clear.dto.TodoDTO;
 import cn.wind.clear.dto.TodoPageQueryDTO;
 import cn.wind.clear.dto.UpdateTodoDTO;
 import cn.wind.clear.result.PageResult;
 import cn.wind.clear.result.Result;
 import cn.wind.clear.service.TodoService;
-import cn.wind.clear.vo.CategoryVO;
 import cn.wind.clear.vo.TodoVO;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * Todo
- * */
+ */
 @RestController
 @RequestMapping("/todo")
 @Slf4j
@@ -30,8 +22,6 @@ public class TodoController {
 
     @Resource
     TodoService todoService;
-    @Resource
-    private RedisTemplate<Object, Object> redisTemplate;
 
     /**
      * 添加待办事项
@@ -42,26 +32,9 @@ public class TodoController {
      * @return 操作结果，成功返回success状态
      */
     @PostMapping("/addTodo")
-    public Result addTodo(@RequestBody TodoDTO todoDTO) {
+    public Result<String> addTodo(@RequestBody TodoDTO todoDTO) {
         todoService.addTodo(todoDTO);
-
-        cleanCache("todos::user_" + BaseContext.getCurrentId() + "_*");
-        return Result.success();
-    }
-
-    /**
-     * 获取用户的分类数据
-     * <p>
-     * 检索并返回当前登录用户的所有分类信息
-     *
-     * @return 包含分类列表的结果对象，成功时返回CategoryVO列表
-     */
-    @GetMapping("/categories")
-    //    @Cacheable(cacheNames = "categories", key = "'user_categories_' + #root.method")
-    public Result<List<CategoryVO>> getCategories() {
-        log.info("获取用户分类数据...");
-        List<CategoryVO> list = todoService.getCategories();
-        return Result.success(list);
+        return Result.success("添加成功");
     }
 
     /**
@@ -73,10 +46,6 @@ public class TodoController {
      * @return 分页结果，包含TodoVO列表和分页信息
      */
     @GetMapping("/page")
-    @Cacheable(
-            cacheNames = "todos",
-            key = "'user_' + T(cn.wind.clear.context.BaseContext).getCurrentId() + '_page_' + #todoPageQueryDTO.page + '_' + #todoPageQueryDTO.pageSize"
-    )
     public Result<PageResult<TodoVO>> pageTodo(TodoPageQueryDTO todoPageQueryDTO) {
         PageResult<TodoVO> pageResult = todoService.pageQuery(todoPageQueryDTO);
         return Result.success(pageResult);
@@ -91,10 +60,9 @@ public class TodoController {
      * @return 操作结果，成功返回success状态
      */
     @DeleteMapping("/deleteTodo/{id}")
-    @CacheEvict(cacheNames = "todos", allEntries = true) // 清空 todos 缓存
-    public Result deleteTodo(@PathVariable Long id) {
+    public Result<String> deleteTodo(@PathVariable String id) {
         todoService.deleteTodo(id);
-        return Result.success();
+        return Result.success("删除成功");
     }
 
     /**
@@ -107,17 +75,8 @@ public class TodoController {
      */
     @PutMapping("/updateTodo")
     @CacheEvict(cacheNames = "todos", allEntries = true) // 清空 todos 缓存
-    public Result updateTodo(@RequestBody UpdateTodoDTO updateTodoDTO) {
+    public Result<String> updateTodo(@RequestBody UpdateTodoDTO updateTodoDTO) {
         todoService.udpateTodo(updateTodoDTO);
-        return Result.success();
-    }
-
-    /**
-     * 清理缓存数据
-     * @param pattern
-     */
-    private void cleanCache(String pattern) {
-        Set<Object> keys = redisTemplate.keys(pattern);
-        redisTemplate.delete(keys);
+        return Result.success("更新成功");
     }
 }

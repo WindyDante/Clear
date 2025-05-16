@@ -125,7 +125,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                         todoService.getNumOfDoneOrUndone(BaseContext.getCurrentId(), StatusConstant.ENABLED)
                 )
                 .numOfDone(todoService.getNumOfDoneOrUndone(BaseContext.getCurrentId(), StatusConstant.DISABLED))
-                .theme(user.getTheme())
                 .build();
     }
 

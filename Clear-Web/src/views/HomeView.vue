@@ -2,19 +2,33 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTaskStore } from '../store/task'
+import { useCategoryStore } from '../store/category'
 import AppHeader from '../components/common/AppHeader.vue'
 import TaskForm from '../components/task/TaskForm.vue'
 import TaskList from '../components/task/TaskList.vue'
+import CategoryManagement from '../components/task/CategoryManagement.vue'
 
 const router = useRouter()
 const taskStore = useTaskStore()
+const categoryStore = useCategoryStore() // 使用分类状态管理
 
 function navigateToAbout() {
   router.push('/about')
 }
 
-onMounted(() => {
-  taskStore.fetchTasks()
+// 统一获取任务和分类数据
+onMounted(async () => {
+  try {
+    // 并行请求，提高加载效率
+    await Promise.all([
+      taskStore.fetchTasks(),
+      categoryStore.fetchCategories()
+    ])
+    
+    console.log('数据初始化完成: 任务和分类数据已加载')
+  } catch (error) {
+    console.error('数据初始化失败:', error)
+  }
 })
 </script>
 
@@ -33,6 +47,7 @@ onMounted(() => {
 
     <div class="task-container">
       <TaskForm />
+      <CategoryManagement />
       <TaskList title="待办清单" />
     </div>
   </div>

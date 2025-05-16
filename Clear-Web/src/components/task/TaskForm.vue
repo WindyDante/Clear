@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, computed } from "vue";
+import { ref, reactive, onMounted, onUnmounted, computed, watch } from "vue";
 import { useTaskStore } from "../../store/task";
+import { useCategoryStore } from "../../store/category";
 import TabNavigation from "../common/TabNavigation.vue";
-import { useToast } from "../../composables/useToast"; // 引入 Toast 功能
+import { useToast } from "../../composables/useToast";
 
 const taskStore = useTaskStore();
-const { showToast } = useToast(); // 使用 Toast 功能
+const categoryStore = useCategoryStore(); // 使用集中的分类状态管理
+const { showToast } = useToast();
 
 const tabs = [
   { id: "category", name: "分类" },
@@ -15,15 +17,42 @@ const tabs = [
 const activeTab = ref("category");
 const showDatePicker = ref(false);
 const datePickerRef = ref<HTMLElement | null>(null);
-const categories = ["默认", "工作", "学习", "生活", "娱乐"];
 
 const newTask = reactive({
   title: "",
   content: "",
-  category: "默认",
+  category: "默认", // 存储分类名称
+  categoryId: 0, // 存储分类ID
   dueDate: null as string | null,
   dueTime: "12:00" as string, // 默认时间设置为中午12点
 });
+
+// 监听分类数据变化，确保选择框始终显示正确的选中项
+watch(() => categoryStore.categories, (categories) => {
+  if (categories && categories.length > 0) {
+    // 如果分类数据变化且有数据，设置默认选中第一个分类
+    const firstCategory = categories[0];
+    newTask.category = firstCategory.categoryName;
+    newTask.categoryId = firstCategory.categoryId;
+    console.log('已设置默认分类:', firstCategory.categoryName, firstCategory.categoryId);
+  }
+}, { immediate: true }); // immediate: true 确保在组件创建时立即执行一次
+
+// 处理分类选择变化
+function handleCategoryChange(event: Event) {
+  const selectElement = event.target as HTMLSelectElement;
+  const selectedCategoryId = selectElement.value;
+  
+  // 找到对应的分类对象
+  const selectedCategory = categoryStore.categories.find(
+    category => category.categoryId.toString() === selectedCategoryId
+  );
+  
+  if (selectedCategory) {
+    newTask.categoryId = selectedCategory.categoryId;
+    newTask.category = selectedCategory.categoryName;
+  }
+}
 
 // 格式化日期显示为24小时制
 function formatDateTime(dateString: string | null) {
@@ -140,6 +169,18 @@ function handleClickOutside(event: MouseEvent) {
 // 生命周期钩子，用于添加和移除点击事件监听器
 onMounted(() => {
   document.addEventListener("click", handleClickOutside);
+  
+  // 不再单独获取分类数据，而是使用父组件已加载的共享状态
+  // 初始化任务的分类选项
+  if (categoryStore.categories.length > 0) {
+    const firstCategory = categoryStore.categories[0];
+    newTask.category = firstCategory.categoryName;
+    newTask.categoryId = firstCategory.categoryId;
+  } else {
+    // 如果分类列表为空，使用默认分类
+    newTask.category = "默认";
+    newTask.categoryId = 0;
+  }
 });
 
 onUnmounted(() => {
@@ -154,6 +195,7 @@ async function handleSubmit() {
       title: newTask.title,
       content: newTask.content,
       category: newTask.category,
+      categoryId: newTask.categoryId, // 添加分类ID
       dueDate: newTask.dueDate,
     });
 
@@ -163,7 +205,17 @@ async function handleSubmit() {
     // Reset form
     newTask.title = "";
     newTask.content = "";
-    newTask.category = "默认";
+    
+    // 重置为第一个分类
+    if (categoryStore.categories.length > 0) {
+      const firstCategory = categoryStore.categories[0];
+      newTask.category = firstCategory.categoryName;
+      newTask.categoryId = firstCategory.categoryId;
+    } else {
+      newTask.category = "默认";
+      newTask.categoryId = 0;
+    }
+    
     newTask.dueDate = null;
     newTask.dueTime = "12:00";
     activeTab.value = "category";
@@ -190,9 +242,19 @@ async function handleSubmit() {
     <div v-if="activeTab === 'category'" class="tab-content">
       <p class="field-label">选择分类：</p>
       <div class="category-selector">
-        <select v-model="newTask.category" class="form-control select-control">
-          <option v-for="category in categories" :key="category" :value="category">
-            {{ category }}
+        <select 
+          class="form-control select-control" 
+          :disabled="categoryStore.loading"
+          @change="handleCategoryChange"
+          :value="newTask.categoryId"
+        >
+          <option v-if="categoryStore.loading" value="" disabled>加载中...</option>
+          <option 
+            v-for="category in categoryStore.categories" 
+            :key="category.categoryId" 
+            :value="category.categoryId"
+          >
+            {{ category.categoryName }}
           </option>
         </select>
         <span class="select-arrow">▼</span>
@@ -206,7 +268,6 @@ async function handleSubmit() {
         <span class="calendar-icon">📅</span>
       </div>
 
-      <!-- This would be replaced with a real date picker component -->
       <div v-if="showDatePicker" class="date-picker-demo" ref="datePickerRef">
         <div class="date-picker-header">
           <button class="picker-nav" @click="prevMonth">◀</button>
@@ -214,7 +275,6 @@ async function handleSubmit() {
           <button class="picker-nav" @click="nextMonth">▶</button>
         </div>
         <div class="date-grid">
-          <!-- A simple representation of the date picker UI -->
           <div v-for="day in daysInMonth" :key="day" class="date-cell" :class="{ active: day === selectedDay }"
             @click="handleDateSelect(day)">
             {{ day }}
@@ -293,7 +353,6 @@ async function handleSubmit() {
   border-radius: var(--border-radius);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   max-width: 320px;
-  /* Constrain width to a more typical date picker size */
   margin-top: 8px;
   padding: 16px;
   color: var(--datepicker-text-color);
@@ -355,7 +414,6 @@ async function handleSubmit() {
 .time-picker {
   margin-top: 16px;
   position: relative;
-  /* 确保定位上下文 */
 }
 
 .time-picker input[type="time"] {
@@ -372,7 +430,6 @@ async function handleSubmit() {
   box-sizing: border-box;
 }
 
-/* 修复时间选择框样式问题 */
 .time-picker input[type="time"]::-webkit-calendar-picker-indicator {
   background-color: transparent;
   cursor: pointer;
@@ -380,12 +437,9 @@ async function handleSubmit() {
   right: 8px;
   opacity: 0.6;
   padding: 0;
-  /* 移除默认内边距 */
   margin: 0;
-  /* 移除默认外边距 */
 }
 
-/* 时间选择器弹出层样式修复 */
 ::-webkit-time-picker,
 ::-webkit-datetime-edit,
 ::-webkit-datetime-edit-fields-wrapper,
@@ -396,15 +450,11 @@ async function handleSubmit() {
   padding: 0;
   margin: 0;
   position: static;
-  /* 防止位置偏移 */
   line-height: normal;
-  /* 规范行高 */
 }
 
-/* 防止AMPM切换导致布局变化 */
 ::-webkit-datetime-edit-ampm-field {
   min-width: 40px;
-  /* 给AM/PM预留固定宽度 */
   text-align: center;
 }
 
@@ -443,11 +493,9 @@ async function handleSubmit() {
   padding: 12px 0;
 }
 
-/* 自定义下拉箭头相关样式 */
 .select-control {
   padding-right: 30px !important;
   appearance: none !important;
-  /* 移除浏览器原生下拉箭头 */
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
   background-image: none !important;
@@ -459,24 +507,19 @@ async function handleSubmit() {
   top: 39%;
   transform: translateY(-50%);
   pointer-events: none;
-  /* 确保箭头不会干扰下拉框的点击 */
   font-size: 12px;
   color: var(--text-secondary);
 }
 
 .select-control {
   background-color: var(--card-color) !important;
-  /* 设置背景色 */
   border: 1px solid var(--border-color) !important;
-  /* 确保边框正确显示 */
 }
 
-/* 单独为IE设置下拉箭头 */
 .select-control::-ms-expand {
   display: block !important;
 }
 
-/* 确保下拉框容器不会干扰下拉箭头的显示 */
 .category-selector {
   position: relative;
   overflow: visible;

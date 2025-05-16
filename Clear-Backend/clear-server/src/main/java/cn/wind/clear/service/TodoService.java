@@ -5,11 +5,8 @@ import cn.wind.clear.dto.TodoPageQueryDTO;
 import cn.wind.clear.dto.UpdateTodoDTO;
 import cn.wind.clear.entity.Todo;
 import cn.wind.clear.result.PageResult;
-import cn.wind.clear.vo.CategoryVO;
 import cn.wind.clear.vo.TodoVO;
 import com.baomidou.mybatisplus.extension.service.IService;
-
-import java.util.List;
 
 public interface TodoService extends IService<Todo> {
     /**
@@ -29,7 +26,7 @@ public interface TodoService extends IService<Todo> {
      * to do 删除
      * @param id
      */
-    void deleteTodo(Long id);
+    void deleteTodo(String id);
 
     /**
      * 更新to do
@@ -37,11 +34,5 @@ public interface TodoService extends IService<Todo> {
      */
     void udpateTodo(UpdateTodoDTO updateTodoDTO);
 
-    /**
-     * 获取用户的分类数据
-     * @return
-     */
-    List<CategoryVO> getCategories();
-
-    Long getNumOfDoneOrUndone(Long currentId, Integer enabled);
+    Long getNumOfDoneOrUndone(String currentId, Integer enabled);
 }

@@ -12,6 +12,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Builder
 public class CategoryVO implements Serializable {
-    private Long categoryId;
+    private String categoryId;
     private String categoryName;
 }

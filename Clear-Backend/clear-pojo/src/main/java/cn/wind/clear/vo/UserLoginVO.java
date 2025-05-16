@@ -12,7 +12,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Builder
 public class UserLoginVO implements Serializable {
-    private Long id; // 用户id, 主键值
+    private String id; // 用户id, 主键值
     private String username; // 用户名
     private String tk; // JWT令牌
     private String theme;

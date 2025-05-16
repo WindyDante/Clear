@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class User implements Serializable {
-    private Long id; // 主键自增
+    private String id; // 主键自增
     private String username; // 用户名
     private String password; // 密码
     private String email; // 邮箱

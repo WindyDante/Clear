@@ -7,14 +7,12 @@ import cn.wind.clear.context.BaseContext;
 import cn.wind.clear.dto.TodoDTO;
 import cn.wind.clear.dto.TodoPageQueryDTO;
 import cn.wind.clear.dto.UpdateTodoDTO;
-import cn.wind.clear.entity.Category;
 import cn.wind.clear.entity.Todo;
 import cn.wind.clear.exception.BaseException;
 import cn.wind.clear.mapper.TodoMapper;
 import cn.wind.clear.result.PageResult;
 import cn.wind.clear.service.CategoryService;
 import cn.wind.clear.service.TodoService;
-import cn.wind.clear.vo.CategoryVO;
 import cn.wind.clear.vo.TodoVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -25,7 +23,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -64,7 +61,7 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
         log.info("Todo分页查询: {}", todoPageQueryDTO);
         todoPageQueryDTO.setUserId(BaseContext.getCurrentId());
         LambdaQueryWrapper<Todo> queryWrapper = new LambdaQueryWrapper<>();
-        Long userId = todoPageQueryDTO.getUserId();
+        String userId = todoPageQueryDTO.getUserId();
         Integer status = todoPageQueryDTO.getStatus();
         queryWrapper.eq(userId != null, Todo::getUserId, userId)
                 .eq(status != null, Todo::getStatus, status)
@@ -88,7 +85,7 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
      *
      * @param id
      */
-    public void deleteTodo(Long id) {
+    public void deleteTodo(String id) {
         boolean isOk = this.removeById(id);
         if (!isOk) {
             throw new BaseException(MessageConstant.SYSTEM_ERROR);
@@ -110,21 +107,8 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
         }
     }
 
-    /**
-     * 获取用户的分类数据
-     *
-     * @return
-     */
-    public List<CategoryVO> getCategories() {
-        List<Category> categories = categoryService.getCategoriesByUserId(BaseContext.getCurrentId());
-
-        return categories.stream()
-                .map(category -> new CategoryVO(category.getId(), category.getName()))
-                .collect(Collectors.toList());
-    }
-
     @Override
-    public Long getNumOfDoneOrUndone(Long currentId, Integer enabled) {
+    public Long getNumOfDoneOrUndone(String currentId, Integer enabled) {
         return this.lambdaQuery()
                 .eq(Todo::getUserId, currentId)
                 .eq(Todo::getStatus, enabled)

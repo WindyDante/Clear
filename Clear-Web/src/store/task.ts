@@ -8,6 +8,7 @@ export interface Task {
   title: string
   content: string
   category: string
+  categoryId?: number | string // 添加分类ID字段
   dueDate: string | null
   completed: boolean
   createdAt: string

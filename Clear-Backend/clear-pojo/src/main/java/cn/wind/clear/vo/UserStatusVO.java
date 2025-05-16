@@ -22,5 +22,4 @@ public class UserStatusVO implements Serializable {
      * 未完成任务数量
      */
     private Long numOfUndone;
-    private String theme;
 }

@@ -10,5 +10,5 @@ public class TodoDTO implements Serializable {
     private String title;
     private String content;
     private LocalDate dueDate;
-    private Long categoryId;
+    private String categoryId;
 }

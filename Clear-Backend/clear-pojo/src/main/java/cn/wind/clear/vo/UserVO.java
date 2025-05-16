@@ -12,6 +12,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Builder
 public class UserVO implements Serializable {
-    private Long userId;
+    private String userId;
     private String username;
 }
