@@ -3,6 +3,21 @@ import { Task } from '../store/task'
 // 从环境变量获取API基础URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
+// 辅助函数：将日期格式化为 "yyyy-MM-dd HH:mm:ss" 格式
+function formatDateToString(dateString: string | null): string | null {
+  if (!dateString) return null;
+
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 // 分类数据接口
 interface Category {
   categoryId: number | string;
@@ -220,7 +235,7 @@ const api = {
     }
   },
 
-  getTasks(page: number, limit: number) {
+  getTasks(page: number, limit: number, categoryId?: string | number, status?: number) {
     try {
       const token = localStorage.getItem('user')
         ? JSON.parse(localStorage.getItem('user') || '{}').tk
@@ -230,7 +245,16 @@ const api = {
         throw new Error('未登录!');
       }
 
-      return fetch(`${API_BASE_URL}/todo/page?page=${page}&pageSize=${limit}`, {
+      // 构建URL，添加可选的categoryId和status参数
+      let url = `${API_BASE_URL}/todo/page?page=${page}&pageSize=${limit}`;
+      if (categoryId) {
+        url += `&categoryId=${categoryId}`;
+      }
+      if (status !== undefined) {
+        url += `&status=${status}`;
+      }
+
+      return fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -239,22 +263,29 @@ const api = {
       })
         .then(response => response.json())
         .then(result => {
-          if (result.code !== 1) {
-            throw new Error(result.msg || '获取任务列表失败');
-          }
+          // 添加调试日志，查看原始响应数据
+          console.log('getTasks API 原始响应:', result);
 
-          // 适配数据模型
-          if (result.data && result.data.records) {
-            const formattedTasks = result.data.records.map((task: any) => ({
-              id: task.todoId.toString(),
-              title: task.title,
-              content: task.content || '',
-              category: task.categoryName || '默认',
-              categoryId: task.categoryId,
-              dueDate: task.dueDate ? task.dueDate : null,
-              completed: task.status === 0, // 0表示已完成
-              createdAt: task.createdAt
-            }));
+          // 对应后端的新响应格式
+          if (result.code === 1 && result.data && result.data.records) {
+            console.log('getTasks 数据格式正确，开始处理数据');
+
+            const formattedTasks = result.data.records.map((task: any) => {
+              console.log('处理任务数据:', task);
+              return {
+                // 添加 null 检查，如果 todoId 是 null，则使用一个默认值
+                id: task.todoId ? task.todoId.toString() : Date.now().toString(),
+                title: task.title || '',
+                content: task.content || '',
+                category: task.categoryName || '默认',
+                categoryId: task.categoryId || 0,
+                dueDate: task.dueDate ? task.dueDate : null,
+                completed: task.status === 1, // 0表示已完成
+                createdAt: task.createdAt || new Date().toISOString()
+              };
+            });
+
+            console.log('格式化后的任务数据:', formattedTasks);
 
             return {
               data: formattedTasks,
@@ -262,6 +293,9 @@ const api = {
               currentPage: page
             };
           }
+
+          // 添加更详细的错误日志
+          console.error('getTasks 返回的数据格式异常:', result);
 
           return {
             data: [],
@@ -288,8 +322,10 @@ const api = {
       title: task.title,
       content: task.content || '',
       categoryId: task.categoryId,
-      dueDate: task.dueDate
+      dueDate: formatDateToString(task.dueDate) // 使用格式化函数转换为"yyyy-MM-dd HH:mm:ss"格式
     };
+
+    console.log('添加任务，格式化后的日期:', todoDTO.dueDate);
 
     return fetch(`${API_BASE_URL}/todo/addTodo`, {
       method: 'POST',
@@ -330,15 +366,20 @@ const api = {
       throw new Error('未登录!');
     }
 
-    // 构造更新DTO
+    // 调试日志
+    console.log('正在更新任务, ID:', taskId, '更新内容:', updates);
+
+    // 构造更新DTO，保持ID为字符串类型，与后端匹配
     const updateDTO = {
-      id: parseInt(taskId),
+      id: taskId, // 不再使用parseInt，保留为字符串
       title: updates.title,
       content: updates.content,
       categoryId: updates.categoryId,
-      dueDate: updates.dueDate,
+      dueDate: formatDateToString(updates.dueDate), // 使用格式化函数转换为"yyyy-MM-dd HH:mm:ss"格式
       status: updates.completed !== undefined ? (updates.completed ? 0 : 1) : undefined
     };
+
+    console.log('发送更新请求DTO (格式化日期):', updateDTO);
 
     return fetch(`${API_BASE_URL}/todo/updateTodo`, {
       method: 'PUT',
@@ -350,6 +391,7 @@ const api = {
     })
       .then(response => response.json())
       .then(result => {
+        console.log('更新任务响应结果:', result);
         if (result.code !== 1) {
           throw new Error(result.msg || '更新任务失败');
         }

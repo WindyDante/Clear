@@ -47,7 +47,7 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
                 ? todoDTO.getCategoryId()
                 : categoryService.getDefaultCategoryId(BaseContext.getCurrentId(), CategoryConstant.DEFAULT_CATEGORY));
         todo.setDueDate(todoDTO.getDueDate() == null ? null : todoDTO.getDueDate());
-        todo.setStatus(StatusConstant.ENABLED);
+        todo.setStatus(StatusConstant.DISABLED);
         todo.setUserId(BaseContext.getCurrentId());
 
         boolean isOk = this.save(todo);
@@ -59,11 +59,12 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
     @Override
     public PageResult<TodoVO> pageQuery(TodoPageQueryDTO todoPageQueryDTO) {
         log.info("Todo分页查询: {}", todoPageQueryDTO);
-        todoPageQueryDTO.setUserId(BaseContext.getCurrentId());
         LambdaQueryWrapper<Todo> queryWrapper = new LambdaQueryWrapper<>();
-        String userId = todoPageQueryDTO.getUserId();
+        String userId = BaseContext.getCurrentId();
         Integer status = todoPageQueryDTO.getStatus();
+        String categoryId = todoPageQueryDTO.getCategoryId();
         queryWrapper.eq(userId != null, Todo::getUserId, userId)
+                .eq(categoryId != null,Todo::getCategoryId, categoryId)
                 .eq(status != null, Todo::getStatus, status)
                 .orderByDesc(Todo::getCreatedAt);
         Page<Todo> page =
@@ -77,7 +78,7 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
                     return todoVO;
                 })
                 .toList();
-        return new PageResult<TodoVO>(res.getTotal(), todoList);
+        return new PageResult<>(res.getTotal(), todoList);
     }
 
     /**

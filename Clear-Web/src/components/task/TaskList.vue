@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useTaskStore, Task } from '../../store/task'
+import { useCategoryStore } from '../../store/category'
 import { useToast } from '../../composables/useToast' // 引入 Toast 功能
 
 defineProps<{
@@ -8,10 +9,30 @@ defineProps<{
 }>()
 
 const taskStore = useTaskStore()
+const categoryStore = useCategoryStore()
 const { showToast } = useToast() // 使用 Toast 功能
 
+// 添加对所有任务的引用，而不仅仅是待办任务
 const tasksToShow = computed(() => {
-  return taskStore.pendingTasks
+  return taskStore.tasks
+})
+
+// 用于UI展示的当前筛选条件
+const currentFilters = computed(() => {
+  const filters = []
+  
+  // 显示分类筛选条件
+  if (taskStore.selectedCategoryId !== undefined) {
+    const categoryName = categoryStore.categories.find(c => c.categoryId === taskStore.selectedCategoryId)?.categoryName || '未知分类'
+    filters.push(`分类: ${categoryName}`)
+  }
+  
+  // 显示状态筛选条件
+  if (taskStore.selectedStatus !== undefined) {
+    filters.push(`状态: ${taskStore.selectedStatus === 1 ? '已完成' : '未完成'}`)
+  }
+  
+  return filters
 })
 
 async function handleToggleCompletion(taskId: string) {
@@ -21,7 +42,7 @@ async function handleToggleCompletion(taskId: string) {
     
     if (task) {
       // 根据任务是否完成显示对应的 Toast
-      showToast(`任务"${task.title}"已标记为完成`, 'success')
+      showToast(`任务"${task.title}"已标记为${task.completed ? '未完成' : '完成'}`, 'success')
     }
   } catch (error) {
     showToast('操作失败，请重试', 'error')
@@ -61,6 +82,32 @@ function goToPreviousPage() {
 function goToNextPage() {
   taskStore.nextPage()
 }
+
+// 设置分类筛选
+function filterByCategory(categoryId: number | string | undefined) {
+  taskStore.setCategory(categoryId)
+}
+
+// 设置任务状态筛选
+function filterByStatus(status: number | undefined) {
+  taskStore.setStatus(status)
+}
+
+// 清除所有筛选条件
+function clearAllFilters() {
+  taskStore.clearFilters()
+}
+
+// 确保组件挂载时加载分类数据和任务数据
+onMounted(async () => {
+  // 加载分类数据
+  if (categoryStore.categories.length === 0) {
+    await categoryStore.fetchCategories()
+  }
+  
+  // 加载任务数据
+  await taskStore.fetchTasks()
+})
 </script>
 
 <template>
@@ -69,12 +116,61 @@ function goToNextPage() {
       <span class="icon">📋</span> {{ title }}
     </h3>
     
+    <!-- 筛选控件 -->
+    <div class="filters-section">
+      <div class="filter-controls">
+        <!-- 分类筛选 -->
+        <div class="filter-group">
+          <label>分类筛选:</label>
+          <div class="filter-buttons">
+            <button class="filter-btn" 
+              :class="{ 'active': taskStore.selectedCategoryId === undefined }"
+              @click="filterByCategory(undefined)">全部</button>
+            <button v-for="category in categoryStore.categories" 
+              :key="category.categoryId"
+              class="filter-btn"
+              :class="{ 'active': taskStore.selectedCategoryId === category.categoryId }"
+              @click="filterByCategory(category.categoryId)">
+              {{ category.categoryName }}
+            </button>
+          </div>
+        </div>
+        
+        <!-- 状态筛选 -->
+        <div class="filter-group">
+          <label>状态筛选:</label>
+          <div class="filter-buttons">
+            <button class="filter-btn" 
+              :class="{ 'active': taskStore.selectedStatus === undefined }"
+              @click="filterByStatus(undefined)">全部</button>
+            <button class="filter-btn" 
+              :class="{ 'active': taskStore.selectedStatus === 0 }"
+              @click="filterByStatus(0)">未完成</button>
+            <button class="filter-btn" 
+              :class="{ 'active': taskStore.selectedStatus === 1 }"
+              @click="filterByStatus(1)">已完成</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 显示当前筛选 -->
+      <div v-if="currentFilters.length > 0" class="active-filters">
+        <span>当前筛选: </span>
+        <div class="filter-tags">
+          <span v-for="(filter, index) in currentFilters" :key="index" class="filter-tag">
+            {{ filter }}
+          </span>
+          <button class="clear-filters-btn" @click="clearAllFilters">清除筛选</button>
+        </div>
+      </div>
+    </div>
+    
     <div v-if="taskStore.loading" class="loading-indicator">
-      Loading...
+      加载中...
     </div>
     
     <div v-else-if="tasksToShow.length === 0" class="empty-state">
-      <p>没有待办任务</p>
+      <p>没有任务</p>
     </div>
     
     <div v-else class="tasks-container">
@@ -82,13 +178,20 @@ function goToNextPage() {
         v-for="task in tasksToShow"
         :key="task.id"
         class="task-item"
+        :class="{ 'completed': task.completed }"
       >
         <div class="task-content">
           <div class="task-header">
-            <div class="task-time">{{ formatCreatedAt(task.createdAt) }}</div>
+            <div class="task-info">
+              <span class="task-time">{{ formatCreatedAt(task.createdAt) }}</span>
+              <span v-if="task.category" class="task-category">{{ task.category }}</span>
+              <span class="task-status" :class="task.completed ? 'status-completed' : 'status-pending'">
+                {{ task.completed ? '已完成' : '未完成' }}
+              </span>
+            </div>
             <div class="task-actions">
-              <button class="action-btn edit-btn" @click="handleToggleCompletion(task.id)">
-                <span class="icon">✓</span>
+              <button class="action-btn toggle-btn" @click="handleToggleCompletion(task.id)">
+                <span class="icon">{{ task.completed ? '↺' : '✓' }}</span>
               </button>
               <button class="action-btn delete-btn" @click="handleDeleteTask(task.id)">
                 <span class="icon">🗑️</span>
@@ -97,6 +200,7 @@ function goToNextPage() {
           </div>
           <h4 class="task-title">{{ task.title }}</h4>
           <p v-if="task.content" class="task-description">{{ task.content }}</p>
+          <p v-if="task.dueDate" class="task-due-date">截止日期: {{ task.dueDate }}</p>
         </div>
       </div>
       
@@ -139,6 +243,93 @@ function goToNextPage() {
   margin-right: 8px;
 }
 
+/* 筛选区样式 */
+.filters-section {
+  margin-bottom: 20px;
+  background-color: var(--card-color);
+  border-radius: var(--border-radius);
+  padding: 12px 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-group label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filter-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: transparent;
+  color: var(--text-primary); /* 添加默认文字颜色 */
+  cursor: pointer;
+  transition: all var(--transition-speed);
+}
+
+.filter-btn.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.active-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.filter-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-tag {
+  padding: 3px 8px;
+  background-color: var(--primary-light);
+  border-radius: var(--border-radius);
+  font-size: 12px;
+}
+
+.clear-filters-btn {
+  font-size: 12px;
+  color: var(--primary-color);
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  transition: background-color var(--transition-speed);
+}
+
+.clear-filters-btn:hover {
+  background-color: var(--primary-light);
+}
+
 .tasks-container {
   display: flex;
   flex-direction: column;
@@ -153,6 +344,16 @@ function goToNextPage() {
   transition: transform var(--transition-speed), box-shadow var(--transition-speed);
 }
 
+.task-item.completed {
+  background-color: var(--background-color);
+  border: 1px dashed var(--border-color);
+}
+
+.task-item.completed .task-title {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
 .task-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -161,13 +362,44 @@ function goToNextPage() {
 .task-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 8px;
+}
+
+.task-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
 .task-time {
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+.task-category {
+  font-size: 11px;
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.task-status {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.status-completed {
+  background-color: var(--success-light);
+  color: var(--success-color);
+}
+
+.status-pending {
+  background-color: var(--warning-light);
+  color: var(--warning-color);
 }
 
 .task-actions {
@@ -188,7 +420,7 @@ function goToNextPage() {
   transition: background-color var(--transition-speed);
 }
 
-.edit-btn:hover {
+.toggle-btn:hover {
   background-color: var(--primary-light);
 }
 
@@ -209,10 +441,16 @@ function goToNextPage() {
 .task-description {
   font-size: 13px;
   color: var(--text-secondary);
-  margin: 0;
+  margin: 0 0 4px 0;
   word-wrap: break-word;
   overflow-wrap: break-word;
   white-space: normal;
+}
+
+.task-due-date {
+  font-size: 12px;
+  color: var(--primary-color);
+  margin: 4px 0 0 0;
 }
 
 .loading-indicator, 

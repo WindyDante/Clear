@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class UpdateTodoDTO implements Serializable {
@@ -12,6 +13,6 @@ public class UpdateTodoDTO implements Serializable {
     private String content;
     private String categoryId;
     private Integer status;
-    private LocalDate dueDate;
+    private LocalDateTime dueDate;
     private String userId;
 }

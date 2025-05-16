@@ -43,14 +43,24 @@ function handleCategoryChange(event: Event) {
   const selectElement = event.target as HTMLSelectElement;
   const selectedCategoryId = selectElement.value;
   
+  console.log('选择的分类ID (原始值):', selectedCategoryId);
+  
   // 找到对应的分类对象
   const selectedCategory = categoryStore.categories.find(
     category => category.categoryId.toString() === selectedCategoryId
   );
   
   if (selectedCategory) {
-    newTask.categoryId = selectedCategory.categoryId;
+    // 确保使用正确的类型
+    // 如果后端需要数字类型，将字符串转换为数字
+    newTask.categoryId = typeof selectedCategory.categoryId === 'string' 
+      ? parseInt(selectedCategory.categoryId) 
+      : selectedCategory.categoryId;
     newTask.category = selectedCategory.categoryName;
+    
+    console.log('设置任务分类:', newTask.category, '分类ID:', newTask.categoryId);
+  } else {
+    console.warn('未找到匹配的分类:', selectedCategoryId);
   }
 }
 
@@ -245,8 +255,7 @@ async function handleSubmit() {
         <select 
           class="form-control select-control" 
           :disabled="categoryStore.loading"
-          @change="handleCategoryChange"
-          :value="newTask.categoryId"
+          v-model="newTask.categoryId"
         >
           <option v-if="categoryStore.loading" value="" disabled>加载中...</option>
           <option 

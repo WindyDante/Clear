@@ -20,6 +20,9 @@ export const useTaskStore = defineStore('task', () => {
   const currentPage = ref(1)
   const totalPages = ref(1)
   const itemsPerPage = 10
+  // 添加分类ID和任务状态筛选参数
+  const selectedCategoryId = ref<string | number | undefined>(undefined)
+  const selectedStatus = ref<number | undefined>(undefined)
 
   const authStore = useAuthStore()
 
@@ -39,7 +42,12 @@ export const useTaskStore = defineStore('task', () => {
 
     loading.value = true
     try {
-      const response = await api.getTasks(currentPage.value, itemsPerPage)
+      const response = await api.getTasks(
+        currentPage.value,
+        itemsPerPage,
+        selectedCategoryId.value,
+        selectedStatus.value
+      )
       tasks.value = response.data
       totalPages.value = response.totalPages
     } catch (error) {
@@ -120,6 +128,30 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
+  // 添加设置分类筛选的方法
+  function setCategory(categoryId: string | number | undefined) {
+    if (selectedCategoryId.value === categoryId) return
+    selectedCategoryId.value = categoryId
+    currentPage.value = 1 // 重置到第一页
+    fetchTasks()
+  }
+
+  // 添加设置任务状态筛选的方法
+  function setStatus(status: number | undefined) {
+    if (selectedStatus.value === status) return
+    selectedStatus.value = status
+    currentPage.value = 1 // 重置到第一页
+    fetchTasks()
+  }
+
+  // 清除所有筛选条件
+  function clearFilters() {
+    selectedCategoryId.value = undefined
+    selectedStatus.value = undefined
+    currentPage.value = 1
+    fetchTasks()
+  }
+
   return {
     tasks,
     loading,
@@ -129,6 +161,8 @@ export const useTaskStore = defineStore('task', () => {
     completedTasks,
     totalCompletedTasks,
     totalPendingTasks,
+    selectedCategoryId,
+    selectedStatus,
     fetchTasks,
     addTask,
     updateTask,
@@ -136,6 +170,9 @@ export const useTaskStore = defineStore('task', () => {
     toggleTaskCompletion,
     nextPage,
     prevPage,
-    getTaskById // 导出新添加的方法
+    getTaskById,
+    setCategory,
+    setStatus,
+    clearFilters
   }
 })

@@ -74,7 +74,6 @@ public class TodoController {
      * @return 操作结果，成功返回success状态
      */
     @PutMapping("/updateTodo")
-    @CacheEvict(cacheNames = "todos", allEntries = true) // 清空 todos 缓存
     public Result<String> updateTodo(@RequestBody UpdateTodoDTO updateTodoDTO) {
         todoService.udpateTodo(updateTodoDTO);
         return Result.success("更新成功");

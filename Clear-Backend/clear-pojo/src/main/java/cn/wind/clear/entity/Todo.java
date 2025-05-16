@@ -18,7 +18,7 @@ public class Todo implements Serializable {
     private String title; // To Do 标题
     private String content; // To Do 详细内容
     private Integer status; // To Do 状态
-    private LocalDate dueDate; // 截止日期
+    private LocalDateTime dueDate; // 截止日期
     private String userId; // 用户id 逻辑外键
     private String categoryId; // 分类 id 逻辑外键
     private LocalDateTime createdAt; // 创建时间
