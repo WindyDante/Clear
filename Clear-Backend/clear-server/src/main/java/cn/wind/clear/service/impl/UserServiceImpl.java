@@ -3,7 +3,7 @@ package cn.wind.clear.service.impl;
 import cn.wind.clear.constant.CategoryConstant;
 import cn.wind.clear.constant.MessageConstant;
 import cn.wind.clear.constant.StatusConstant;
-import cn.wind.clear.context.BaseContext;
+import cn.wind.clear.context.RedisContext;
 import cn.wind.clear.dto.UserDTO;
 import cn.wind.clear.dto.UserLoginDTO;
 import cn.wind.clear.entity.Category;
@@ -117,14 +117,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public UserStatusVO getStatus() {
         log.info("获取当前用户相关信息");
         User user = this.lambdaQuery()
-                .eq(User::getId, BaseContext.getCurrentId())
+                .eq(User::getId, RedisContext.getCurrentId())
                 .one();
         return UserStatusVO.builder()
                 .username(user.getUsername())
                 .numOfUndone(
-                        todoService.getNumOfDoneOrUndone(BaseContext.getCurrentId(), StatusConstant.ENABLED)
+                        todoService.getNumOfDoneOrUndone(RedisContext.getCurrentId(), StatusConstant.ENABLED)
                 )
-                .numOfDone(todoService.getNumOfDoneOrUndone(BaseContext.getCurrentId(), StatusConstant.DISABLED))
+                .numOfDone(todoService.getNumOfDoneOrUndone(RedisContext.getCurrentId(), StatusConstant.DISABLED))
                 .build();
     }
 

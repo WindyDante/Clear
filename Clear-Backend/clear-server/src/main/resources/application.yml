@@ -7,6 +7,7 @@ spring:
   profiles:
     active: prod
 
+
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: cn.wind.clear.entity

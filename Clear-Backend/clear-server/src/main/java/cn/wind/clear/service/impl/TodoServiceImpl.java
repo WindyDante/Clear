@@ -3,7 +3,7 @@ package cn.wind.clear.service.impl;
 import cn.wind.clear.constant.CategoryConstant;
 import cn.wind.clear.constant.MessageConstant;
 import cn.wind.clear.constant.StatusConstant;
-import cn.wind.clear.context.BaseContext;
+import cn.wind.clear.context.RedisContext;
 import cn.wind.clear.dto.TodoDTO;
 import cn.wind.clear.dto.TodoPageQueryDTO;
 import cn.wind.clear.dto.UpdateTodoDTO;
@@ -45,10 +45,10 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
         BeanUtils.copyProperties(todoDTO, todo);
         todo.setCategoryId(todoDTO.getCategoryId() != null
                 ? todoDTO.getCategoryId()
-                : categoryService.getDefaultCategoryId(BaseContext.getCurrentId(), CategoryConstant.DEFAULT_CATEGORY));
+                : categoryService.getDefaultCategoryId(RedisContext.getCurrentId(), CategoryConstant.DEFAULT_CATEGORY));
         todo.setDueDate(todoDTO.getDueDate() == null ? null : todoDTO.getDueDate());
         todo.setStatus(StatusConstant.DISABLED);
-        todo.setUserId(BaseContext.getCurrentId());
+        todo.setUserId(RedisContext.getCurrentId());
 
         boolean isOk = this.save(todo);
         if (!isOk) {
@@ -60,7 +60,7 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
     public PageResult<TodoVO> pageQuery(TodoPageQueryDTO todoPageQueryDTO) {
         log.info("Todo分页查询: {}", todoPageQueryDTO);
         LambdaQueryWrapper<Todo> queryWrapper = new LambdaQueryWrapper<>();
-        String userId = BaseContext.getCurrentId();
+        String userId = RedisContext.getCurrentId();
         Integer status = todoPageQueryDTO.getStatus();
         String categoryId = todoPageQueryDTO.getCategoryId();
         queryWrapper.eq(userId != null, Todo::getUserId, userId)
@@ -105,7 +105,7 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
     public void udpateTodo(UpdateTodoDTO updateTodoDTO) {
         Todo todo = new Todo();
         BeanUtils.copyProperties(updateTodoDTO, todo);
-        todo.setUserId(BaseContext.getCurrentId());
+        todo.setUserId(RedisContext.getCurrentId());
         boolean isOk = this.updateById(todo);
         if (!isOk) {
             throw new BaseException(MessageConstant.SYSTEM_ERROR);

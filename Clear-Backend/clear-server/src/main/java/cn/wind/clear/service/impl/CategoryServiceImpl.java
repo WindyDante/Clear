@@ -1,6 +1,6 @@
 package cn.wind.clear.service.impl;
 
-import cn.wind.clear.context.BaseContext;
+import cn.wind.clear.context.RedisContext;
 import cn.wind.clear.dto.CategoryDTO;
 import cn.wind.clear.entity.Category;
 import cn.wind.clear.exception.BaseException;
@@ -41,7 +41,8 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
      * @return
      */
     public List<CategoryVO> getCategories() {
-        List<Category> categories = this.getCategoriesByUserId(BaseContext.getCurrentId());
+        String currentId = RedisContext.getCurrentId();
+        List<Category> categories = this.getCategoriesByUserId(currentId);
 
         return categories.stream()
                 .map(category -> new CategoryVO(category.getId(), category.getName()))
@@ -50,7 +51,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
 
     @Override
     public void addCategory(CategoryDTO categoryDTO) {
-        List<Category> categories = this.getCategoriesByUserId(BaseContext.getCurrentId());
+        List<Category> categories = this.getCategoriesByUserId(RedisContext.getCurrentId());
         categories.stream()
                 .filter(category -> category.getName().equals(categoryDTO.getName()))
                 .findFirst()
@@ -58,7 +59,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
                     throw new BaseException("分类已存在");
                 });
         Category category = new Category();
-        category.setUserId(BaseContext.getCurrentId());
+        category.setUserId(RedisContext.getCurrentId());
         BeanUtils.copyProperties(categoryDTO, category);
         boolean isOk = this.save(category);
         if (!isOk) {
@@ -72,7 +73,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
         if (category == null) {
             throw new BaseException("分类不存在");
         }
-        List<Category> categories = this.getCategoriesByUserId(BaseContext.getCurrentId());
+        List<Category> categories = this.getCategoriesByUserId(RedisContext.getCurrentId());
         categories.stream()
                 .filter(c -> c.getName().equals(categoryDTO.getName()) && !c.getId().equals(categoryDTO.getId()))
                 .findFirst()

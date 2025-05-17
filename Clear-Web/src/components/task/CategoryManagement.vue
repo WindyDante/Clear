@@ -63,7 +63,7 @@ const submitting = ref(false);
 // 新分类名称
 const newCategoryName = ref('');
 // 正在编辑的分类ID
-const editingCategoryId = ref<number | string | null>(null);
+const editingCategoryId = ref<string | null>(null);
 // 编辑中的分类名称
 const editingCategoryName = ref('');
 
@@ -127,7 +127,7 @@ function confirmDelete(category: Category) {
 }
 
 // 删除分类
-async function deleteCategory(categoryId: number | string) {
+async function deleteCategory(categoryId: string) {
   try {
     await categoryStore.deleteCategory(categoryId);
     showToast('分类删除成功', 'success');

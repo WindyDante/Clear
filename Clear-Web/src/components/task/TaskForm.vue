@@ -18,11 +18,17 @@ const activeTab = ref("category");
 const showDatePicker = ref(false);
 const datePickerRef = ref<HTMLElement | null>(null);
 
+// 时间选择器数据
+const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
+const selectedHour = ref('12');
+const selectedMinute = ref('00');
+
 const newTask = reactive({
   title: "",
   content: "",
   category: "默认", // 存储分类名称
-  categoryId: 0, // 存储分类ID
+  categoryId: "0", // 存储分类ID，使用字符串类型
   dueDate: null as string | null,
   dueTime: "12:00" as string, // 默认时间设置为中午12点
 });
@@ -33,36 +39,11 @@ watch(() => categoryStore.categories, (categories) => {
     // 如果分类数据变化且有数据，设置默认选中第一个分类
     const firstCategory = categories[0];
     newTask.category = firstCategory.categoryName;
+    // 使用字符串类型的分类ID
     newTask.categoryId = firstCategory.categoryId;
     console.log('已设置默认分类:', firstCategory.categoryName, firstCategory.categoryId);
   }
 }, { immediate: true }); // immediate: true 确保在组件创建时立即执行一次
-
-// 处理分类选择变化
-function handleCategoryChange(event: Event) {
-  const selectElement = event.target as HTMLSelectElement;
-  const selectedCategoryId = selectElement.value;
-  
-  console.log('选择的分类ID (原始值):', selectedCategoryId);
-  
-  // 找到对应的分类对象
-  const selectedCategory = categoryStore.categories.find(
-    category => category.categoryId.toString() === selectedCategoryId
-  );
-  
-  if (selectedCategory) {
-    // 确保使用正确的类型
-    // 如果后端需要数字类型，将字符串转换为数字
-    newTask.categoryId = typeof selectedCategory.categoryId === 'string' 
-      ? parseInt(selectedCategory.categoryId) 
-      : selectedCategory.categoryId;
-    newTask.category = selectedCategory.categoryName;
-    
-    console.log('设置任务分类:', newTask.category, '分类ID:', newTask.categoryId);
-  } else {
-    console.warn('未找到匹配的分类:', selectedCategoryId);
-  }
-}
 
 // 格式化日期显示为24小时制
 function formatDateTime(dateString: string | null) {
@@ -75,11 +56,6 @@ function formatDateTime(dateString: string | null) {
   const minutes = String(date.getMinutes()).padStart(2, '0');
 
   return `${year}-${month}-${day} ${hours}:${minutes}`;
-}
-
-// 格式化时间为24小时制
-function formatTimeString(timeString: string) {
-  return timeString; // 已经是24小时制，保持不变
 }
 
 // 计算当前选中的日期
@@ -148,16 +124,15 @@ function handleDateSelect(day: number) {
   newTask.dueDate = date.toISOString();
 }
 
-// 处理时间选择
-function handleTimeChange(event: Event) {
-  const timeString = (event.target as HTMLInputElement).value;
-  newTask.dueTime = timeString;
-
+// 处理时间选择器更改
+function handleTimeChange() {
+  // 更新时间
+  newTask.dueTime = `${selectedHour.value}:${selectedMinute.value}`;
+  
   // 如果已经选择了日期，则更新日期时间
   if (newTask.dueDate) {
     const date = new Date(newTask.dueDate);
-    const [hours, minutes] = timeString.split(':').map(Number);
-    date.setHours(hours, minutes);
+    date.setHours(parseInt(selectedHour.value), parseInt(selectedMinute.value));
     newTask.dueDate = date.toISOString();
   }
 }
@@ -169,7 +144,7 @@ function handleClickOutside(event: MouseEvent) {
   if (
     datePickerRef.value &&
     !datePickerRef.value.contains(target) &&
-    !target.closest(".date-picker-trigger") &&
+    !target.closest(".date-picker-trigger") && // Ensure not clicking the trigger itself
     showDatePicker.value
   ) {
     showDatePicker.value = false;
@@ -185,11 +160,19 @@ onMounted(() => {
   if (categoryStore.categories.length > 0) {
     const firstCategory = categoryStore.categories[0];
     newTask.category = firstCategory.categoryName;
+    // 使用字符串类型的分类ID
     newTask.categoryId = firstCategory.categoryId;
   } else {
     // 如果分类列表为空，使用默认分类
     newTask.category = "默认";
-    newTask.categoryId = 0;
+    newTask.categoryId = "0";
+  }
+  
+  // 初始化时间选择器的值
+  if (newTask.dueTime) {
+    const [hour, minute] = newTask.dueTime.split(':');
+    selectedHour.value = hour;
+    selectedMinute.value = minute;
   }
 });
 
@@ -220,14 +203,17 @@ async function handleSubmit() {
     if (categoryStore.categories.length > 0) {
       const firstCategory = categoryStore.categories[0];
       newTask.category = firstCategory.categoryName;
+      // 使用字符串类型的分类ID
       newTask.categoryId = firstCategory.categoryId;
     } else {
       newTask.category = "默认";
-      newTask.categoryId = 0;
+      newTask.categoryId = "0";
     }
     
     newTask.dueDate = null;
     newTask.dueTime = "12:00";
+    selectedHour.value = "12";
+    selectedMinute.value = "00";
     activeTab.value = "category";
   } catch (error) {
     // 显示添加失败的 Toast
@@ -261,7 +247,7 @@ async function handleSubmit() {
           <option 
             v-for="category in categoryStore.categories" 
             :key="category.categoryId" 
-            :value="category.categoryId"
+            :value="category.categoryId" 
           >
             {{ category.categoryName }}
           </option>
@@ -273,7 +259,7 @@ async function handleSubmit() {
     <div v-else-if="activeTab === 'dueDate'" class="tab-content">
       <p class="field-label">截止日期 ({{ newTask.category }})：</p>
       <div class="date-picker-trigger" @click="showDatePicker = true">
-        <input :value="formatDateTime(newTask.dueDate)" class="form-control" placeholder="选择日期和时间" readonly />
+        <input :value="formatDateTime(newTask.dueDate)" class="form-control" placeholder="选择日期" readonly />
         <span class="calendar-icon">📅</span>
       </div>
 
@@ -293,7 +279,15 @@ async function handleSubmit() {
 
       <div class="time-picker">
         <p class="field-label">选择时间：</p>
-        <input type="time" v-model="newTask.dueTime" class="form-control" @change="handleTimeChange" />
+        <div class="time-selectors">
+          <select v-model="selectedHour" class="form-control time-select" @change="handleTimeChange">
+            <option v-for="hour in hours" :key="hour" :value="hour">{{ hour }}</option>
+          </select>
+          <span class="separator">:</span>
+          <select v-model="selectedMinute" class="form-control time-select" @change="handleTimeChange">
+            <option v-for="minute in minutes" :key="minute" :value="minute">{{ minute }}</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -425,52 +419,62 @@ async function handleSubmit() {
   position: relative;
 }
 
-.time-picker input[type="time"] {
+.time-selectors {
+  display: flex;
+  justify-content: flex-start; /* Align to the left */
+  align-items: center;
   height: 40px;
+  position: relative;
+  background-color: var(--card-bg);
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
-  background-color: var(--card-color);
-  padding: 0 12px;
-  font-size: 14px;
-  color: var(--text-color);
-  width: 100%;
-  cursor: pointer;
-  position: relative;
-  box-sizing: border-box;
+  max-width: 150px; 
+  margin: 0; /* Ensure no auto margins interfere with left alignment */
 }
 
-.time-picker input[type="time"]::-webkit-calendar-picker-indicator {
+.time-select {
+  margin: 10px;
+  width: 50px; 
+  padding: 0;
+  height: 100%;
+  border: none;
+  border-radius: var(--border-radius);
   background-color: transparent;
+  color: var(--text-color);
+  font-size: 15px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   cursor: pointer;
-  position: absolute;
-  right: 8px;
-  opacity: 0.6;
-  padding: 0;
-  margin: 0;
-}
-
-::-webkit-time-picker,
-::-webkit-datetime-edit,
-::-webkit-datetime-edit-fields-wrapper,
-::-webkit-datetime-edit-text,
-::-webkit-datetime-edit-hour-field,
-::-webkit-datetime-edit-minute-field,
-::-webkit-datetime-edit-ampm-field {
-  padding: 0;
-  margin: 0;
-  position: static;
-  line-height: normal;
-}
-
-::-webkit-datetime-edit-ampm-field {
-  min-width: 40px;
   text-align: center;
+  text-align-last: center; 
+  line-height: 40px; 
 }
 
-.time-picker input[type="time"]:focus {
+/* Style for the dropdown list to make it scrollable and mobile-friendly */
+.time-select option {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  font-size: 14px; /* Reduced font size for options on mobile */
+}
+
+/* Limit height and enable scrolling for the select dropdown */
+.time-select:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Styling for the actual dropdown list (browser-dependent, might need more specific selectors for some browsers) */
+/* For Webkit browsers */
+select {
+  max-height: 200px; /* Limit the height of the dropdown */
+  overflow-y: auto; /* Enable vertical scrolling */
+}
+
+
+.separator {
+  font-size: 18px;
+  color: var(--text-color);
+  margin: 0 5px; /* Adjusted margin */
 }
 
 .form-actions {

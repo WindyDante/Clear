@@ -4,7 +4,7 @@ import api from '../services/api'
 
 // 分类数据接口
 export interface Category {
-    categoryId: number | string
+    categoryId: string // 改为只使用字符串类型
     categoryName: string
 }
 
@@ -25,7 +25,7 @@ export const useCategoryStore = defineStore('category', () => {
 
             // 如果返回的分类列表为空，添加默认分类
             if (categories.value.length === 0) {
-                categories.value = [{ categoryId: 0, categoryName: "默认" }]
+                categories.value = [{ categoryId: '0', categoryName: "默认" }]
             }
 
             return categories.value
@@ -33,7 +33,7 @@ export const useCategoryStore = defineStore('category', () => {
             console.error('获取分类失败:', err)
             error.value = err instanceof Error ? err.message : '获取分类失败'
             // 出错时使用默认分类
-            categories.value = [{ categoryId: 0, categoryName: "默认" }]
+            categories.value = [{ categoryId: '0', categoryName: "默认" }]
             throw err
         } finally {
             loading.value = false
@@ -60,7 +60,7 @@ export const useCategoryStore = defineStore('category', () => {
     }
 
     // 更新分类
-    async function updateCategory(categoryId: number | string, categoryName: string) {
+    async function updateCategory(categoryId: string, categoryName: string) {
         loading.value = true
         error.value = null
 
@@ -79,7 +79,7 @@ export const useCategoryStore = defineStore('category', () => {
     }
 
     // 删除分类
-    async function deleteCategory(categoryId: number | string) {
+    async function deleteCategory(categoryId: string) {
         loading.value = true
         error.value = null
 
@@ -99,7 +99,7 @@ export const useCategoryStore = defineStore('category', () => {
     // 获取默认分类
     const defaultCategory = computed(() => {
         const defaultCat = categories.value.find(cat => cat.categoryName === "默认")
-        return defaultCat || { categoryId: 0, categoryName: "默认" }
+        return defaultCat || { categoryId: '0', categoryName: "默认" }
     })
 
     return {

@@ -10,6 +10,6 @@ spring:
   data:
     redis:
       host: ${REDIS_HOST}
-      port: 6379
+      port: 26739
       password: ${REDIS_PASSWORD}
       database: 0
