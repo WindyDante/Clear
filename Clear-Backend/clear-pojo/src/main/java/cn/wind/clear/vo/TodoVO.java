@@ -22,5 +22,5 @@ public class TodoVO implements Serializable {
     private String categoryName; // 分类名称
     private LocalDateTime dueDate; // 截止日期
     private LocalDateTime createdAt; // 创建时间
-    private LocalDateTime udpatedAt; // 更新时间
+    private LocalDateTime updatedAt; // 更新时间
 }

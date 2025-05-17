@@ -19,6 +19,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser</artifactId>
+        </dependency>
+        <dependency>
             <groupId>cn.wind.clear</groupId>
             <artifactId>clear-common</artifactId>
             <version>1.0.0</version>
@@ -31,10 +35,6 @@
             <groupId>cn.wind.clear</groupId>
             <artifactId>clear-pojo</artifactId>
             <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mybatis.spring.boot</groupId>
-            <artifactId>mybatis-spring-boot-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

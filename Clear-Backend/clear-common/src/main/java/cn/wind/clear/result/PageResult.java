@@ -12,5 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 public class PageResult<T> implements Serializable {
     private Long total;
+    private Long size;
+    private Long current;
     private List<T> records;
 }

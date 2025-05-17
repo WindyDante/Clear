@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
+// ref removed as currentTab is no longer used
 const props = defineProps<{
   tabs: { id: string; name: string; icon?: string }[] // Add icon property
   activeTab?: string
@@ -10,18 +9,19 @@ const emit = defineEmits<{
   (e: 'change', tabId: string): void
 }>()
 
-const currentTab = ref(props.activeTab || props.tabs[0].id)
+// const currentTab = ref(props.activeTab || props.tabs[0].id) // REMOVED
 
 function setActiveTab(tabId: string) {
-  currentTab.value = tabId
+  // currentTab.value = tabId // REMOVED
   emit('change', tabId)
 }
 </script>
 
 <template>
   <div class="tab-navigation">
-    <button v-for="tab in tabs" :key="tab.id" class="tab-button" :class="{ active: currentTab === tab.id }"
-      @click="setActiveTab(tab.id)">
+    <button v-for="tab in tabs" :key="tab.id" class="tab-button" 
+            :class="{ active: props.activeTab === tab.id }"
+            @click="setActiveTab(tab.id)">
       <img v-if="tab.icon" :src="tab.icon" :alt="tab.name" class="tab-icon" />
       <span v-else>{{ tab.name }}</span>
     </button>

@@ -172,8 +172,6 @@ const api = {
       // 尝试不同的端点URL
       // 1. 原始URL
       const originalUrl = `${API_BASE_URL}/category/update`;
-      // 2. 备选URL
-      const alternativeUrl = `${API_BASE_URL}/category/updateCategory`;
 
       // 使用原始URL发送请求
       const response = await fetch(originalUrl, {
@@ -273,14 +271,13 @@ const api = {
             const formattedTasks = result.data.records.map((task: any) => {
               console.log('处理任务数据:', task);
               return {
-                // 添加 null 检查，如果 todoId 是 null，则使用一个默认值
-                id: task.todoId ? task.todoId.toString() : Date.now().toString(),
+                id: task.id ? task.id.toString() : Date.now().toString(), // 修改这里：使用 task.id 而不是 task.todoId
                 title: task.title || '',
                 content: task.content || '',
                 category: task.categoryName || '默认',
                 categoryId: task.categoryId || 0,
                 dueDate: task.dueDate ? task.dueDate : null,
-                completed: task.status === 1, // 0表示已完成
+                completed: task.status === 1, // Backend status 1 means completed
                 createdAt: task.createdAt || new Date().toISOString()
               };
             });
@@ -366,20 +363,33 @@ const api = {
       throw new Error('未登录!');
     }
 
-    // 调试日志
     console.log('正在更新任务, ID:', taskId, '更新内容:', updates);
 
-    // 构造更新DTO，保持ID为字符串类型，与后端匹配
-    const updateDTO = {
-      id: taskId, // 不再使用parseInt，保留为字符串
-      title: updates.title,
-      content: updates.content,
-      categoryId: updates.categoryId,
-      dueDate: formatDateToString(updates.dueDate), // 使用格式化函数转换为"yyyy-MM-dd HH:mm:ss"格式
-      status: updates.completed !== undefined ? (updates.completed ? 0 : 1) : undefined
-    };
+    let updatePayload: { id: string; status?: number; title?: string; content?: string; categoryId?: number | string; dueDate?: string | null } = { id: taskId };
 
-    console.log('发送更新请求DTO (格式化日期):', updateDTO);
+    // Check if this is primarily a status update (toggle completion)
+    if (updates.completed !== undefined && Object.keys(updates).length === 1 && 'completed' in updates) {
+      updatePayload.status = updates.completed ? 1 : 0; // 1 for completed, 0 for pending
+    } else {
+      // For general updates, include other fields if they are provided in 'updates'
+      if (updates.title !== undefined) {
+        updatePayload.title = updates.title;
+      }
+      if (updates.content !== undefined) {
+        updatePayload.content = updates.content;
+      }
+      if (updates.categoryId !== undefined) {
+        updatePayload.categoryId = updates.categoryId;
+      }
+      if (updates.dueDate !== undefined) {
+        updatePayload.dueDate = formatDateToString(updates.dueDate);
+      }
+      if (updates.completed !== undefined) {
+        updatePayload.status = updates.completed ? 1 : 0;
+      }
+    }
+
+    console.log('发送更新请求DTO:', updatePayload);
 
     return fetch(`${API_BASE_URL}/todo/updateTodo`, {
       method: 'PUT',
@@ -387,7 +397,7 @@ const api = {
         'Content-Type': 'application/json',
         'Authorization': token
       },
-      body: JSON.stringify(updateDTO)
+      body: JSON.stringify(updatePayload)
     })
       .then(response => response.json())
       .then(result => {

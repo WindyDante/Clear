@@ -74,11 +74,15 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
                 .map(todo -> {
                     TodoVO todoVO = new TodoVO();
                     BeanUtils.copyProperties(todo, todoVO);
-                    // 如果需要设置 categoryName，可以在此处处理
+                    String categoryName = categoryService.getCategoryNameById(todo.getCategoryId());
+                    todoVO.setCategoryName(categoryName);
                     return todoVO;
                 })
                 .toList();
-        return new PageResult<>(res.getTotal(), todoList);
+        PageResult<TodoVO> result = new PageResult<>();
+        BeanUtils.copyProperties(res, result);
+        result.setRecords(todoList);
+        return result;
     }
 
     /**

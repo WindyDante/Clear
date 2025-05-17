@@ -85,4 +85,10 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
             throw new BaseException(SYSTEM_ERROR);
         }
     }
+
+    @Override
+    public String getCategoryNameById(String categoryId) {
+        return this.lambdaQuery().eq(Category::getId, categoryId)
+                .one().getName();
+    }
 }

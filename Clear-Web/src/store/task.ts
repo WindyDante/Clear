@@ -19,7 +19,7 @@ export const useTaskStore = defineStore('task', () => {
   const loading = ref(false)
   const currentPage = ref(1)
   const totalPages = ref(1)
-  const itemsPerPage = 10
+  const itemsPerPage = 3 // 修改此处为 3
   // 添加分类ID和任务状态筛选参数
   const selectedCategoryId = ref<string | number | undefined>(undefined)
   const selectedStatus = ref<number | undefined>(undefined)
@@ -76,13 +76,23 @@ export const useTaskStore = defineStore('task', () => {
 
     loading.value = true
     try {
-      const response = await api.updateTask(taskId, updates)
-      const index = tasks.value.findIndex(t => t.id === taskId)
-      if (index !== -1) {
-        tasks.value[index] = response
+      // Assuming api.updateTask returns a success boolean or the updated task.
+      // If it returns boolean, we update the task locally.
+      const success = await api.updateTask(taskId, updates) // Let's assume it returns boolean for now based on the error
+      if (success) {
+        const index = tasks.value.findIndex(t => t.id === taskId)
+        if (index !== -1) {
+          // Merge updates into the existing task
+          tasks.value[index] = { ...tasks.value[index], ...updates }
+        }
+      } else {
+        // Handle update failure if necessary
+        console.error('Error updating task: API returned failure')
+        throw new Error('Task update failed')
       }
     } catch (error) {
       console.error('Error updating task:', error)
+      // Optionally re-throw or handle as per application's error handling strategy
     } finally {
       loading.value = false
     }

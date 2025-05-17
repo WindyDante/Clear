@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from 'vue'
-import { useTaskStore, Task } from '../../store/task'
+import { computed, onMounted } from 'vue'
+import { useTaskStore } from '../../store/task'
 import { useCategoryStore } from '../../store/category'
 import { useToast } from '../../composables/useToast' // 引入 Toast 功能
 
@@ -72,6 +72,20 @@ function formatCreatedAt(dateString: string) {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+// 格式化截止日期的函数
+function formatDueDate(dateString: string) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
 }
 
 // For pagination
@@ -200,7 +214,7 @@ onMounted(async () => {
           </div>
           <h4 class="task-title">{{ task.title }}</h4>
           <p v-if="task.content" class="task-description">{{ task.content }}</p>
-          <p v-if="task.dueDate" class="task-due-date">截止日期: {{ task.dueDate }}</p>
+          <p v-if="task.dueDate" class="task-due-date">截止日期: {{ formatDueDate(task.dueDate) }}</p>
         </div>
       </div>
       
@@ -241,6 +255,7 @@ onMounted(async () => {
 
 .icon {
   margin-right: 8px;
+  color: var(--text-primary); /* Ensure icon color is visible */
 }
 
 /* 筛选区样式 */
@@ -381,9 +396,10 @@ onMounted(async () => {
 .task-category {
   font-size: 11px;
   background-color: var(--primary-light);
-  color: var(--primary-color);
+  color: var(--primary-dark); /* Changed from --primary-color for potentially better contrast */
   padding: 2px 6px;
   border-radius: 10px;
+  font-weight: 500; /* Added for better readability */
 }
 
 .task-status {
@@ -405,6 +421,8 @@ onMounted(async () => {
 .task-actions {
   display: flex;
   gap: 8px;
+  opacity: 1;
+  visibility: visible; /* Ensure actions are always visible */
 }
 
 .action-btn {
@@ -420,7 +438,12 @@ onMounted(async () => {
   transition: background-color var(--transition-speed);
 }
 
-.toggle-btn:hover {
+.action-btn .icon { /* Targeting icons specifically within action buttons */
+  color: var(--text-primary); /* Ensure icons in action buttons are visible */
+  margin-right: 0; /* Reset margin if not needed here */
+}
+
+.toggle-btn {
   background-color: var(--primary-light);
 }
 
@@ -475,9 +498,10 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   border-radius: var(--border-radius);
-  background-color: var(--background-color);
-  border: none;
+  background-color: var(--card-color); /* Changed to card-color for better visibility */
+  border: 1px solid var(--border-color); /* Added border */
   cursor: pointer;
+  color: var(--primary-color); /* Added text color for < and > */
 }
 
 .pagination-btn:disabled {
