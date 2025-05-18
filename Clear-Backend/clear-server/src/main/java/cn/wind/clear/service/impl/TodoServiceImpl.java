@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -39,6 +40,10 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
     public void addTodo(TodoDTO todoDTO) {
         if (todoDTO.getTitle() == null || todoDTO.getTitle().isEmpty()) {
             throw new BaseException(MessageConstant.EMPTY_TITLE);
+        }
+
+        if (todoDTO.getDueDate() != null && todoDTO.getDueDate().isBefore(LocalDateTime.now())) {
+            throw new BaseException(MessageConstant.DATE_EXPIRE);
         }
 
         Todo todo = new Todo();

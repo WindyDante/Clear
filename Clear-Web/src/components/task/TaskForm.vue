@@ -5,6 +5,21 @@ import { useCategoryStore } from "../../store/category";
 import TabNavigation from "../common/TabNavigation.vue";
 import { useToast } from "../../composables/useToast";
 
+// Helper to get time with an offset from now
+function getOffsetTime(hoursOffset: number = 0, minutesOffset: number = 0) {
+  const now = new Date();
+  now.setHours(now.getHours() + hoursOffset);
+  now.setMinutes(now.getMinutes() + minutesOffset);
+  now.setSeconds(0, 0); // Zero out seconds and milliseconds for consistency
+  return {
+    date: new Date(now), // Return a new Date object
+    hour: now.getHours().toString().padStart(2, '0'),
+    minute: now.getMinutes().toString().padStart(2, '0'),
+  };
+}
+
+const initialDefaultTimeInfo = getOffsetTime(1, 0); // Default to one hour from now
+
 const taskStore = useTaskStore();
 const categoryStore = useCategoryStore(); // 使用集中的分类状态管理
 const { showToast } = useToast();
@@ -21,16 +36,16 @@ const datePickerRef = ref<HTMLElement | null>(null);
 // 时间选择器数据
 const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
 const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
-const selectedHour = ref('12');
-const selectedMinute = ref('00');
+const selectedHour = ref(initialDefaultTimeInfo.hour);
+const selectedMinute = ref(initialDefaultTimeInfo.minute);
 
 const newTask = reactive({
   title: "",
   content: "",
   category: "默认", // 存储分类名称
   categoryId: "0", // 存储分类ID，使用字符串类型
-  dueDate: null as string | null,
-  dueTime: "12:00" as string, // 默认时间设置为中午12点
+  dueDate: initialDefaultTimeInfo.date.toISOString(), // Default to one hour from now
+  dueTime: `${initialDefaultTimeInfo.hour}:${initialDefaultTimeInfo.minute}` as string, // Default to one hour from now
 });
 
 // 监听分类数据变化，确保选择框始终显示正确的选中项
@@ -183,6 +198,20 @@ onUnmounted(() => {
 async function handleSubmit() {
   if (!newTask.title.trim()) return;
 
+  // 校验截止日期是否小于当前时间
+  if (newTask.dueDate) {
+    const selectedDueDate = new Date(newTask.dueDate);
+    const now = new Date();
+    // 比较时，确保比较到分钟级别，忽略秒和毫秒
+    const selectedDateComparable = new Date(selectedDueDate.getFullYear(), selectedDueDate.getMonth(), selectedDueDate.getDate(), selectedDueDate.getHours(), selectedDueDate.getMinutes());
+    const nowDateComparable = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
+
+    if (selectedDateComparable < nowDateComparable) {
+      showToast("截止日期不能小于当前时间", "error");
+      return; // 阻止提交并保持当前表单状态
+    }
+  }
+
   try {
     await taskStore.addTask({
       title: newTask.title,
@@ -192,9 +221,6 @@ async function handleSubmit() {
       dueDate: newTask.dueDate,
     });
 
-    // 显示添加成功的 Toast // 已在 store 中处理
-    // showToast(`任务"${newTask.title}"添加成功`, "success");
-
     // Reset form
     newTask.title = "";
     newTask.content = "";
@@ -203,17 +229,19 @@ async function handleSubmit() {
     if (categoryStore.categories.length > 0) {
       const firstCategory = categoryStore.categories[0];
       newTask.category = firstCategory.categoryName;
-      // 使用字符串类型的分类ID
       newTask.categoryId = firstCategory.categoryId;
     } else {
       newTask.category = "默认";
       newTask.categoryId = "0";
     }
 
-    newTask.dueDate = null;
-    newTask.dueTime = "12:00";
-    selectedHour.value = "12";
-    selectedMinute.value = "00";
+    // 重置时间为当前时间 + 1 小时
+    const resetTimeInfo = getOffsetTime(1, 0);
+    newTask.dueTime = `${resetTimeInfo.hour}:${resetTimeInfo.minute}`;
+    selectedHour.value = resetTimeInfo.hour;
+    selectedMinute.value = resetTimeInfo.minute;
+    newTask.dueDate = resetTimeInfo.date.toISOString();
+
     activeTab.value = "category";
   } catch (error) {
     // 显示添加失败的 Toast // 已在 store 中处理，由 api.ts 抛出错误时统一处理
@@ -421,7 +449,7 @@ async function handleSubmit() {
   background-color: var(--card-bg);
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
-  max-width: 150px;
+  max-width: 100px;
   margin: 0;
   /* Ensure no auto margins interfere with left alignment */
 }

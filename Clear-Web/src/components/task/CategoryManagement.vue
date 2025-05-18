@@ -196,12 +196,10 @@ onMounted(() => {
 
 .edit {
   background-color: var(--primary-light, #e7f3ff);
-  color: var(--primary-color, #0066cc);
 }
 
 .edit:hover {
   background-color: var(--primary-color);
-  color: white;
 }
 
 .delete {

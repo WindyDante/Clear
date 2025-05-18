@@ -7,6 +7,7 @@ export const themes = [
         colors: {
             '--primary-color': '#3498db',
             '--primary-light': '#5dade2',
+            '--primary-dark': '#ffffff', // 添加 primary-dark 并设置为白色
             '--primary-rgb': '52, 152, 219',
             '--secondary-color': '#2ecc71',
             '--background-color': '#f5f7fa',
@@ -30,6 +31,7 @@ export const themes = [
         colors: {
             '--primary-color': '#409eff',
             '--primary-light': '#66b1ff',
+            '--primary-dark': '#ffffff', // 添加 primary-dark 并设置为白色
             '--primary-rgb': '64, 158, 255',
             '--secondary-color': '#85ce61',
             '--background-color': '#1d1e20',
@@ -53,6 +55,7 @@ export const themes = [
         colors: {
             '--primary-color': '#c74c3c', // 胭脂红
             '--primary-light': '#e74c3c',
+            '--primary-dark': '#ffffff', // 添加 primary-dark 并设置为白色
             '--primary-rgb': '199, 76, 60',
             '--secondary-color': '#d35400',
             '--background-color': '#fdf6f5',
@@ -76,6 +79,7 @@ export const themes = [
         colors: {
             '--primary-color': '#f39c12', // 藤黄色
             '--primary-light': '#f1c40f',
+            '--primary-dark': '#ffffff', // 添加 primary-dark 并设置为白色
             '--primary-rgb': '243, 156, 18',
             '--secondary-color': '#e67e22',
             '--background-color': '#fffcf5',
@@ -99,6 +103,7 @@ export const themes = [
         colors: {
             '--primary-color': '#8e44ad', // 紫棠色
             '--primary-light': '#9b59b6',
+            '--primary-dark': '#ffffff', // 添加 primary-dark 并设置为白色
             '--primary-rgb': '142, 68, 173',
             '--secondary-color': '#c39bd3',
             '--background-color': '#fbf5ff',
@@ -122,6 +127,7 @@ export const themes = [
         colors: {
             '--primary-color': '#1abc9c', // 青碧色
             '--primary-light': '#48c9b0',
+            '--primary-dark': '#ffffff', // 添加 primary-dark 并设置为白色
             '--primary-rgb': '26, 188, 156',
             '--secondary-color': '#76d7c4',
             '--background-color': '#f4fcfb',
@@ -199,8 +205,18 @@ export function useTheme() {
 
             // 然后检查是否有保存的主题设置
             const savedThemeName = localStorage.getItem('active-theme-name');
-            if (savedThemeName && savedThemeName !== themes[0].name) {
-                applyTheme(savedThemeName);
+
+            // 确保 savedThemeName 是一个有效的、存在于 themes 数组中的主题名称
+            if (savedThemeName && savedThemeName !== 'undefined' && themes.some(t => t.name === savedThemeName)) {
+                // 如果保存的主题不是当前已应用的默认主题，则应用它
+                if (savedThemeName !== activeThemeName.value) {
+                    applyTheme(savedThemeName);
+                }
+            } else if (savedThemeName) {
+                // 如果 localStorage 中存在一个无效的主题名称（例如 "undefined" 或已不存在的主题）
+                console.warn(`在 localStorage 中发现无效的主题名称 \"${savedThemeName}\"。将使用默认主题。`);
+                localStorage.removeItem('active-theme-name'); // 清除无效的条目
+                // applyDefaultTheme() 已经被调用，所以默认主题已激活
             }
         } catch (error) {
             console.error('初始化主题时发生错误:', error);

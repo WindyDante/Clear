@@ -15,4 +15,5 @@ public class MessageConstant {
 
     // Todo相关
     public static final String EMPTY_TITLE = "Todo的标题不能为空";
+    public static final String DATE_EXPIRE = "截止日期不能小于当前时间";
 }

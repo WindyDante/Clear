@@ -66,23 +66,21 @@ export const useTaskStore = defineStore('task', () => {
 
     loading.value = true
     try {
-      const response = await api.addTask(task)
-      // 添加任务成功后，直接将新任务添加到当前页面上
-      // 如果是第一页，则直接添加到列表开头
-      if (currentPage.value === 1) {
-        tasks.value.unshift(response)
-        // 如果超出每页显示数量，则移除最后一条
-        if (tasks.value.length > itemsPerPage) {
-          tasks.value.pop()
-        }
-      } else {
-        // 如果不是第一页，跳转到第一页并刷新数据
+      const addedTask = await api.addTask(task) // Assume api.addTask returns the newly created Task object
+
+      // Ensure we are on the first page to see the new task
+      if (currentPage.value !== 1) {
         currentPage.value = 1
-        await fetchTasks()
       }
-      showToast(`任务 "${task.title}" 添加成功`, 'success')
+
+      // Refresh the task list from the server
+      await fetchTasks()
+
+      showToast(`任务 \"${addedTask.title}\" 添加成功`, 'success') // Use title from the response
     } catch (error) {
       console.error('Error adding task:', error)
+      // Consider if a specific error toast is needed here, or if it's handled by api.ts
+      // For now, relying on global error handling or existing console log.
     } finally {
       loading.value = false
     }
