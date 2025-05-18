@@ -110,22 +110,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return newUser;
     }
 
-    /**
-     * 获取当前用户相关信息
-     * @return
-     */
-    public UserStatusVO getStatus() {
-        log.info("获取当前用户相关信息");
-        User user = this.lambdaQuery()
-                .eq(User::getId, RedisContext.getCurrentId())
-                .one();
-        return UserStatusVO.builder()
-                .username(user.getUsername())
-                .numOfUndone(
-                        todoService.getNumOfDoneOrUndone(RedisContext.getCurrentId(), StatusConstant.ENABLED)
-                )
-                .numOfDone(todoService.getNumOfDoneOrUndone(RedisContext.getCurrentId(), StatusConstant.DISABLED))
-                .build();
+    @Override
+    public void updateTheme(Integer theme) {
+        boolean isOk = this.lambdaUpdate().eq(User::getId, RedisContext.getCurrentId())
+                .set(User::getTheme, theme)
+                .update();
+        if (!isOk) {
+            throw new BaseException(MessageConstant.SYSTEM_ERROR);
+        }
     }
+
 
 }

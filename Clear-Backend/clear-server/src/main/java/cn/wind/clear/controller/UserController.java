@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * User
@@ -66,18 +67,40 @@ public class UserController {
         return Result.success(vo);
     }
 
-    /**
-     * 获取当前用户相关信息
-     * <p>
-     * 检索并返回当前登录用户的状态和配置信息
-     *
-     * @return 包含用户状态信息的结果对象，成功时返回UserStatusVO
-     */
-    @GetMapping("/status")
-    public Result<UserStatusVO> getUserStatus() {
-        UserStatusVO userStatusVO = userService.getStatus();
-        return Result.success(userStatusVO);
+    @PutMapping("/theme/{theme}")
+    public Result<String> updateTheme(@PathVariable Integer theme) {
+        userService.updateTheme(theme);
+        return Result.success("主题更新成功");
     }
+
+    /**
+     * 发送简单文本邮件
+     *
+     * @param mail 收件人邮箱地址
+     * @return Result 发送结果，成功返回提示信息
+     */
+    @PostMapping("/send/{mail}")
+    public Result<String> send(@PathVariable String mail){
+//        emailService.sendHtmlEmail(mail);
+        return Result.success("当前功能正在开发中,请耐心等待");
+    }
+
+    /**
+     * 验证邮箱验证码
+     * <p>
+     * 校验用户提供的邮箱地址和验证码是否匹配有效
+     *
+     * @param mail 用户邮箱地址
+     * @param code 用户输入的验证码
+     * @return Result 验证结果，成功返回提示信息
+     */
+    @PostMapping("/check/{mail}/{code}")
+    public Result<String> check(@PathVariable String mail, @PathVariable String code){
+//        String token = emailService.check(mail,code);
+        return Result.success("当前功能正在开发中,请耐心等待");
+    }
+
+
 
     /**
      * 生成响应结果

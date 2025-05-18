@@ -19,26 +19,41 @@ function getToastFunction() {
 // 通用API响应处理函数
 async function handleApiResponse<T>(
   apiCall: () => Promise<any>,
-  errorMessage = '操作失败'
+  errorMessage = '操作失败',
+  showDataInToast = false // 控制是否在toast中显示data
 ): Promise<T> {
-  let errorToThrow: Error | null = null;
   try {
     const response = await apiCall();
     const result = await response.json();
+    const showToast = getToastFunction();
 
     if (result.code !== 1) {
-      // Prepare error to be thrown, toast will be shown in the catch block
-      errorToThrow = new Error(result.msg || errorMessage);
-      throw errorToThrow;
+      // 错误情况：使用API返回的msg，如果不存在则使用默认错误消息
+      const message = result.msg || errorMessage;
+      showToast(message, 'error');
+      throw new Error(message);
     }
+
+    // 成功情况：根据需要选择显示API返回的data或msg
+    if (showDataInToast && result.data) {
+      // 如果需要显示data且data存在，只显示data
+      const dataMessage = typeof result.data === 'string'
+        ? result.data
+        : JSON.stringify(result.data);
+      showToast(dataMessage, 'success');
+    } else if (!showDataInToast && result.msg) {
+      // 否则显示msg(如果存在且不是要显示data的情况)
+      showToast(result.msg, 'success');
+    }
+
     return result.data;
   } catch (error) {
-    const showToast = getToastFunction();
-    // Use message from errorToThrow if it's set (API logical error),
-    // otherwise use the caught error's message or the default errorMessage.
-    const message = errorToThrow ? errorToThrow.message : (error instanceof Error ? error.message : errorMessage);
-    showToast(message, 'error');
-    throw errorToThrow || error; // Rethrow the specific error or the caught one
+    // 处理网络错误等非API响应错误
+    if (!(error instanceof Error && error.message !== errorMessage)) {
+      const showToast = getToastFunction();
+      showToast(error instanceof Error ? error.message : errorMessage, 'error');
+    }
+    throw error;
   }
 }
 
@@ -99,6 +114,34 @@ const api = {
         body: JSON.stringify(userData)
       }),
       '注册失败'
+    );
+  },
+
+  // 更新用户主题
+  async updateUserTheme(themeId: number) {
+    const token = localStorage.getItem('user')
+      ? JSON.parse(localStorage.getItem('user') || '{}').tk
+      : null;
+
+    if (!token) {
+      // 对于主题更新，如果未登录，可以选择静默失败或不调用API
+      // 这里我们选择不抛出错误，让 useTheme 自行处理
+      console.warn('User not logged in, theme update not sent to API.');
+      // 返回一个符合预期的成功结构，但标记为本地更改
+      return { code: 1, msg: '本地主题更新（未登录）', data: '主题设置已应用（本地）' };
+    }
+
+    return handleApiResponse<{ code: number; msg: string | null; data: string }>(
+      () => fetch(`${API_BASE_URL}/user/theme/${themeId}`, { // 使用模板字符串构建URL
+        method: 'PUT', // 通常更新操作使用 PUT 或 PATCH
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token
+        },
+        // body: JSON.stringify({ themeId }) // 如果API需要请求体
+      }),
+      '更新主题失败',
+      true // 在toast中显示data
     );
   },
 
@@ -369,7 +412,53 @@ const api = {
       }),
       '删除任务失败'
     ).then(() => true);
-  }
+  },
+
+  // 发送邮箱验证码
+  async sendEmailCode(email: string) {
+    const token = localStorage.getItem('user')
+      ? JSON.parse(localStorage.getItem('user') || '{}').tk
+      : null;
+
+    if (!token) {
+      throw new Error('未登录!');
+    }
+
+    return handleApiResponse<string>(
+      () => fetch(`${API_BASE_URL}/user/send/${encodeURIComponent(email)}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token
+        }
+      }),
+      '发送验证码失败',
+      true // 启用展示data数据到toast
+    );
+  },
+
+  // 验证邮箱验证码
+  async verifyEmailCode(email: string, code: string) {
+    const token = localStorage.getItem('user')
+      ? JSON.parse(localStorage.getItem('user') || '{}').tk
+      : null;
+
+    if (!token) {
+      throw new Error('未登录!');
+    }
+
+    return handleApiResponse<string>(
+      () => fetch(`${API_BASE_URL}/user/check/${encodeURIComponent(email)}/${encodeURIComponent(code)}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token
+        }
+      }),
+      '验证码验证失败',
+      true // 启用展示data数据到toast
+    );
+  },
 }
 
 export default api

@@ -20,9 +20,5 @@ public interface UserService extends IService<User> {
      */
     User register(UserDTO userDTO);
 
-    /**
-     * 获取当前用户相关信息
-     * @return
-     */
-    UserStatusVO getStatus();
+    void updateTheme(Integer theme);
 }

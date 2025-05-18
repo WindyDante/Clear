@@ -1,15 +1,28 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive, onUnmounted } from 'vue'
 import { useTaskStore } from '../store/task'
 import AppHeader from '../components/common/AppHeader.vue'
 import { useAuthStore } from '../store/auth'
 import { useToast } from '../composables/useToast'
 import { useTheme } from '../composables/useTheme' // 引入主题管理
+import api from '../services/api' // 导入API服务
 
 const taskStore = useTaskStore()
 const authStore = useAuthStore()
 const { showToast } = useToast()
 const { themes, activeThemeName, applyTheme } = useTheme() // 使用主题管理
+const countdownTimer = ref<number | null>(null) // 倒计时定时器引用
+
+// 邮箱格式验证
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+// 计算属性：邮箱是否有效
+const isEmailValid = computed(() => {
+  return settingsForm.email && isValidEmail(settingsForm.email);
+})
 
 // 获取主题预览颜色
 function getThemePreviewColor(theme: any) {
@@ -41,6 +54,9 @@ const settingsForm = reactive({
   newPassword: '',
   confirmPassword: '',
   email: authStore.user?.email || '',
+  verificationCode: '', // 添加验证码字段
+  codeSent: false, // 标记验证码是否已发送
+  countDown: 0, // 倒计时计数器
   loading: false,
   success: ''
 })
@@ -85,26 +101,92 @@ async function handleChangeEmail() {
     showToast('请输入邮箱地址', 'error')
     return
   }
+
+  // 如果还未发送验证码，先触发发送验证码流程
+  if (!settingsForm.codeSent) {
+    sendVerificationCode()
+    return
+  }
+
+  // 验证码不能为空
+  if (!settingsForm.verificationCode) {
+    showToast('请输入验证码', 'error')
+    return
+  }
+
   settingsForm.loading = true
   try {
-    // Replace with your actual API call to change email
-    // await api.changeEmail(authStore.user.id, settingsForm.email)
-    console.log('Email change attempt:', { email: settingsForm.email })
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    // Update email in auth store if your API confirms it
+    // 直接使用验证邮箱验证码的接口完成邮箱验证和更新
+    await api.verifyEmailCode(settingsForm.email, settingsForm.verificationCode)
+
+    // 更新用户信息中的邮箱
     if (authStore.user) {
       authStore.user.email = settingsForm.email
       localStorage.setItem('user', JSON.stringify(authStore.user))
     }
-    settingsForm.success = '邮箱修改成功'
-    showToast('邮箱修改成功', 'success')
+
+    // 重置表单状态
+    settingsForm.verificationCode = ''
+    settingsForm.codeSent = false
+    if (countdownTimer.value) {
+      clearInterval(countdownTimer.value)
+      countdownTimer.value = null
+    }
+    settingsForm.countDown = 0
   } catch (error: any) {
-    showToast(error.message || '邮箱修改失败，请重试', 'error')
+    // handleApiResponse已处理错误提示
   } finally {
     settingsForm.loading = false
   }
 }
+
+// 发送邮箱验证码
+async function sendVerificationCode() {
+  if (!settingsForm.email) {
+    showToast('请先输入邮箱地址', 'error')
+    return
+  }
+
+  try {
+    settingsForm.loading = true
+    // 调用发送验证码的API
+    await api.sendEmailCode(settingsForm.email)
+    settingsForm.codeSent = true
+
+    // 设置倒计时60秒
+    settingsForm.countDown = 60
+
+    // 清除可能存在的定时器
+    if (countdownTimer.value) {
+      clearInterval(countdownTimer.value)
+    }
+
+    // 启动新的倒计时定时器
+    countdownTimer.value = window.setInterval(() => {
+      if (settingsForm.countDown > 0) {
+        settingsForm.countDown--
+      } else {
+        // 倒计时结束，清除定时器
+        if (countdownTimer.value) {
+          clearInterval(countdownTimer.value)
+          countdownTimer.value = null
+        }
+      }
+    }, 1000)
+  } catch (error: any) {
+    // API错误处理已经由handleApiResponse完成，这里无需额外处理
+  } finally {
+    settingsForm.loading = false
+  }
+}
+
+// 在组件卸载时清除定时器
+onUnmounted(() => {
+  if (countdownTimer.value) {
+    clearInterval(countdownTimer.value)
+    countdownTimer.value = null
+  }
+})
 
 onMounted(() => {
   taskStore.fetchTasks()
@@ -170,16 +252,32 @@ onMounted(() => {
             <label for="email">邮箱地址</label>
             <input id="email" type="email" v-model="settingsForm.email" class="form-control" placeholder="请输入新的邮箱地址">
           </div>
-          <button type="submit" class="btn btn-primary" :disabled="settingsForm.loading">
-            {{ settingsForm.loading ? '处理中...' : '修改邮箱' }}
+
+          <!-- 验证码输入框和按钮组 -->
+          <div class="form-group verification-group">
+            <label for="verification-code">验证码</label>
+            <div class="verification-input-group">
+              <input id="verification-code" type="text" v-model="settingsForm.verificationCode" class="form-control"
+                placeholder="请输入验证码" :disabled="!settingsForm.codeSent">
+              <button type="button" class="btn send-code-btn"
+                :class="{ 'btn-secondary': !isEmailValid, 'btn-valid': isEmailValid }" @click="sendVerificationCode"
+                :disabled="settingsForm.loading || settingsForm.countDown > 0 || !isEmailValid">
+                {{ settingsForm.loading && !settingsForm.codeSent ? '发送中...' : (settingsForm.countDown > 0 ?
+                  `${settingsForm.countDown}秒` : '获取验证码') }}
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary"
+            :disabled="settingsForm.loading || !settingsForm.verificationCode || !settingsForm.codeSent">
+            {{ settingsForm.loading && settingsForm.codeSent ? '处理中...' : '修改邮箱' }}
           </button>
         </form>
-        <p v-if="settingsForm.success" class="success-message">{{ settingsForm.success }}</p>
       </div>
 
       <div class="stats-card card">
         <h2 class="card-title">
-          <span class="emoji">✨</span> 关于:
+          <span class="emoji">✨</span> 关于
         </h2>
 
         <p class="stats-text">
@@ -190,11 +288,15 @@ onMounted(() => {
 
       <div class="info-card card">
         <h2 class="card-title">
-          <span class="emoji">💡</span> 设计理念:
+          <span class="emoji">💡</span> 想法
         </h2>
 
         <p class="info-text">
-          这个小程序的设计理念旨在帮助用户有效地减轻认知负担，通过提供一个简单、直观的界面来降低的复杂性和趣味任务。它的目标是帮助用户避免因现代生活中生过多的精神压力，让用户能够更加专注于重要的事务，提升工作效率和生活质量。
+          希望这个小工具能帮助你更好地管理任务和时间。<br>
+          通过简单的界面和直观的操作，让你能快速上手。<br>
+          你可以随时修改设置，调整主题，或者更改密码。<br>
+          多个主题的目的是为了让你在看到不同颜色时，能有不同的心情和灵感。<br>
+          <span class="highlight">如果你有任何建议或反馈，请随时告诉我！</span>
         </p>
       </div>
     </div>
@@ -307,6 +409,80 @@ onMounted(() => {
 .theme-option span {
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+/* 验证码相关样式 */
+.standalone-btn {
+  margin: 8px 0 16px 0;
+  width: 100%;
+  max-width: 140px;
+}
+
+.send-code-btn {
+  background-color: var(--primary-color);
+  /* 修改为使用主题的primary-color */
+  color: var(--text-on-primary);
+  /* 确保文字颜色与背景形成对比 */
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+  /* 添加过渡效果 */
+}
+
+.send-code-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* 邮箱验证通过的按钮样式 */
+.btn-valid {
+  background-color: var(--primary-color) !important;
+  /* 使用主题的primary-color替换硬编码颜色 */
+  color: var(--text-on-primary) !important;
+  /* 文字颜色与背景形成对比 */
+}
+
+.verification-group {
+  margin-bottom: 16px;
+}
+
+.verification-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.verification-input-group .form-control {
+  flex: 1;
+}
+
+.verification-input-group .send-code-btn {
+  white-space: nowrap;
+  min-width: 90px;
+  height: 38px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+/* 添加修改密码和修改邮箱按钮的样式 */
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--border-radius, 4px);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-light);
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 @media (min-width: 768px) {

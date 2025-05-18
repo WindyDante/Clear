@@ -17,7 +17,7 @@ public class User implements Serializable {
     private String username; // 用户名
     private String password; // 密码
     private String email; // 邮箱
-    private String theme; // 主题
+    private Integer theme; // 主题
     private LocalDateTime createdAt; // 创建时间
     private LocalDateTime updatedAt; // 更新时间
 }
