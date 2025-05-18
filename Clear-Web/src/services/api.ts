@@ -19,33 +19,26 @@ function getToastFunction() {
 // 通用API响应处理函数
 async function handleApiResponse<T>(
   apiCall: () => Promise<any>,
-  successMessage?: string,
   errorMessage = '操作失败'
 ): Promise<T> {
+  let errorToThrow: Error | null = null;
   try {
     const response = await apiCall();
     const result = await response.json();
 
-    // 显示Toast消息
-    const showToast = getToastFunction();
-
-    // code为0表示出现问题
     if (result.code !== 1) {
-      showToast(result.msg || errorMessage, 'error');
-      throw new Error(result.msg || errorMessage);
+      // Prepare error to be thrown, toast will be shown in the catch block
+      errorToThrow = new Error(result.msg || errorMessage);
+      throw errorToThrow;
     }
-
-    // 操作成功，如有消息则显示
-    if (successMessage) {
-      showToast(successMessage, 'success');
-    }
-
     return result.data;
   } catch (error) {
     const showToast = getToastFunction();
-    const errorMsg = error instanceof Error ? error.message : errorMessage;
-    showToast(errorMsg, 'error');
-    throw error;
+    // Use message from errorToThrow if it's set (API logical error),
+    // otherwise use the caught error's message or the default errorMessage.
+    const message = errorToThrow ? errorToThrow.message : (error instanceof Error ? error.message : errorMessage);
+    showToast(message, 'error');
+    throw errorToThrow || error; // Rethrow the specific error or the caught one
   }
 }
 
@@ -92,7 +85,6 @@ const api = {
         },
         body: JSON.stringify(credentials)
       }),
-      '登录成功',
       '登录失败'
     );
   },
@@ -106,7 +98,6 @@ const api = {
         },
         body: JSON.stringify(userData)
       }),
-      '注册成功',
       '注册失败'
     );
   },
@@ -129,7 +120,6 @@ const api = {
           'Authorization': token
         }
       }),
-      undefined,
       '获取分类失败'
     );
   },
@@ -158,7 +148,6 @@ const api = {
         },
         body: JSON.stringify(requestBody)
       }),
-      `分类"${categoryName}"添加成功`,
       '添加分类失败'
     );
   },
@@ -188,7 +177,6 @@ const api = {
         },
         body: JSON.stringify(requestBody)
       }),
-      `分类"${categoryName}"更新成功`,
       '更新分类失败'
     );
   },
@@ -211,7 +199,6 @@ const api = {
           'Authorization': token
         }
       }),
-      '分类删除成功',
       '删除分类失败'
     );
   },
@@ -242,7 +229,6 @@ const api = {
           'Authorization': token
         }
       }),
-      undefined,
       '获取任务列表失败'
     ).then(data => {
       if (data && data.records) {
@@ -300,7 +286,6 @@ const api = {
         },
         body: JSON.stringify(todoDTO)
       }),
-      `任务"${task.title}"添加成功`,
       '添加任务失败'
     ).then(data => {
       // 构造一个任务对象返回
@@ -361,9 +346,6 @@ const api = {
         },
         body: JSON.stringify(updatePayload)
       }),
-      updates.completed !== undefined
-        ? `任务已标记为${updates.completed ? '完成' : '未完成'}`
-        : '任务更新成功',
       '更新任务失败'
     );
   },
@@ -385,7 +367,6 @@ const api = {
           'Authorization': token
         }
       }),
-      '任务删除成功',
       '删除任务失败'
     ).then(() => true);
   }

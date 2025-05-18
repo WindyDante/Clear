@@ -128,7 +128,7 @@ function handleDateSelect(day: number) {
 function handleTimeChange() {
   // 更新时间
   newTask.dueTime = `${selectedHour.value}:${selectedMinute.value}`;
-  
+
   // 如果已经选择了日期，则更新日期时间
   if (newTask.dueDate) {
     const date = new Date(newTask.dueDate);
@@ -154,7 +154,7 @@ function handleClickOutside(event: MouseEvent) {
 // 生命周期钩子，用于添加和移除点击事件监听器
 onMounted(() => {
   document.addEventListener("click", handleClickOutside);
-  
+
   // 不再单独获取分类数据，而是使用父组件已加载的共享状态
   // 初始化任务的分类选项
   if (categoryStore.categories.length > 0) {
@@ -167,7 +167,7 @@ onMounted(() => {
     newTask.category = "默认";
     newTask.categoryId = "0";
   }
-  
+
   // 初始化时间选择器的值
   if (newTask.dueTime) {
     const [hour, minute] = newTask.dueTime.split(':');
@@ -192,13 +192,13 @@ async function handleSubmit() {
       dueDate: newTask.dueDate,
     });
 
-    // 显示添加成功的 Toast
-    showToast(`任务"${newTask.title}"添加成功`, "success");
+    // 显示添加成功的 Toast // 已在 store 中处理
+    // showToast(`任务"${newTask.title}"添加成功`, "success");
 
     // Reset form
     newTask.title = "";
     newTask.content = "";
-    
+
     // 重置为第一个分类
     if (categoryStore.categories.length > 0) {
       const firstCategory = categoryStore.categories[0];
@@ -209,15 +209,15 @@ async function handleSubmit() {
       newTask.category = "默认";
       newTask.categoryId = "0";
     }
-    
+
     newTask.dueDate = null;
     newTask.dueTime = "12:00";
     selectedHour.value = "12";
     selectedMinute.value = "00";
     activeTab.value = "category";
   } catch (error) {
-    // 显示添加失败的 Toast
-    showToast("任务添加失败，请重试", "error");
+    // 显示添加失败的 Toast // 已在 store 中处理，由 api.ts 抛出错误时统一处理
+    // showToast("任务添加失败，请重试", "error");
   }
 }
 </script>
@@ -238,17 +238,9 @@ async function handleSubmit() {
     <div v-if="activeTab === 'category'" class="tab-content">
       <p class="field-label">选择分类：</p>
       <div class="category-selector">
-        <select 
-          class="form-control select-control" 
-          :disabled="categoryStore.loading"
-          v-model="newTask.categoryId"
-        >
+        <select class="form-control select-control" :disabled="categoryStore.loading" v-model="newTask.categoryId">
           <option v-if="categoryStore.loading" value="" disabled>加载中...</option>
-          <option 
-            v-for="category in categoryStore.categories" 
-            :key="category.categoryId" 
-            :value="category.categoryId" 
-          >
+          <option v-for="category in categoryStore.categories" :key="category.categoryId" :value="category.categoryId">
             {{ category.categoryName }}
           </option>
         </select>
@@ -344,7 +336,7 @@ async function handleSubmit() {
 .calendar-icon {
   position: absolute;
   right: 12px;
-  top: 39%;
+  top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
 }
@@ -421,20 +413,22 @@ async function handleSubmit() {
 
 .time-selectors {
   display: flex;
-  justify-content: flex-start; /* Align to the left */
+  justify-content: flex-start;
+  /* Align to the left */
   align-items: center;
   height: 40px;
   position: relative;
   background-color: var(--card-bg);
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
-  max-width: 150px; 
-  margin: 0; /* Ensure no auto margins interfere with left alignment */
+  max-width: 150px;
+  margin: 0;
+  /* Ensure no auto margins interfere with left alignment */
 }
 
 .time-select {
   margin: 10px;
-  width: 50px; 
+  width: 50px;
   padding: 0;
   height: 100%;
   border: none;
@@ -447,15 +441,16 @@ async function handleSubmit() {
   -moz-appearance: none;
   cursor: pointer;
   text-align: center;
-  text-align-last: center; 
-  line-height: 40px; 
+  text-align-last: center;
+  line-height: 40px;
 }
 
 /* Style for the dropdown list to make it scrollable and mobile-friendly */
 .time-select option {
   background-color: var(--card-bg);
   color: var(--text-color);
-  font-size: 14px; /* Reduced font size for options on mobile */
+  font-size: 14px;
+  /* Reduced font size for options on mobile */
 }
 
 /* Limit height and enable scrolling for the select dropdown */
@@ -466,15 +461,18 @@ async function handleSubmit() {
 /* Styling for the actual dropdown list (browser-dependent, might need more specific selectors for some browsers) */
 /* For Webkit browsers */
 select {
-  max-height: 200px; /* Limit the height of the dropdown */
-  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: 200px;
+  /* Limit the height of the dropdown */
+  overflow-y: auto;
+  /* Enable vertical scrolling */
 }
 
 
 .separator {
   font-size: 18px;
   color: var(--text-color);
-  margin: 0 5px; /* Adjusted margin */
+  margin: 0 5px;
+  /* Adjusted margin */
 }
 
 .form-actions {
@@ -517,7 +515,7 @@ select {
 .select-arrow {
   position: absolute;
   right: 12px;
-  top: 39%;
+  top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
   font-size: 12px;

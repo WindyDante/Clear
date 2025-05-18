@@ -17,12 +17,7 @@
             </div>
           </div>
           <div class="category-edit" v-else>
-            <input 
-              v-model="editingCategoryName" 
-              class="form-control" 
-              placeholder="分类名称" 
-              @keyup.enter="saveEdit"
-            />
+            <input v-model="editingCategoryName" class="form-control" placeholder="分类名称" @keyup.enter="saveEdit" />
             <div class="edit-actions">
               <button @click="saveEdit" class="btn-action save">保存</button>
               <button @click="cancelEdit" class="btn-action cancel">取消</button>
@@ -33,18 +28,10 @@
     </div>
 
     <div class="add-category-form">
-      <input 
-        v-model="newCategoryName" 
-        class="form-control" 
-        placeholder="输入新分类名称..." 
-        @keyup.enter="addCategory"
-      />
-      <button 
-        @click="addCategory" 
-        class="btn primary"
-        :disabled="!canAddCategory || submitting"
-      >
-        {{ submitting ? '添加中...' : '添加分类' }}
+      <input v-model="newCategoryName" class="form-control" placeholder="输入新分类名称..." @keyup.enter="addCategory" />
+      <button @click="addCategory" class="btn primary add-category-btn" :disabled="!canAddCategory || submitting">
+        <img v-if="!submitting" src="/add.svg" alt="添加分类" class="add-icon" />
+        <span v-if="submitting">添加中...</span>
       </button>
     </div>
   </div>
@@ -75,15 +62,13 @@ const canAddCategory = computed(() => {
 // 添加新分类
 async function addCategory() {
   if (!canAddCategory.value || submitting.value) return;
-  
+
   submitting.value = true;
   try {
     await categoryStore.addCategory(newCategoryName.value.trim());
-    showToast(`分类"${newCategoryName.value.trim()}"添加成功`, 'success');
     newCategoryName.value = '';
   } catch (error) {
     console.error('添加分类失败:', error);
-    showToast('添加分类失败，请重试', 'error');
   } finally {
     submitting.value = false;
   }
@@ -110,10 +95,8 @@ async function saveEdit() {
 
   try {
     await categoryStore.updateCategory(editingCategoryId.value, editingCategoryName.value.trim());
-    showToast('分类更新成功', 'success');
   } catch (error) {
     console.error('更新分类失败:', error);
-    showToast('更新分类失败，请重试', 'error');
   } finally {
     cancelEdit();
   }
@@ -130,10 +113,8 @@ function confirmDelete(category: Category) {
 async function deleteCategory(categoryId: string) {
   try {
     await categoryStore.deleteCategory(categoryId);
-    showToast('分类删除成功', 'success');
   } catch (error) {
     console.error('删除分类失败:', error);
-    showToast('删除分类失败，请重试', 'error');
   }
 }
 
@@ -166,10 +147,11 @@ onMounted(() => {
   margin-bottom: 1.5rem;
 }
 
-.loading, .empty-state {
+.loading,
+.empty-state {
   padding: 1rem 0;
   text-align: center;
-  color: #888;
+  color: var(--text-secondary);
 }
 
 .category-items {
@@ -181,8 +163,9 @@ onMounted(() => {
 .category-item {
   padding: 0.75rem;
   border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  background-color: #f9f9f9;
+  border: 1px solid var(--border-color);
+  background-color: var(--card-color);
+  transition: background-color 0.2s;
 }
 
 .category-info {
@@ -191,7 +174,13 @@ onMounted(() => {
   align-items: center;
 }
 
-.category-actions, .edit-actions {
+.category-name {
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.category-actions,
+.edit-actions {
   display: flex;
   gap: 0.5rem;
 }
@@ -202,43 +191,46 @@ onMounted(() => {
   border-radius: 4px;
   font-size: 0.85rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .edit {
-  background-color: #e7f3ff;
-  color: #0066cc;
+  background-color: var(--primary-light, #e7f3ff);
+  color: var(--primary-color, #0066cc);
 }
 
 .edit:hover {
-  background-color: #d0e7ff;
+  background-color: var(--primary-color);
+  color: white;
 }
 
 .delete {
-  background-color: #ffe7e7;
-  color: #cc0000;
+  background-color: rgba(204, 0, 0, 0.15);
+  color: var(--danger-color, #cc0000);
 }
 
 .delete:hover {
-  background-color: #ffd0d0;
+  background-color: var(--danger-color);
+  color: white;
 }
 
 .save {
-  background-color: #e5f8e5;
-  color: #006600;
+  background-color: rgba(0, 102, 0, 0.15);
+  color: var(--success-color, #006600);
 }
 
 .save:hover {
-  background-color: #d0f0d0;
+  background-color: var(--success-color);
+  color: white;
 }
 
 .cancel {
-  background-color: #f0f0f0;
-  color: #444;
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
 .cancel:hover {
-  background-color: #e0e0e0;
+  background-color: var(--border-color);
 }
 
 .category-edit {
@@ -248,15 +240,42 @@ onMounted(() => {
 
 .category-edit input {
   flex: 1;
+  background-color: var(--card-color);
+  color: var(--text-color);
 }
 
 .add-category-form {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+  /* 确保垂直对齐 */
 }
 
-.add-category-form input {
-  flex: 1;
+.add-category-btn {
+  /* 添加分类按钮特定样式 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  /* 调整内边距以适应图标 */
+  min-width: 40px;
+  /* 根据图标大小调整 */
+  height: 40px;
+  /* 与输入框高度一致 */
+  box-sizing: border-box;
+  /* 确保高度计算包括内边距和边框 */
+  border: 1px solid #ddd;
+  /* 新增：匹配输入框的边框 */
+  /* background-color and color will be inherited from .primary class */
+  /* border-radius will be inherited from .btn class */
+}
+
+.add-icon {
+  /* 图标样式 */
+  width: 20px;
+  /* 根据你的SVG图标大小调整 */
+  height: 20px;
+  /* 根据你的SVG图标大小调整 */
 }
 
 .btn {
@@ -283,14 +302,20 @@ onMounted(() => {
 
 .form-control {
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 1rem;
+  height: 40px;
+  background-color: var(--card-color);
+  color: var(--text-color);
+  /* 确保输入框有明确高度以便对齐 */
+  box-sizing: border-box;
+  /* 确保padding和border不增加总高度 */
 }
 
 .form-control:focus {
   outline: none;
-  border-color: var(--primary-color, #4caf50);
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb, 76, 175, 80), 0.2);
 }
 </style>

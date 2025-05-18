@@ -20,18 +20,18 @@ const tasksToShow = computed(() => {
 // 用于UI展示的当前筛选条件
 const currentFilters = computed(() => {
   const filters = []
-  
+
   // 显示分类筛选条件
   if (taskStore.selectedCategoryId !== undefined) {
     const categoryName = categoryStore.categories.find(c => c.categoryId === taskStore.selectedCategoryId)?.categoryName || '未知分类'
     filters.push(`分类: ${categoryName}`)
   }
-  
+
   // 显示状态筛选条件
   if (taskStore.selectedStatus !== undefined) {
     filters.push(`状态: ${taskStore.selectedStatus === 1 ? '已完成' : '未完成'}`)
   }
-  
+
   return filters
 })
 
@@ -39,26 +39,31 @@ async function handleToggleCompletion(taskId: string) {
   try {
     const task = taskStore.getTaskById(taskId)
     await taskStore.toggleTaskCompletion(taskId)
-    
-    if (task) {
-      // 根据任务是否完成显示对应的 Toast
-      showToast(`任务"${task.title}"已标记为${task.completed ? '未完成' : '完成'}`, 'success')
-    }
+
+    // The success toast for toggling completion is now handled in the taskStore's updateTask action
+    // if (task) {
+    //   showToast(`任务"${task.title}"已标记为${task.completed ? '未完成' : '完成'}`, 'success')
+    // }
   } catch (error) {
-    showToast('操作失败，请重试', 'error')
+    // Error toast is handled by the API service or store
+    // showToast('操作失败，请重试', 'error')
+    console.error('Error toggling task completion:', error) // Keep console error for debugging
   }
 }
 
 async function handleDeleteTask(taskId: string) {
   try {
-    const task = taskStore.getTaskById(taskId)
+    // const task = taskStore.getTaskById(taskId) // No longer needed here for toast
     await taskStore.deleteTask(taskId)
-    
-    if (task) {
-      showToast(`任务"${task.title}"已删除`, 'info')
-    }
+
+    // Success toast is now handled in the taskStore's deleteTask action
+    // if (task) {
+    //   showToast(`任务"${task.title}"已删除`, 'info')
+    // }
   } catch (error) {
-    showToast('删除失败，请重试', 'error')
+    // Error toast is handled by the API service or store
+    // showToast('删除失败，请重试', 'error')
+    console.error('Error deleting task:', error) // Keep console error for debugging
   }
 }
 
@@ -113,14 +118,9 @@ function clearAllFilters() {
 }
 
 // 确保组件挂载时加载分类数据和任务数据
-onMounted(async () => {
-  // 加载分类数据
-  if (categoryStore.categories.length === 0) {
-    await categoryStore.fetchCategories()
-  }
-  
-  // 加载任务数据
-  await taskStore.fetchTasks()
+onMounted(() => {
+  // 数据初始化已移至App.vue中集中处理
+  console.log('TaskList: 组件已挂载，数据将由App.vue集中初始化');
 })
 </script>
 
@@ -129,7 +129,7 @@ onMounted(async () => {
     <h3 class="list-title">
       <span class="icon">📋</span> {{ title }}
     </h3>
-    
+
     <!-- 筛选控件 -->
     <div class="filters-section">
       <div class="filter-controls">
@@ -137,36 +137,30 @@ onMounted(async () => {
         <div class="filter-group">
           <label>分类筛选:</label>
           <div class="filter-buttons">
-            <button class="filter-btn" 
-              :class="{ 'active': taskStore.selectedCategoryId === undefined }"
+            <button class="filter-btn" :class="{ 'active': taskStore.selectedCategoryId === undefined }"
               @click="filterByCategory(undefined)">全部</button>
-            <button v-for="category in categoryStore.categories" 
-              :key="category.categoryId"
-              class="filter-btn"
+            <button v-for="category in categoryStore.categories" :key="category.categoryId" class="filter-btn"
               :class="{ 'active': taskStore.selectedCategoryId === category.categoryId }"
               @click="filterByCategory(category.categoryId)">
               {{ category.categoryName }}
             </button>
           </div>
         </div>
-        
+
         <!-- 状态筛选 -->
         <div class="filter-group">
           <label>状态筛选:</label>
           <div class="filter-buttons">
-            <button class="filter-btn" 
-              :class="{ 'active': taskStore.selectedStatus === undefined }"
+            <button class="filter-btn" :class="{ 'active': taskStore.selectedStatus === undefined }"
               @click="filterByStatus(undefined)">全部</button>
-            <button class="filter-btn" 
-              :class="{ 'active': taskStore.selectedStatus === 0 }"
+            <button class="filter-btn" :class="{ 'active': taskStore.selectedStatus === 0 }"
               @click="filterByStatus(0)">未完成</button>
-            <button class="filter-btn" 
-              :class="{ 'active': taskStore.selectedStatus === 1 }"
+            <button class="filter-btn" :class="{ 'active': taskStore.selectedStatus === 1 }"
               @click="filterByStatus(1)">已完成</button>
           </div>
         </div>
       </div>
-      
+
       <!-- 显示当前筛选 -->
       <div v-if="currentFilters.length > 0" class="active-filters">
         <span>当前筛选: </span>
@@ -178,22 +172,17 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-    
+
     <div v-if="taskStore.loading" class="loading-indicator">
       加载中...
     </div>
-    
+
     <div v-else-if="tasksToShow.length === 0" class="empty-state">
       <p>没有任务</p>
     </div>
-    
+
     <div v-else class="tasks-container">
-      <div
-        v-for="task in tasksToShow"
-        :key="task.id"
-        class="task-item"
-        :class="{ 'completed': task.completed }"
-      >
+      <div v-for="task in tasksToShow" :key="task.id" class="task-item" :class="{ 'completed': task.completed }">
         <div class="task-content">
           <div class="task-header">
             <div class="task-info">
@@ -217,22 +206,14 @@ onMounted(async () => {
           <p v-if="task.dueDate" class="task-due-date">截止日期: {{ formatDueDate(task.dueDate) }}</p>
         </div>
       </div>
-      
+
       <!-- Pagination -->
       <div class="pagination" v-if="taskStore.totalPages > 1">
-        <button 
-          class="pagination-btn" 
-          :disabled="taskStore.currentPage === 1"
-          @click="goToPreviousPage"
-        >
+        <button class="pagination-btn" :disabled="taskStore.currentPage === 1" @click="goToPreviousPage">
           &lt;
         </button>
         <span class="current-page">{{ taskStore.currentPage }}</span>
-        <button 
-          class="pagination-btn" 
-          :disabled="taskStore.currentPage === taskStore.totalPages"
-          @click="goToNextPage"
-        >
+        <button class="pagination-btn" :disabled="taskStore.currentPage === taskStore.totalPages" @click="goToNextPage">
           &gt;
         </button>
       </div>
@@ -255,7 +236,8 @@ onMounted(async () => {
 
 .icon {
   margin-right: 8px;
-  color: var(--text-primary); /* Ensure icon color is visible */
+  color: var(--text-primary);
+  /* Ensure icon color is visible */
 }
 
 /* 筛选区样式 */
@@ -297,7 +279,8 @@ onMounted(async () => {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   background-color: transparent;
-  color: var(--text-primary); /* 添加默认文字颜色 */
+  color: var(--text-primary);
+  /* 添加默认文字颜色 */
   cursor: pointer;
   transition: all var(--transition-speed);
 }
@@ -396,10 +379,12 @@ onMounted(async () => {
 .task-category {
   font-size: 11px;
   background-color: var(--primary-light);
-  color: var(--primary-dark); /* Changed from --primary-color for potentially better contrast */
+  color: var(--primary-dark);
+  /* Changed from --primary-color for potentially better contrast */
   padding: 2px 6px;
   border-radius: 10px;
-  font-weight: 500; /* Added for better readability */
+  font-weight: 500;
+  /* Added for better readability */
 }
 
 .task-status {
@@ -422,7 +407,8 @@ onMounted(async () => {
   display: flex;
   gap: 8px;
   opacity: 1;
-  visibility: visible; /* Ensure actions are always visible */
+  visibility: visible;
+  /* Ensure actions are always visible */
 }
 
 .action-btn {
@@ -438,9 +424,12 @@ onMounted(async () => {
   transition: background-color var(--transition-speed);
 }
 
-.action-btn .icon { /* Targeting icons specifically within action buttons */
-  color: var(--text-primary); /* Ensure icons in action buttons are visible */
-  margin-right: 0; /* Reset margin if not needed here */
+.action-btn .icon {
+  /* Targeting icons specifically within action buttons */
+  color: var(--text-primary);
+  /* Ensure icons in action buttons are visible */
+  margin-right: 0;
+  /* Reset margin if not needed here */
 }
 
 .toggle-btn {
@@ -476,7 +465,7 @@ onMounted(async () => {
   margin: 4px 0 0 0;
 }
 
-.loading-indicator, 
+.loading-indicator,
 .empty-state {
   text-align: center;
   padding: 24px;
@@ -498,10 +487,13 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   border-radius: var(--border-radius);
-  background-color: var(--card-color); /* Changed to card-color for better visibility */
-  border: 1px solid var(--border-color); /* Added border */
+  background-color: var(--card-color);
+  /* Changed to card-color for better visibility */
+  border: 1px solid var(--border-color);
+  /* Added border */
   cursor: pointer;
-  color: var(--primary-color); /* Added text color for < and > */
+  color: var(--primary-color);
+  /* Added text color for < and > */
 }
 
 .pagination-btn:disabled {

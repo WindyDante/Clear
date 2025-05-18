@@ -102,7 +102,6 @@ button:hover {
   width: 100%;
   box-sizing: border-box;
   /* 确保 padding 和 border 不会增加元素的总宽度 */
-  margin-bottom: 12px;
   /* 统一表单控件间距 */
 }
 

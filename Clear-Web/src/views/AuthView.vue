@@ -29,51 +29,39 @@ const registerForm = reactive({
   loading: false
 })
 
-async function handleLogin() {
+const handleLogin = async () => {
   if (!loginForm.username || !loginForm.password) {
-    showToast('请输入用户名和密码', 'warning') // 显示警告 Toast
+    // showToast('请输入用户名和密码', 'warning') // 已在 store 中处理
     return
   }
-
-  loginForm.loading = true
-
   try {
     await authStore.login({
       username: loginForm.username,
       password: loginForm.password
     })
-
-    showToast('登录成功，欢迎回来！', 'success') // 显示成功 Toast
+    // showToast('登录成功，欢迎回来！', 'success') // 已在 store 中处理
     router.push('/')
   } catch (error: any) {
-    // 显示来自API的错误消息
-    showToast(error.message || '登录失败，请检查用户名和密码', 'error')
-  } finally {
-    loginForm.loading = false
+    // showToast(error.message || '登录失败，请检查用户名和密码', 'error') // 已在 store/api.ts 中处理
+    console.error('Login error:', error)
   }
 }
 
-async function handleRegister() {
+const handleRegister = async () => {
   if (!registerForm.username || !registerForm.password) {
-    showToast('请输入用户名和密码', 'warning') // 显示警告 Toast
+    // showToast('请输入用户名和密码', 'warning') // 已在 store 中处理
     return
   }
-
-  registerForm.loading = true
-
   try {
     await authStore.register({
       username: registerForm.username,
       password: registerForm.password
     })
-
-    showToast('注册成功，欢迎加入！', 'success') // 显示成功 Toast
+    // showToast('注册成功，欢迎加入！', 'success') // 已在 store 中处理
     router.push('/')
   } catch (error: any) {
-    // 显示来自API的错误消息
-    showToast(error.message || '注册失败，请稍后再试', 'error')
-  } finally {
-    registerForm.loading = false
+    // showToast(error.message || '注册失败，请稍后再试', 'error') // 已在 store/api.ts 中处理
+    console.error('Register error:', error)
   }
 }
 </script>

@@ -2,13 +2,14 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useAuthStore } from './auth'
 import api from '../services/api'
+import { useToast } from '../composables/useToast'
 
 export interface Task {
   id: string
   title: string
   content: string
   category: string
-  categoryId?: number | string // 添加分类ID字段
+  categoryId?: number | string
   dueDate: string | null
   completed: boolean
   createdAt: string
@@ -19,10 +20,11 @@ export const useTaskStore = defineStore('task', () => {
   const loading = ref(false)
   const currentPage = ref(1)
   const totalPages = ref(1)
-  const itemsPerPage = 3 // 修改此处为 3
-  // 添加分类ID和任务状态筛选参数
+  const itemsPerPage = 3
   const selectedCategoryId = ref<string | number | undefined>(undefined)
   const selectedStatus = ref<number | undefined>(undefined)
+  const isInitialized = ref(false) // 新增：标记是否已初始化
+  const { showToast } = useToast()
 
   const authStore = useAuthStore()
 
@@ -40,6 +42,7 @@ export const useTaskStore = defineStore('task', () => {
   async function fetchTasks() {
     if (!authStore.isAuthenticated) return
 
+    // 避免重复请求的标记，但重置筛选条件或切换页码时仍需请求新数据
     loading.value = true
     try {
       const response = await api.getTasks(
@@ -50,6 +53,7 @@ export const useTaskStore = defineStore('task', () => {
       )
       tasks.value = response.data
       totalPages.value = response.totalPages
+      isInitialized.value = true
     } catch (error) {
       console.error('Error fetching tasks:', error)
     } finally {
@@ -63,7 +67,20 @@ export const useTaskStore = defineStore('task', () => {
     loading.value = true
     try {
       const response = await api.addTask(task)
-      tasks.value.unshift(response)
+      // 添加任务成功后，直接将新任务添加到当前页面上
+      // 如果是第一页，则直接添加到列表开头
+      if (currentPage.value === 1) {
+        tasks.value.unshift(response)
+        // 如果超出每页显示数量，则移除最后一条
+        if (tasks.value.length > itemsPerPage) {
+          tasks.value.pop()
+        }
+      } else {
+        // 如果不是第一页，跳转到第一页并刷新数据
+        currentPage.value = 1
+        await fetchTasks()
+      }
+      showToast(`任务 "${task.title}" 添加成功`, 'success')
     } catch (error) {
       console.error('Error adding task:', error)
     } finally {
@@ -76,23 +93,45 @@ export const useTaskStore = defineStore('task', () => {
 
     loading.value = true
     try {
-      // Assuming api.updateTask returns a success boolean or the updated task.
-      // If it returns boolean, we update the task locally.
-      const success = await api.updateTask(taskId, updates) // Let's assume it returns boolean for now based on the error
+      const success = await api.updateTask(taskId, updates)
       if (success) {
-        const index = tasks.value.findIndex(t => t.id === taskId)
+        // 判断是否是状态更新（完成/未完成）
+        const isStatusUpdate = updates.completed !== undefined;
+        const taskBeforeUpdate = tasks.value.find(t => t.id === taskId);
+
+        // 如果是状态更改且用户当前正在按状态筛选
+        if (isStatusUpdate && selectedStatus !== undefined) {
+          // 1. 任务从未完成变为已完成，且用户在查看未完成任务
+          // 2. 任务从已完成变为未完成，且用户在查看已完成任务
+          // 这两种情况下，该任务应该从当前筛选视图中被移除，需要刷新列表
+          const newCompletedStatus = updates.completed;
+          const isFilteredOut =
+            (selectedStatus.value === 0 && newCompletedStatus === true) || // 未完成筛选，任务变为已完成
+            (selectedStatus.value === 1 && newCompletedStatus === false);  // 已完成筛选，任务变为未完成
+
+          if (isFilteredOut) {
+            showToast(`任务已标记为${updates.completed ? '完成' : '未完成'}`, 'success');
+            // 需要刷新列表，因为该任务不再属于当前筛选条件
+            return await fetchTasks();
+          }
+        }
+
+        // 其他情况下，本地更新任务数据
+        const index = tasks.value.findIndex(t => t.id === taskId);
         if (index !== -1) {
-          // Merge updates into the existing task
-          tasks.value[index] = { ...tasks.value[index], ...updates }
+          tasks.value[index] = { ...tasks.value[index], ...updates };
+          if (isStatusUpdate) {
+            showToast(`任务已标记为${updates.completed ? '完成' : '未完成'}`, 'success');
+          } else {
+            showToast('任务更新成功', 'success');
+          }
         }
       } else {
-        // Handle update failure if necessary
         console.error('Error updating task: API returned failure')
         throw new Error('Task update failed')
       }
     } catch (error) {
       console.error('Error updating task:', error)
-      // Optionally re-throw or handle as per application's error handling strategy
     } finally {
       loading.value = false
     }
@@ -104,7 +143,41 @@ export const useTaskStore = defineStore('task', () => {
     loading.value = true
     try {
       await api.deleteTask(taskId)
+      showToast('任务删除成功', 'success')
+
+      // 获取当前页任务数
+      const currentTaskCount = tasks.value.length
+
+      // 本地删除该任务
       tasks.value = tasks.value.filter(t => t.id !== taskId)
+
+      // 如果删除后当前页任务数小于设定值且不是最后一页，需获取下一页的一条数据
+      if (tasks.value.length < itemsPerPage && currentPage.value < totalPages.value) {
+        // 只需要一次网络请求，获取下一页第一条数据
+        const nextPageData = await api.getTasks(
+          currentPage.value + 1,
+          1, // 只需要一条数据
+          selectedCategoryId.value,
+          selectedStatus.value
+        )
+
+        // 如果有数据，添加到当前页
+        if (nextPageData.data && nextPageData.data.length > 0) {
+          tasks.value.push(nextPageData.data[0])
+        }
+
+        // 更新总页数，但不改变当前页码
+        totalPages.value = nextPageData.totalPages
+      }
+      // 如果删除后没有数据且当前页不是第一页，跳到上一页
+      else if (tasks.value.length === 0 && currentPage.value > 1) {
+        currentPage.value--
+        await fetchTasks()
+      }
+      // 如果删除后当前页没有数据且是第一页，更新总页数
+      else if (tasks.value.length === 0 && currentPage.value === 1) {
+        totalPages.value = 0
+      }
     } catch (error) {
       console.error('Error deleting task:', error)
     } finally {
@@ -112,7 +185,6 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
-  // 根据ID获取任务的方法
   function getTaskById(taskId: string): Task | undefined {
     return tasks.value.find(task => task.id === taskId)
   }
@@ -138,7 +210,6 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
-  // 添加设置分类筛选的方法
   function setCategory(categoryId: string | number | undefined) {
     if (selectedCategoryId.value === categoryId) return
     selectedCategoryId.value = categoryId
@@ -146,7 +217,6 @@ export const useTaskStore = defineStore('task', () => {
     fetchTasks()
   }
 
-  // 添加设置任务状态筛选的方法
   function setStatus(status: number | undefined) {
     if (selectedStatus.value === status) return
     selectedStatus.value = status
@@ -154,12 +224,21 @@ export const useTaskStore = defineStore('task', () => {
     fetchTasks()
   }
 
-  // 清除所有筛选条件
   function clearFilters() {
     selectedCategoryId.value = undefined
     selectedStatus.value = undefined
     currentPage.value = 1
     fetchTasks()
+  }
+
+  // 重置状态（用于登出时）
+  function reset() {
+    tasks.value = []
+    currentPage.value = 1
+    totalPages.value = 1
+    selectedCategoryId.value = undefined
+    selectedStatus.value = undefined
+    isInitialized.value = false
   }
 
   return {
@@ -173,6 +252,7 @@ export const useTaskStore = defineStore('task', () => {
     totalPendingTasks,
     selectedCategoryId,
     selectedStatus,
+    isInitialized,
     fetchTasks,
     addTask,
     updateTask,
@@ -183,6 +263,7 @@ export const useTaskStore = defineStore('task', () => {
     getTaskById,
     setCategory,
     setStatus,
-    clearFilters
+    clearFilters,
+    reset
   }
 })

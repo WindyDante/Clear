@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTaskStore } from '../store/task'
 import { useCategoryStore } from '../store/category'
@@ -16,19 +16,31 @@ function navigateToAbout() {
   router.push('/about')
 }
 
-// 统一获取任务和分类数据
-onMounted(async () => {
-  try {
-    // 并行请求，提高加载效率
-    await Promise.all([
-      taskStore.fetchTasks(),
-      categoryStore.fetchCategories()
-    ])
-    
-    console.log('数据初始化完成: 任务和分类数据已加载')
-  } catch (error) {
-    console.error('数据初始化失败:', error)
+// 监听分类变更并刷新任务列表
+watch(() => categoryStore.categoryChanged, async (newVal) => {
+  if (newVal) {
+    console.log(`分类变更: ${newVal.action}, ID: ${newVal.categoryId}`);
+
+    // 如果当前正在按分类筛选，并且该分类被删除，则清除筛选条件
+    if (newVal.action === 'delete' &&
+      taskStore.selectedCategoryId !== undefined &&
+      taskStore.selectedCategoryId.toString() === newVal.categoryId) {
+      console.log('正在查看的分类已被删除，清除分类筛选');
+      taskStore.setCategory(undefined);
+    }
+    // 如果正在筛选被更新的分类，或者没有特定筛选但分类发生变化，刷新任务列表
+    else if (newVal.action === 'update' || newVal.action === 'add' ||
+      taskStore.selectedCategoryId === undefined) {
+      console.log('分类变更后刷新任务列表');
+      await taskStore.fetchTasks();
+    }
   }
+}, { deep: true });
+
+// 统一获取任务和分类数据
+onMounted(() => {
+  // 数据初始化已移至App.vue中集中处理
+  console.log('HomeView: 组件已挂载，数据将由App.vue集中初始化');
 })
 </script>
 

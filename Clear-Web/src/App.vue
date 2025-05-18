@@ -1,12 +1,45 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import { RouterView } from 'vue-router';
-import AppToast from './components/common/AppToast.vue'; // Import AppToast
+import { useTaskStore } from './store/task';
+import { useCategoryStore } from './store/category';
+import { useAuthStore } from './store/auth';
+import AppToast from './components/common/AppToast.vue';
+import { useTheme } from './composables/useTheme';
+
+const { applyTheme } = useTheme();
+// 初始化主题
+applyTheme();
+
+const taskStore = useTaskStore();
+const categoryStore = useCategoryStore();
+const authStore = useAuthStore();
+
+// 在App级别初始化数据，确保全局只请求一次
+onMounted(async () => {
+  // 只有登录后才需要加载数据
+  if (authStore.isAuthenticated) {
+    console.log('App.vue: 检查并初始化必要的应用数据');
+
+    // 加载分类数据（如果需要）
+    if (!categoryStore.isLoaded) {
+      console.log('App.vue: 初始化分类数据');
+      await categoryStore.fetchCategories();
+    }
+
+    // 加载任务数据（如果需要）
+    if (!taskStore.isInitialized) {
+      console.log('App.vue: 初始化任务数据');
+      await taskStore.fetchTasks();
+    }
+  }
+});
 </script>
 
 <template>
-  <div class="app-container">
+  <div class="app">
     <RouterView />
-    <AppToast /> <!-- Add AppToast component here -->
+    <AppToast />
   </div>
 </template>
 
@@ -43,6 +76,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.app {
+  width: 100%;
+  height: 100%;
+}
+
 .app-container {
   display: flex;
   flex-direction: column;
@@ -62,7 +100,7 @@ a:hover {
   color: var(--primary-dark);
 }
 
-button, 
+button,
 .btn {
   cursor: pointer;
   border: none;
