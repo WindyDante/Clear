@@ -1,51 +1,28 @@
 services:
-  mysql:
-    image: mysql:8
-    container_name: mysql
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: Clear
-    networks:
-      - clear-network
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-
-  redis:
-    image: redis:7
-    container_name: redis
-    restart: always
-    command: redis-server --requirepass redis
-    networks:
-      - clear-network
-
   backend:
-    build: 
-      context: ./Clear-Backend
-      dockerfile: Dockerfile
+    image: eastwind996/clear-java-backend:0.0.1
     container_name: clear-backend
+    ports:
+      - "5673:8888"  # 添加端口映射，确保服务在Docker网络中可访问
     networks:
       - clear-network
-    depends_on:
-      - mysql
-      - redis
 
   frontend:
-    build:
-      context: ./Clear-Web
-      dockerfile: Dockerfile
+    image: eastwind996/clear-frontend:0.0.1
     container_name: clear-frontend
+    ports:
+      - "5172:80"
     networks:
       - clear-network
     depends_on:
       - backend
 
   nginx:
-    image: nginx:latest
-    container_name: clear-nginx
+    image: nginx:alpine
+    container_name: clear
     restart: always
     ports:
-      - "4088:80"
+      - "3668:80"
     networks:
       - clear-network
     volumes:
@@ -55,5 +32,5 @@ services:
       - backend
 
 networks:
-  tika-network:
+  clear-network:
     driver: bridge

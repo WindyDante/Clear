@@ -2,6 +2,7 @@ FROM eclipse-temurin:17
 
 WORKDIR /app
 
-COPY tika-server/target/tika-server-1.0.0.jar /app/tika-server.jar
+# 修正JAR文件路径
+COPY ./clear-server/target/clear-server-1.0.0.jar /app/clear-server.jar
 
-CMD ["java", "-jar", "tika-server.jar"]
+CMD ["java", "-jar", "clear-server.jar"]

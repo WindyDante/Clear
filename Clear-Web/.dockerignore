@@ -1,0 +1,24 @@
+# 忽略node_modules目录，解决Windows下的文件权限问题
+node_modules
+.DS_Store
+dist
+*.local
+.git
+.gitignore
+
+# 日志文件
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 编辑器目录和文件
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
