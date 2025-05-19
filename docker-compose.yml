@@ -2,6 +2,8 @@ services:
   backend:
     image: eastwind996/clear-java-backend:0.0.1
     container_name: clear-backend
+    env_file:
+      - ./.env
     ports:
       - "5673:8888"  # 添加端口映射，确保服务在Docker网络中可访问
     networks:
