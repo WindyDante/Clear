@@ -1,6 +1,8 @@
 # Clear
 
-<img src="./Clear-Web/public/favicon.svg" alt="Clear Logo" width="120" height="120" align="center" />
+<p align="center">
+  <img alt="Clear" src="./Clear-Web/public/favicon.svg" width="100">
+</p>
 
 > **简洁之美，效率之选**
 
