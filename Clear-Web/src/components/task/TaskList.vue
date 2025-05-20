@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, onUnmounted } from 'vue' // 引入 onUnmounted
 import { useTaskStore } from '../../store/task'
 import { useCategoryStore } from '../../store/category'
 import { useToast } from '../../composables/useToast' // 引入 Toast 功能
@@ -14,6 +14,132 @@ const taskStore = useTaskStore()
 const categoryStore = useCategoryStore()
 const { showToast } = useToast()
 const router = useRouter();
+
+// 本地 ref 用于绑定日期和关键字输入
+const startDateInput = ref('')
+const endDateInput = ref('')
+const keywordInput = ref('')
+
+// --- 日期选择器状态 ---
+const showStartDatePicker = ref(false)
+const showEndDatePicker = ref(false)
+const startDatePickerContainerRef = ref<HTMLElement | null>(null)
+const endDatePickerContainerRef = ref<HTMLElement | null>(null)
+
+const pickerCurrentYear = ref(new Date().getFullYear())
+const pickerCurrentMonth = ref(new Date().getMonth()) // 0-indexed
+
+const monthNames = [
+  "一月", "二月", "三月", "四月", "五月", "六月",
+  "七月", "八月", "九月", "十月", "十一月", "十二月"
+];
+
+const pickerDaysInMonth = computed(() => {
+  return new Date(pickerCurrentYear.value, pickerCurrentMonth.value + 1, 0).getDate();
+});
+
+const pickerCurrentMonthName = computed(() => {
+  return `${monthNames[pickerCurrentMonth.value]} ${pickerCurrentYear.value}`;
+});
+
+function pickerPrevMonth() {
+  if (pickerCurrentMonth.value === 0) {
+    pickerCurrentMonth.value = 11;
+    pickerCurrentYear.value--;
+  } else {
+    pickerCurrentMonth.value--;
+  }
+}
+
+function pickerNextMonth() {
+  if (pickerCurrentMonth.value === 11) {
+    pickerCurrentMonth.value = 0;
+    pickerCurrentYear.value++;
+  } else {
+    pickerCurrentMonth.value++;
+  }
+}
+
+const formatDateToYYYYMMDD = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const openPicker = (type: 'start' | 'end') => {
+  const today = new Date();
+  let currentDateVal: string | undefined;
+
+  if (type === 'start') {
+    showStartDatePicker.value = !showStartDatePicker.value; // Toggle
+    showEndDatePicker.value = false; // Close other picker
+    currentDateVal = startDateInput.value;
+  } else {
+    showEndDatePicker.value = !showEndDatePicker.value; // Toggle
+    showStartDatePicker.value = false; // Close other picker
+    currentDateVal = endDateInput.value;
+  }
+
+  // Initialize picker date
+  if (currentDateVal) {
+    const [year, month, day] = currentDateVal.split('-').map(Number);
+    if (year && month && day) {
+        pickerCurrentYear.value = year;
+        pickerCurrentMonth.value = month - 1; // Month is 0-indexed
+    } else { // Fallback to today if date format is invalid
+        pickerCurrentYear.value = today.getFullYear();
+        pickerCurrentMonth.value = today.getMonth();
+    }
+  } else {
+    pickerCurrentYear.value = today.getFullYear();
+    pickerCurrentMonth.value = today.getMonth();
+  }
+};
+
+const selectDate = (day: number, type: 'start' | 'end') => {
+  const selectedDate = new Date(pickerCurrentYear.value, pickerCurrentMonth.value, day);
+  const formattedDate = formatDateToYYYYMMDD(selectedDate);
+
+  if (type === 'start') {
+    startDateInput.value = formattedDate;
+    showStartDatePicker.value = false;
+  } else {
+    endDateInput.value = formattedDate;
+    showEndDatePicker.value = false;
+  }
+  taskStore.setDateRange(startDateInput.value || undefined, endDateInput.value || undefined);
+};
+
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  // Check for start date picker
+  if (showStartDatePicker.value && startDatePickerContainerRef.value && !startDatePickerContainerRef.value.contains(target)) {
+    // Check if the click was on the trigger for the start date picker
+    const startDateTrigger = document.querySelector('.start-date-input-trigger');
+    if (!startDateTrigger || !startDateTrigger.contains(target)) {
+      showStartDatePicker.value = false;
+    }
+  }
+  // Check for end date picker
+  if (showEndDatePicker.value && endDatePickerContainerRef.value && !endDatePickerContainerRef.value.contains(target)) {
+     const endDateTrigger = document.querySelector('.end-date-input-trigger');
+    if (!endDateTrigger || !endDateTrigger.contains(target)) {
+      showEndDatePicker.value = false;
+    }
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside, true); // Use capture phase
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside, true);
+});
+
+
+// --- End 日期选择器状态 ---
 
 // 添加对所有任务的引用，而不仅仅是待办任务
 const tasksToShow = computed(() => {
@@ -33,6 +159,20 @@ const currentFilters = computed(() => {
   // 显示状态筛选条件
   if (taskStore.selectedStatus !== undefined) {
     filters.push(`状态: ${taskStore.selectedStatus === 1 ? '已完成' : '未完成'}`)
+  }
+
+  // 显示日期筛选条件
+  if (taskStore.selectedStartDate && taskStore.selectedEndDate) {
+    filters.push(`日期: ${taskStore.selectedStartDate} 至 ${taskStore.selectedEndDate}`)
+  } else if (taskStore.selectedStartDate) {
+    filters.push(`日期: ${taskStore.selectedStartDate} 之后`)
+  } else if (taskStore.selectedEndDate) {
+    filters.push(`日期: ${taskStore.selectedEndDate} 之前`)
+  }
+
+  // 显示关键字筛选条件
+  if (taskStore.searchKeyword) {
+    filters.push(`关键字: "${taskStore.searchKeyword}"`)
   }
 
   return filters
@@ -126,7 +266,7 @@ function filterByCategory(categoryId: number | string | undefined) {
 
 // 设置任务状态筛选
 function filterByStatus(status: number | undefined) {
-  if (!props.canOperate && status !== undefined) { 
+  if (!props.canOperate && status !== undefined) {
     router.push('/auth');
     showToast('请先登录再操作', 'warning');
     return;
@@ -134,9 +274,24 @@ function filterByStatus(status: number | undefined) {
   taskStore.setStatus(status)
 }
 
+// 设置关键字筛选
+function applyKeywordFilter() {
+  if (!props.canOperate && keywordInput.value) {
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
+  taskStore.setKeyword(keywordInput.value || undefined);
+}
+
 // 清除所有筛选条件
 function clearAllFilters() {
   // No auth check here, clearing filters should always be allowed
+  startDateInput.value = ''
+  endDateInput.value = ''
+  keywordInput.value = ''
+  showStartDatePicker.value = false; // Close picker
+  showEndDatePicker.value = false;   // Close picker
   taskStore.clearFilters()
 }
 
@@ -181,6 +336,56 @@ onMounted(() => {
             <button class="filter-btn" :class="{ 'active': taskStore.selectedStatus === 1 }"
               @click="filterByStatus(1)">已完成</button>
           </div>
+        </div>
+
+        <!-- 日期筛选 -->
+        <div class="filter-group">
+          <label>日期筛选:</label>
+          <div class="date-filter-inputs">
+            <div class="date-input-container">
+              <input type="text" :value="startDateInput" placeholder="开始日期" @click="openPicker('start')" readonly class="filter-input date-input start-date-input-trigger">
+              <div v-if="showStartDatePicker" class="date-picker-popover" ref="startDatePickerContainerRef">
+                <div class="date-picker-header">
+                  <button class="picker-nav" @click.stop="pickerPrevMonth">◀</button>
+                  <div class="current-month">{{ pickerCurrentMonthName }}</div>
+                  <button class="picker-nav" @click.stop="pickerNextMonth">▶</button>
+                </div>
+                <div class="date-grid">
+                  <div v-for="day in pickerDaysInMonth" :key="day" 
+                       class="date-cell" 
+                       :class="{ 'active': startDateInput === formatDateToYYYYMMDD(new Date(pickerCurrentYear, pickerCurrentMonth, day)) }"
+                       @click.stop="selectDate(day, 'start')">
+                    {{ day }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <span>-</span>
+            <div class="date-input-container">
+              <input type="text" :value="endDateInput" placeholder="结束日期 (可选)" @click="openPicker('end')" readonly class="filter-input date-input end-date-input-trigger">
+              <div v-if="showEndDatePicker" class="date-picker-popover date-picker-popover-end" ref="endDatePickerContainerRef">
+                <div class="date-picker-header">
+                  <button class="picker-nav" @click.stop="pickerPrevMonth">◀</button>
+                  <div class="current-month">{{ pickerCurrentMonthName }}</div>
+                  <button class="picker-nav" @click.stop="pickerNextMonth">▶</button>
+                </div>
+                <div class="date-grid">
+                  <div v-for="day in pickerDaysInMonth" :key="day" 
+                       class="date-cell" 
+                       :class="{ 'active': endDateInput === formatDateToYYYYMMDD(new Date(pickerCurrentYear, pickerCurrentMonth, day)) }"
+                       @click.stop="selectDate(day, 'end')">
+                    {{ day }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 关键字筛选 -->
+        <div class="filter-group">
+          <label>关键字筛选:</label>
+          <input type="text" v-model="keywordInput" placeholder="输入关键字" @keyup.enter="applyKeywordFilter" @blur="applyKeywordFilter" class="filter-input keyword-input">
         </div>
       </div>
 
@@ -275,7 +480,7 @@ onMounted(() => {
 .filter-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 16px; /* 调整整体间距 */
   margin-bottom: 12px;
 }
 
@@ -283,8 +488,8 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  flex-grow: 1; /* 让筛选组在空间足够时可以扩展 */
 }
-
 .filter-group label {
   font-size: 13px;
   color: var(--text-secondary);
@@ -313,6 +518,122 @@ onMounted(() => {
   color: white;
   border-color: var(--primary-color);
 }
+
+/* 新增输入框样式 */
+.filter-input {
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--background-color); /* 改为背景色以区分按钮 */
+  color: var(--text-primary);
+  transition: border-color var(--transition-speed);
+  box-sizing: border-box; /* 确保padding和border不会增加元素总宽度 */
+}
+
+.filter-input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.date-filter-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.date-filter-inputs span {
+  color: var(--text-secondary);
+}
+
+.date-input {
+  width: 120px; /* 根据需要调整日期输入框宽度 */
+  cursor: pointer; /* Indicate it's clickable */
+}
+
+.date-input-container {
+  position: relative; /* For positioning the date picker */
+}
+
+.keyword-input {
+  width: 100%; /* 关键字输入框可以更宽 */
+  max-width: 200px; /* 但也给一个最大宽度 */
+}
+
+
+/* Date Picker Styles (adapted from TaskForm.vue) */
+.date-picker-popover {
+  position: absolute;
+  top: calc(100% + 8px); /* Position below the input */
+  left: 0;
+  z-index: 1000; /* Ensure it's above other elements */
+  background: var(--card-color); /* Use card color for background */
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 280px; /* Adjust width as needed */
+  padding: 12px;
+  color: var(--text-primary); /* Use primary text color */
+  border: 1px solid var(--border-color);
+}
+
+.date-picker-popover-end {
+  left: auto;
+  right: 0;
+}
+
+.date-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.current-month {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.picker-nav {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--primary-color);
+  padding: 4px 8px;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+}
+
+.picker-nav:hover {
+  background-color: var(--primary-light);
+}
+
+.date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px; /* Adjust gap as needed */
+}
+
+.date-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px; /* Adjust size as needed */
+  width: 30px;  /* Adjust size as needed */
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.date-cell:hover {
+  background-color: var(--primary-light);
+}
+
+.date-cell.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
 
 .active-filters {
   display: flex;

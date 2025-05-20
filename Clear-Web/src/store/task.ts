@@ -23,6 +23,9 @@ export const useTaskStore = defineStore('task', () => {
   const itemsPerPage = 3
   const selectedCategoryId = ref<string | number | undefined>(undefined)
   const selectedStatus = ref<number | undefined>(undefined)
+  const selectedStartDate = ref<string | undefined>(undefined) // 新增：开始日期筛选
+  const selectedEndDate = ref<string | undefined>(undefined)   // 新增：结束日期筛选
+  const searchKeyword = ref<string | undefined>(undefined)    // 新增：关键字筛选
   const isInitialized = ref(false) // 新增：标记是否已初始化
   const { showToast } = useToast()
 
@@ -49,7 +52,10 @@ export const useTaskStore = defineStore('task', () => {
         currentPage.value,
         itemsPerPage,
         selectedCategoryId.value,
-        selectedStatus.value
+        selectedStatus.value,
+        selectedStartDate.value, // 传递开始日期
+        selectedEndDate.value,   // 传递结束日期
+        searchKeyword.value      // 传递关键字
       )
       tasks.value = response.data
       totalPages.value = response.totalPages
@@ -95,10 +101,9 @@ export const useTaskStore = defineStore('task', () => {
       if (success) {
         // 判断是否是状态更新（完成/未完成）
         const isStatusUpdate = updates.completed !== undefined;
-        const taskBeforeUpdate = tasks.value.find(t => t.id === taskId);
 
         // 如果是状态更改且用户当前正在按状态筛选
-        if (isStatusUpdate && selectedStatus !== undefined) {
+        if (isStatusUpdate && selectedStatus.value !== undefined) { // Corrected: used selectedStatus.value
           // 1. 任务从未完成变为已完成，且用户在查看未完成任务
           // 2. 任务从已完成变为未完成，且用户在查看已完成任务
           // 这两种情况下，该任务应该从当前筛选视图中被移除，需要刷新列表
@@ -142,9 +147,6 @@ export const useTaskStore = defineStore('task', () => {
     try {
       await api.deleteTask(taskId)
       showToast('任务删除成功', 'success')
-
-      // 获取当前页任务数
-      const currentTaskCount = tasks.value.length
 
       // 本地删除该任务
       tasks.value = tasks.value.filter(t => t.id !== taskId)
@@ -222,9 +224,36 @@ export const useTaskStore = defineStore('task', () => {
     fetchTasks()
   }
 
+  function setDateRange(startDate?: string, endDate?: string) {
+    // 校验日期格式 yyyy-MM-dd
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (startDate && !dateRegex.test(startDate)) {
+      showToast('开始日期格式不正确，应为 yyyy-MM-dd', 'error');
+      return;
+    }
+    if (endDate && !dateRegex.test(endDate)) {
+      showToast('结束日期格式不正确，应为 yyyy-MM-dd', 'error');
+      return;
+    }
+
+    selectedStartDate.value = startDate
+    selectedEndDate.value = endDate
+    currentPage.value = 1 // 重置到第一页
+    fetchTasks()
+  }
+
+  function setKeyword(keyword?: string) {
+    searchKeyword.value = keyword
+    currentPage.value = 1 // 重置到第一页
+    fetchTasks()
+  }
+
   function clearFilters() {
     selectedCategoryId.value = undefined
     selectedStatus.value = undefined
+    selectedStartDate.value = undefined
+    selectedEndDate.value = undefined
+    searchKeyword.value = undefined
     currentPage.value = 1
     fetchTasks()
   }
@@ -236,6 +265,9 @@ export const useTaskStore = defineStore('task', () => {
     totalPages.value = 1
     selectedCategoryId.value = undefined
     selectedStatus.value = undefined
+    selectedStartDate.value = undefined
+    selectedEndDate.value = undefined
+    searchKeyword.value = undefined
     isInitialized.value = false
   }
 
@@ -250,6 +282,9 @@ export const useTaskStore = defineStore('task', () => {
     totalPendingTasks,
     selectedCategoryId,
     selectedStatus,
+    selectedStartDate,
+    selectedEndDate,
+    searchKeyword,
     isInitialized,
     fetchTasks,
     addTask,
@@ -261,6 +296,8 @@ export const useTaskStore = defineStore('task', () => {
     getTaskById,
     setCategory,
     setStatus,
+    setDateRange,
+    setKeyword,
     clearFilters,
     reset
   }

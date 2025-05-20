@@ -72,12 +72,6 @@ function formatDateToString(dateString: string | null): string | null {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-// 分类数据接口
-interface Category {
-  categoryId: string; // 改为只使用字符串类型
-  categoryName: string;
-}
-
 // 新分类请求参数接口，调整为与后端一致的格式
 interface CategoryAddRequest {
   name: string;
@@ -246,7 +240,7 @@ const api = {
     );
   },
 
-  getTasks(page: number, limit: number, categoryId?: string | number, status?: number) {
+  getTasks(page: number, limit: number, categoryId?: string | number, status?: number, startDate?: string, endDate?: string, keyword?: string) {
     const token = localStorage.getItem('user')
       ? JSON.parse(localStorage.getItem('user') || '{}').tk
       : null;
@@ -262,6 +256,15 @@ const api = {
     }
     if (status !== undefined) {
       url += `&status=${status}`;
+    }
+    if (startDate) {
+      url += `&startDate=${startDate}`;
+    }
+    if (endDate) {
+      url += `&endDate=${endDate}`;
+    }
+    if (keyword) {
+      url += `&keyword=${encodeURIComponent(keyword)}`;
     }
 
     return handleApiResponse<any>(

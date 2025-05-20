@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -71,7 +72,19 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
         queryWrapper.eq(userId != null, Todo::getUserId, userId)
                 .eq(categoryId != null,Todo::getCategoryId, categoryId)
                 .eq(status != null, Todo::getStatus, status)
-                .orderByDesc(Todo::getCreatedAt);
+                .like(todoPageQueryDTO.getKeyword() != null, Todo::getContent, todoPageQueryDTO.getKeyword());
+        // 如果只有开始日期，则查询当天数据
+        if (todoPageQueryDTO.getStartDate() != null && todoPageQueryDTO.getEndDate() == null) {
+            LocalDate startOfDay = todoPageQueryDTO.getStartDate();
+            LocalDate endOfDay = startOfDay.plusDays(1);
+            queryWrapper.ge(Todo::getDueDate, startOfDay)
+                    .lt(Todo::getDueDate, endOfDay);
+        } else if (todoPageQueryDTO.getStartDate() != null) {
+            // 有开始和结束日期，查询日期范围
+            queryWrapper.ge(Todo::getDueDate, todoPageQueryDTO.getStartDate())
+                    .lt(Todo::getDueDate, todoPageQueryDTO.getEndDate().plusDays(1));
+        }
+        queryWrapper.orderByDesc(Todo::getDueDate);
         Page<Todo> page =
                 new Page<>(todoPageQueryDTO.getPage(), todoPageQueryDTO.getPageSize());
         Page<Todo> res = this.page(page, queryWrapper);

@@ -31,7 +31,6 @@
       <input v-model="newCategoryName" class="form-control" placeholder="输入新分类名称..." @keyup.enter="addCategory" />
       <button @click="addCategory" class="btn primary add-category-btn" :disabled="!canAddCategory || submitting">
         <img v-if="!submitting" src="/add.svg" alt="添加分类" class="add-icon" />
-        <span v-if="submitting">添加中...</span>
       </button>
     </div>
   </div>
