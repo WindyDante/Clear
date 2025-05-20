@@ -73,13 +73,21 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
                 .eq(categoryId != null,Todo::getCategoryId, categoryId)
                 .eq(status != null, Todo::getStatus, status)
                 .like(todoPageQueryDTO.getKeyword() != null, Todo::getContent, todoPageQueryDTO.getKeyword());
-        // 如果只有开始日期，则查询当天数据
+        // 如果只有开始日期，则查询开始日期后的数据
         if (todoPageQueryDTO.getStartDate() != null && todoPageQueryDTO.getEndDate() == null) {
             LocalDate startOfDay = todoPageQueryDTO.getStartDate();
-            LocalDate endOfDay = startOfDay.plusYears(100);
+            LocalDate endOfDay = LocalDate.of(2099, 12, 31); // 使用固定的未来日期作为终点
             queryWrapper.ge(Todo::getDueDate, startOfDay)
                     .lt(Todo::getDueDate, endOfDay);
-        } else if (todoPageQueryDTO.getStartDate() != null) {
+        }
+        // 如果只有结束日期，则查询结束日期前的数据
+        else if(todoPageQueryDTO.getStartDate() == null && todoPageQueryDTO.getEndDate() != null){
+            LocalDate startOfDay = LocalDate.of(1970, 1, 1); // 使用一个较早的日期作为起点
+            LocalDate endOfDay = todoPageQueryDTO.getEndDate().plusDays(1); // 结束日期加1天，以包含整个结束日期
+            queryWrapper.ge(Todo::getDueDate, startOfDay)
+                    .lt(Todo::getDueDate, endOfDay);
+        }
+        else if (todoPageQueryDTO.getStartDate() != null) {
             // 有开始和结束日期，查询日期范围
             queryWrapper.ge(Todo::getDueDate, todoPageQueryDTO.getStartDate())
                     .lt(Todo::getDueDate, todoPageQueryDTO.getEndDate().plusDays(1));
