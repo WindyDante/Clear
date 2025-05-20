@@ -76,10 +76,9 @@ const handleRegister = async () => {
       </template>
       <template #right-actions>
         <button class="icon-button github-button">
-          <span class="material-icon">
-            <a href="https://github.com/WindyDante/Clear" class="github-link" target="_blank"
-              rel="noopener noreferrer">Github</a>
-          </span>
+          <a href="https://github.com/WindyDante/Clear" class="github-link" target="_blank" rel="noopener noreferrer">
+            <img src="/github.svg" alt="Github" class="icon-img" />
+          </a>
         </button>
       </template>
     </AppHeader>
@@ -211,5 +210,13 @@ const handleRegister = async () => {
 
 .clear-text {
   color: var(--primary-color);
+}
+
+.icon-img {
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
 }
 </style>
