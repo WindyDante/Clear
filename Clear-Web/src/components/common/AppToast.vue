@@ -43,8 +43,15 @@ const getIcon = (type: string) => {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 10px;
   max-width: calc(100% - 40px); /* 防止 Toast 超出屏幕 */
+}
+
+/* Style the div rendered by transition-group to control spacing between toasts */
+.toast-container > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* Ensures toasts align to the right if they don't fill the width */
+  gap: 10px; /* This will create space between individual toast messages */
 }
 
 .toast-message {
@@ -61,6 +68,8 @@ const getIcon = (type: string) => {
   transition: all 0.5s ease;
   box-sizing: border-box;
 }
+
+/* Removed .toast-container > div > .toast-message:last-child rule */
 
 .toast-icon {
   flex-shrink: 0; /* 防止图标被压缩 */
