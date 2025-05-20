@@ -190,27 +190,34 @@ export function useTheme() {
         }
         const themeId = themeIndex + 1; // 1-based ID for API
 
-        try {
-            // api.updateUserTheme (via handleApiResponse) will handle showing toasts for API success/failure.
-            await api.updateUserTheme(themeId);
+        // 应用样式到DOM
+        _applyThemeStyles(themeName);
 
-            // If api.updateUserTheme was successful (didn't throw an error),
-            // then we can proceed with applying styles and updating the store.
-            _applyThemeStyles(themeName); // Apply styles and update activeThemeName
-
-            if (authStore.user) {
-                authStore.user.theme = themeId;
-                localStorage.setItem('user', JSON.stringify(authStore.user));
+        // 如果用户已登录，则尝试更新后端并保存到localStorage
+        if (authStore.isAuthenticated) {
+            try {
+                await api.updateUserTheme(themeId);
+                // API成功后（没有抛出错误），更新store和localStorage
+                if (authStore.user) {
+                    authStore.user.theme = themeId;
+                    localStorage.setItem('user', JSON.stringify(authStore.user));
+                }
+                // 成功提示由 api.updateUserTheme -> handleApiResponse 处理
+            } catch (error: any) {
+                // 错误提示由 api.updateUserTheme -> handleApiResponse 处理
+                console.error('Failed to update theme via API:', error);
+                // 可选：如果API调用失败，是否需要回滚本地主题更改？
+                // 例如，可以重新加载用户之前的主题：
+                // if (authStore.user && authStore.user.theme) {
+                //     const previousTheme = actualThemes.value[authStore.user.theme - 1];
+                //     if (previousTheme) _applyThemeStyles(previousTheme.name);
+                // } else if (actualThemes.value.length > 0) {
+                //     _applyThemeStyles(actualThemes.value[0].name); // 或者回滚到默认主题
+                // }
             }
-            // Success toast is now handled by api.updateUserTheme -> handleApiResponse
-
-        } catch (error: any) {
-            // Error toast is now handled by api.updateUserTheme -> handleApiResponse.
-            // We can log the error here if needed for debugging, but avoid showing a second toast.
-            console.error('Failed to apply theme after API call:', error);
-            // Optionally, you might want to revert theme change or handle UI state here
-            // if _applyThemeStyles or localStorage.setItem could also fail, but for now,
-            // we assume the primary error (and its toast) came from the API call.
+        } else {
+            // 用户未登录，仅应用主题，不进行API调用或本地存储
+            // showToast('主题已在本地切换', 'info'); // 可选：给未登录用户一个提示
         }
     };
 

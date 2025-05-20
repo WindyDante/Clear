@@ -3,14 +3,17 @@ import { computed, onMounted } from 'vue'
 import { useTaskStore } from '../../store/task'
 import { useCategoryStore } from '../../store/category'
 import { useToast } from '../../composables/useToast' // 引入 Toast 功能
+import { useRouter } from 'vue-router';
 
-defineProps<{
+const props = defineProps<{
   title: string
+  canOperate?: boolean
 }>()
 
 const taskStore = useTaskStore()
 const categoryStore = useCategoryStore()
-const { showToast } = useToast() // 使用 Toast 功能
+const { showToast } = useToast()
+const router = useRouter();
 
 // 添加对所有任务的引用，而不仅仅是待办任务
 const tasksToShow = computed(() => {
@@ -36,8 +39,12 @@ const currentFilters = computed(() => {
 })
 
 async function handleToggleCompletion(taskId: string) {
+  if (!props.canOperate) { 
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
   try {
-    const task = taskStore.getTaskById(taskId)
     await taskStore.toggleTaskCompletion(taskId)
 
     // The success toast for toggling completion is now handled in the taskStore's updateTask action
@@ -52,6 +59,11 @@ async function handleToggleCompletion(taskId: string) {
 }
 
 async function handleDeleteTask(taskId: string) {
+  if (!props.canOperate) { 
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
   try {
     // const task = taskStore.getTaskById(taskId) // No longer needed here for toast
     await taskStore.deleteTask(taskId)
@@ -104,16 +116,27 @@ function goToNextPage() {
 
 // 设置分类筛选
 function filterByCategory(categoryId: number | string | undefined) {
+  if (!props.canOperate && categoryId !== undefined) { 
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
   taskStore.setCategory(categoryId)
 }
 
 // 设置任务状态筛选
 function filterByStatus(status: number | undefined) {
+  if (!props.canOperate && status !== undefined) { 
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
   taskStore.setStatus(status)
 }
 
 // 清除所有筛选条件
 function clearAllFilters() {
+  // No auth check here, clearing filters should always be allowed
   taskStore.clearFilters()
 }
 

@@ -40,8 +40,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useCategoryStore, Category } from '../../store/category';
+import { useRouter } from 'vue-router';
+import { useToast } from '../../composables/useToast';
+
+const props = defineProps<{ 
+  canOperate?: boolean
+}>()
 
 const categoryStore = useCategoryStore();
+const router = useRouter();
+const { showToast } = useToast();
 
 // 提交状态
 const submitting = ref(false);
@@ -59,6 +67,11 @@ const canAddCategory = computed(() => {
 
 // 添加新分类
 async function addCategory() {
+  if (!props.canOperate) { 
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
   if (!canAddCategory.value || submitting.value) return;
 
   submitting.value = true;
@@ -74,6 +87,11 @@ async function addCategory() {
 
 // 开始编辑分类
 function startEdit(category: Category) {
+  if (!props.canOperate) { 
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
   editingCategoryId.value = category.categoryId;
   editingCategoryName.value = category.categoryName;
 }
@@ -86,6 +104,11 @@ function cancelEdit() {
 
 // 保存编辑
 async function saveEdit() {
+  if (!props.canOperate) { 
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
   if (!editingCategoryName.value.trim() || !editingCategoryId.value) {
     cancelEdit();
     return;
@@ -102,7 +125,12 @@ async function saveEdit() {
 
 // 确认删除分类
 function confirmDelete(category: Category) {
-  if (confirm(`确定要删除分类"${category.categoryName}"吗？此操作不可恢复。分类下的任务将变为无分类状态。`)) {
+  if (!props.canOperate) { 
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
+  if (confirm(`确定要删除分类 "${category.categoryName}" 吗？此操作不可恢复。分类下的任务将变为无分类状态。`)) {
     deleteCategory(category.categoryId);
   }
 }

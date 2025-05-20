@@ -6,11 +6,13 @@ import { useAuthStore } from '../store/auth'
 import { useToast } from '../composables/useToast'
 import { useTheme } from '../composables/useTheme' // 引入主题管理
 import api from '../services/api' // 导入API服务
+import { useRouter } from 'vue-router'
 
 const taskStore = useTaskStore()
 const authStore = useAuthStore()
 const { showToast } = useToast()
 const { themes, activeThemeName, applyTheme } = useTheme() // 使用主题管理
+const router = useRouter()
 const countdownTimer = ref<number | null>(null) // 倒计时定时器引用
 
 // 邮箱格式验证
@@ -63,6 +65,13 @@ const settingsForm = reactive({
 
 // Function to handle password change
 async function handleChangePassword() {
+  // 检查是否已登录
+  if (!authStore.isAuthenticated) {
+    showToast('请先登录再操作', 'warning');
+    router.push('/auth');
+    return;
+  }
+  
   settingsForm.success = ''
   if (settingsForm.newPassword !== settingsForm.confirmPassword) {
     showToast('新密码和确认密码不匹配', 'error')
@@ -96,6 +105,13 @@ async function handleChangePassword() {
 
 // Function to handle email change
 async function handleChangeEmail() {
+  // 检查是否已登录
+  if (!authStore.isAuthenticated) {
+    showToast('请先登录再操作', 'warning');
+    router.push('/auth');
+    return;
+  }
+  
   settingsForm.success = ''
   if (!settingsForm.email) {
     showToast('请输入邮箱地址', 'error')
@@ -142,6 +158,13 @@ async function handleChangeEmail() {
 
 // 发送邮箱验证码
 async function sendVerificationCode() {
+  // 检查是否已登录
+  if (!authStore.isAuthenticated) {
+    showToast('请先登录再操作', 'warning');
+    router.push('/auth');
+    return;
+  }
+  
   if (!settingsForm.email) {
     showToast('请先输入邮箱地址', 'error')
     return

@@ -4,6 +4,11 @@ import { useTaskStore } from "../../store/task";
 import { useCategoryStore } from "../../store/category";
 import TabNavigation from "../common/TabNavigation.vue";
 import { useToast } from "../../composables/useToast";
+import { useRouter } from 'vue-router';
+
+const props = defineProps<{ // Added
+  canOperate?: boolean
+}>()
 
 // Helper to get time with an offset from now
 function getOffsetTime(hoursOffset: number = 0, minutesOffset: number = 0) {
@@ -23,6 +28,7 @@ const initialDefaultTimeInfo = getOffsetTime(1, 0); // Default to one hour from 
 const taskStore = useTaskStore();
 const categoryStore = useCategoryStore(); // 使用集中的分类状态管理
 const { showToast } = useToast();
+const router = useRouter(); // Added
 
 const tabs = [
   { id: "category", name: "分类" },
@@ -200,6 +206,11 @@ onUnmounted(() => {
 });
 
 async function handleSubmit() {
+  if (!props.canOperate) { 
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
   if (!newTask.title.trim()) return;
 
   // 校验分类是否选择
@@ -273,7 +284,7 @@ async function handleSubmit() {
       <input v-model="newTask.title" class="form-control task-title" placeholder="输入任务标题..."
         @keyup.enter="handleSubmit" />
 
-      <textarea v-model="newTask.content" class="form-control task-content" placeholder="输入任务内容..." rows="3"></textarea>
+      <textarea v-model="newTask.content" class="form-control task-content" placeholder="输入任务内容..." rows="3"></textarea> 
     </div>
 
     <TabNavigation :tabs="tabs" :active-tab="activeTab" @change="handleTabChange" />
@@ -281,7 +292,7 @@ async function handleSubmit() {
     <div v-if="activeTab === 'category'" class="tab-content">
       <p class="field-label">选择分类：</p>
       <div class="category-selector">
-        <select class="form-control select-control" :disabled="categoryStore.loading || categoryStore.categories.length === 0" v-model="newTask.categoryId">
+        <select class="form-control select-control" :disabled="categoryStore.loading || categoryStore.categories.length === 0" v-model="newTask.categoryId"> 
           <option v-if="categoryStore.loading" value="" disabled>加载中...</option>
           <option v-else-if="!categoryStore.loading && categoryStore.categories.length === 0" value="" disabled>暂无分类，请先添加</option>
           <option v-for="category in categoryStore.categories" :key="category.categoryId" :value="category.categoryId">
@@ -328,7 +339,7 @@ async function handleSubmit() {
     </div>
 
     <div class="form-actions">
-      <button class="btn btn-primary submit-btn" :disabled="!newTask.title.trim()" @click="handleSubmit">
+      <button class="btn btn-primary submit-btn" :disabled="!newTask.title.trim()" @click="handleSubmit"> 
         <span class="icon">✓</span>
         添加
       </button>

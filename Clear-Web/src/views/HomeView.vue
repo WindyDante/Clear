@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { onMounted, watch, computed } from 'vue' // Added computed
 import { useRouter } from 'vue-router'
 import { useTaskStore } from '../store/task'
 import { useCategoryStore } from '../store/category'
+import { useAuthStore } from '../store/auth' // Added
 import AppHeader from '../components/common/AppHeader.vue'
 import TaskForm from '../components/task/TaskForm.vue'
 import TaskList from '../components/task/TaskList.vue'
@@ -10,7 +11,10 @@ import CategoryManagement from '../components/task/CategoryManagement.vue'
 
 const router = useRouter()
 const taskStore = useTaskStore()
-const categoryStore = useCategoryStore() // 使用分类状态管理
+const categoryStore = useCategoryStore()
+const authStore = useAuthStore() // Added
+
+const isAuthenticated = computed(() => authStore.isAuthenticated) // Added
 
 function navigateToAbout() {
   router.push('/about')
@@ -46,7 +50,7 @@ onMounted(() => {
 
 <template>
   <div class="home-view">
-    <AppHeader :show-logout-icon="true">
+    <AppHeader :show-logout-icon="isAuthenticated">
       <template #left-actions>
         <button class="icon-button about-button" @click="navigateToAbout">
           <img src="/about.svg" alt="关于" class="icon-img" />
@@ -58,9 +62,9 @@ onMounted(() => {
     </AppHeader>
 
     <div class="task-container">
-      <TaskForm />
-      <CategoryManagement />
-      <TaskList title="待办清单" />
+      <TaskForm :can-operate="isAuthenticated" /> 
+      <CategoryManagement :can-operate="isAuthenticated" /> 
+      <TaskList title="待办清单" :can-operate="isAuthenticated" /> 
     </div>
   </div>
 </template>
