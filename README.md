@@ -1,6 +1,5 @@
 # Clear
 
-下图所示为胭脂主题
 <p align="center">
   <img alt="Clear" src="./Clear-Web/public/favicon.svg" width="100">
 </p>
@@ -9,6 +8,7 @@
 
 Clear是一款极简而强大的待办事项管理应用，专为注重效率和简洁的用户设计。通过精心打造的界面和强大的功能，帮助您轻松管理日常任务，提高工作效率。
 
+下图所示为胭脂主题
 ![主页预览](./docs/img/index.png)
 
 [预览地址](https://clear.1wind.cn/)
