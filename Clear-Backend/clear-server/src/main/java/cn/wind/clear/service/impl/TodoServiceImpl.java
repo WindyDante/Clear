@@ -76,7 +76,7 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
         // 如果只有开始日期，则查询当天数据
         if (todoPageQueryDTO.getStartDate() != null && todoPageQueryDTO.getEndDate() == null) {
             LocalDate startOfDay = todoPageQueryDTO.getStartDate();
-            LocalDate endOfDay = startOfDay.plusDays(1);
+            LocalDate endOfDay = startOfDay.plusYears(100);
             queryWrapper.ge(Todo::getDueDate, startOfDay)
                     .lt(Todo::getDueDate, endOfDay);
         } else if (todoPageQueryDTO.getStartDate() != null) {
