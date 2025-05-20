@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref } from 'vue'
 import api from '../services/api'
 import { useToast } from '../composables/useToast' // Corrected import
 
@@ -34,18 +34,13 @@ export const useCategoryStore = defineStore('category', () => {
             const data = await api.getCategories()
             categories.value = data || []
 
-            // 如果返回的分类列表为空，添加默认分类
-            if (categories.value.length === 0) {
-                categories.value = [{ categoryId: '0', categoryName: "默认" }]
-            }
-
             isLoaded.value = true // 标记数据已加载
             return categories.value
         } catch (err) {
             console.error('获取分类失败:', err)
             error.value = err instanceof Error ? err.message : '获取分类失败'
-            // 出错时使用默认分类
-            categories.value = [{ categoryId: '0', categoryName: "默认" }]
+            // 出错时设置为空数组
+            categories.value = []
             throw err
         } finally {
             loading.value = false
@@ -143,12 +138,6 @@ export const useCategoryStore = defineStore('category', () => {
         }
     }
 
-    // 获取默认分类
-    const defaultCategory = computed(() => {
-        const defaultCat = categories.value.find(cat => cat.categoryName === "默认")
-        return defaultCat || { categoryId: '0', categoryName: "默认" }
-    })
-
     // 重置加载状态（用于登出后重置状态）
     function reset() {
         categories.value = []
@@ -166,7 +155,6 @@ export const useCategoryStore = defineStore('category', () => {
         addCategory,
         updateCategory,
         deleteCategory,
-        defaultCategory,
         reset
     }
 })

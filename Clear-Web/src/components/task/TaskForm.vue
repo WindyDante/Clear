@@ -42,8 +42,8 @@ const selectedMinute = ref(initialDefaultTimeInfo.minute);
 const newTask = reactive({
   title: "",
   content: "",
-  category: "默认", // 存储分类名称
-  categoryId: "0", // 存储分类ID，使用字符串类型
+  category: "", // 存储分类名称
+  categoryId: "", // 存储分类ID，使用字符串类型
   dueDate: initialDefaultTimeInfo.date.toISOString(), // Default to one hour from now
   dueTime: `${initialDefaultTimeInfo.hour}:${initialDefaultTimeInfo.minute}` as string, // Default to one hour from now
 });
@@ -56,7 +56,11 @@ watch(() => categoryStore.categories, (categories) => {
     newTask.category = firstCategory.categoryName;
     // 使用字符串类型的分类ID
     newTask.categoryId = firstCategory.categoryId;
-    console.log('已设置默认分类:', firstCategory.categoryName, firstCategory.categoryId);
+    // console.log('已设置默认分类:', firstCategory.categoryName, firstCategory.categoryId); // 移除或注释掉这行
+  } else {
+    // 没有分类时，清空选择
+    newTask.category = "";
+    newTask.categoryId = "";
   }
 }, { immediate: true }); // immediate: true 确保在组件创建时立即执行一次
 
@@ -178,9 +182,9 @@ onMounted(() => {
     // 使用字符串类型的分类ID
     newTask.categoryId = firstCategory.categoryId;
   } else {
-    // 如果分类列表为空，使用默认分类
-    newTask.category = "默认";
-    newTask.categoryId = "0";
+    // 如果分类列表为空，清空选择
+    newTask.category = "";
+    newTask.categoryId = "";
   }
 
   // 初始化时间选择器的值
@@ -197,6 +201,17 @@ onUnmounted(() => {
 
 async function handleSubmit() {
   if (!newTask.title.trim()) return;
+
+  // 校验分类是否选择
+  if (!newTask.categoryId && categoryStore.categories.length > 0) {
+    showToast("请选择一个分类", "error");
+    return;
+  } else if (categoryStore.categories.length === 0) {
+    showToast("请先添加分类后再创建任务", "error");
+    activeTab.value = "category"; // 提示用户切换到分类tab可能不直接，但保留原意
+    // 更好的做法可能是引导用户到分类管理页面
+    return;
+  }
 
   // 校验截止日期是否小于当前时间
   if (newTask.dueDate) {
@@ -225,14 +240,14 @@ async function handleSubmit() {
     newTask.title = "";
     newTask.content = "";
 
-    // 重置为第一个分类
+    // 重置为第一个分类或清空
     if (categoryStore.categories.length > 0) {
       const firstCategory = categoryStore.categories[0];
       newTask.category = firstCategory.categoryName;
       newTask.categoryId = firstCategory.categoryId;
     } else {
-      newTask.category = "默认";
-      newTask.categoryId = "0";
+      newTask.category = "";
+      newTask.categoryId = "";
     }
 
     // 重置时间为当前时间 + 1 小时
@@ -266,8 +281,9 @@ async function handleSubmit() {
     <div v-if="activeTab === 'category'" class="tab-content">
       <p class="field-label">选择分类：</p>
       <div class="category-selector">
-        <select class="form-control select-control" :disabled="categoryStore.loading" v-model="newTask.categoryId">
+        <select class="form-control select-control" :disabled="categoryStore.loading || categoryStore.categories.length === 0" v-model="newTask.categoryId">
           <option v-if="categoryStore.loading" value="" disabled>加载中...</option>
+          <option v-else-if="!categoryStore.loading && categoryStore.categories.length === 0" value="" disabled>暂无分类，请先添加</option>
           <option v-for="category in categoryStore.categories" :key="category.categoryId" :value="category.categoryId">
             {{ category.categoryName }}
           </option>

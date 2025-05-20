@@ -39,10 +39,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useToast } from '../../composables/useToast';
 import { useCategoryStore, Category } from '../../store/category';
 
-const { showToast } = useToast();
 const categoryStore = useCategoryStore();
 
 // 提交状态
@@ -104,7 +102,7 @@ async function saveEdit() {
 
 // 确认删除分类
 function confirmDelete(category: Category) {
-  if (confirm(`确定要删除分类"${category.categoryName}"吗？此操作不可恢复，分类下的任务将被移动到默认分类。`)) {
+  if (confirm(`确定要删除分类"${category.categoryName}"吗？此操作不可恢复。分类下的任务将变为无分类状态。`)) {
     deleteCategory(category.categoryId);
   }
 }
