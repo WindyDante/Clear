@@ -1,48 +1,18 @@
 <template>
-  <div class="category-management card">
-    <h3 class="form-title"><span class="icon">📁</span> 分类管理</h3>
-
-    <div class="categories-list">
-      <div v-if="categoryStore.loading" class="loading">加载中...</div>
-      <div v-else-if="categoryStore.categories.length === 0" class="empty-state">
-        暂无分类，请添加新分类
-      </div>
-      <div v-else class="category-items">
-        <div v-for="category in categoryStore.categories" :key="category.categoryId" class="category-item">
-          <div class="category-info" v-if="editingCategoryId !== category.categoryId">
-            <span class="category-name">{{ category.categoryName }}</span>
-            <div class="category-actions">
-              <button @click="startEdit(category)" class="btn-action edit">编辑</button>
-              <button @click="confirmDelete(category)" class="btn-action delete">删除</button>
-            </div>
-          </div>
-          <div class="category-edit" v-else>
-            <input v-model="editingCategoryName" class="form-control" placeholder="分类名称" @keyup.enter="saveEdit" />
-            <div class="edit-actions">
-              <button @click="saveEdit" class="btn-action save">保存</button>
-              <button @click="cancelEdit" class="btn-action cancel">取消</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="add-category-form">
-      <input v-model="newCategoryName" class="form-control" placeholder="输入新分类名称..." @keyup.enter="addCategory" />
-      <button @click="addCategory" class="btn primary add-category-btn" :disabled="!canAddCategory || submitting">
-        <img v-if="!submitting" src="/add.svg" alt="添加分类" class="add-icon" />
-      </button>
-    </div>
+  <div v-if="false" class="category-management card">
+    <!-- Content removed as it is integrated into TaskList.vue -->
   </div>
 </template>
 
 <script setup lang="ts">
+// Logic remains for store interactions, but UI is removed.
+// This component might be entirely removed if store actions are directly called from TaskList or a composable.
 import { ref, computed, onMounted } from 'vue';
-import { useCategoryStore, Category } from '../../store/category';
+import { useCategoryStore, type Category } from '../../store/category';
 import { useRouter } from 'vue-router';
 import { useToast } from '../../composables/useToast';
 
-const props = defineProps<{ 
+const props = defineProps<{
   canOperate?: boolean
 }>()
 
@@ -50,29 +20,22 @@ const categoryStore = useCategoryStore();
 const router = useRouter();
 const { showToast } = useToast();
 
-// 提交状态
 const submitting = ref(false);
-// 新分类名称
 const newCategoryName = ref('');
-// 正在编辑的分类ID
 const editingCategoryId = ref<string | null>(null);
-// 编辑中的分类名称
 const editingCategoryName = ref('');
 
-// 是否可以添加新分类
 const canAddCategory = computed(() => {
   return newCategoryName.value.trim().length > 0;
 });
 
-// 添加新分类
 async function addCategory() {
-  if (!props.canOperate) { 
+  if (!props.canOperate) {
     router.push('/auth');
     showToast('请先登录再操作', 'warning');
     return;
   }
   if (!canAddCategory.value || submitting.value) return;
-
   submitting.value = true;
   try {
     await categoryStore.addCategory(newCategoryName.value.trim());
@@ -84,9 +47,8 @@ async function addCategory() {
   }
 }
 
-// 开始编辑分类
 function startEdit(category: Category) {
-  if (!props.canOperate) { 
+  if (!props.canOperate) {
     router.push('/auth');
     showToast('请先登录再操作', 'warning');
     return;
@@ -95,15 +57,13 @@ function startEdit(category: Category) {
   editingCategoryName.value = category.categoryName;
 }
 
-// 取消编辑
 function cancelEdit() {
   editingCategoryId.value = null;
   editingCategoryName.value = '';
 }
 
-// 保存编辑
 async function saveEdit() {
-  if (!props.canOperate) { 
+  if (!props.canOperate) {
     router.push('/auth');
     showToast('请先登录再操作', 'warning');
     return;
@@ -112,7 +72,6 @@ async function saveEdit() {
     cancelEdit();
     return;
   }
-
   try {
     await categoryStore.updateCategory(editingCategoryId.value, editingCategoryName.value.trim());
   } catch (error) {
@@ -122,19 +81,17 @@ async function saveEdit() {
   }
 }
 
-// 确认删除分类
 function confirmDelete(category: Category) {
-  if (!props.canOperate) { 
+  if (!props.canOperate) {
     router.push('/auth');
     showToast('请先登录再操作', 'warning');
     return;
   }
-  if (confirm(`确定要删除分类 "${category.categoryName}" 吗？此操作不可恢复。分类下的任务将变为无分类状态。`)) {
+  if (window.confirm(`确定要删除分类 "${category.categoryName}" 吗？此操作不可恢复。分类下的任务将变为无分类状态。`)) {
     deleteCategory(category.categoryId);
   }
 }
 
-// 删除分类
 async function deleteCategory(categoryId: string) {
   try {
     await categoryStore.deleteCategory(categoryId);
@@ -143,202 +100,12 @@ async function deleteCategory(categoryId: string) {
   }
 }
 
-// 组件加载时获取分类列表
 onMounted(() => {
-  // 不再单独获取分类列表，改为使用父组件已加载的共享状态
-  // categoryStore.fetchCategories();
+  // console.log('CategoryManagement: Component mounted, data will be initialized by App.vue or parent.');
 });
 </script>
 
 <style scoped>
-.category-management {
-  margin: 1.5rem 0;
-  padding: 1.5rem;
-}
-
-.form-title {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-}
-
-.form-title .icon {
-  margin-right: 0.5rem;
-}
-
-.categories-list {
-  margin-bottom: 1.5rem;
-}
-
-.loading,
-.empty-state {
-  padding: 1rem 0;
-  text-align: center;
-  color: var(--text-secondary);
-}
-
-.category-items {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.category-item {
-  padding: 0.75rem;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  background-color: var(--card-color);
-  transition: background-color 0.2s;
-}
-
-.category-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.category-name {
-  color: var(--text-color);
-  font-weight: 500;
-}
-
-.category-actions,
-.edit-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-action {
-  padding: 0.25rem 0.5rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.edit {
-  background-color: var(--primary-light, #e7f3ff);
-}
-
-.edit:hover {
-  background-color: var(--primary-color);
-}
-
-.delete {
-  background-color: rgba(204, 0, 0, 0.15);
-  color: var(--danger-color, #cc0000);
-}
-
-.delete:hover {
-  background-color: var(--danger-color);
-  color: white;
-}
-
-.save {
-  background-color: rgba(0, 102, 0, 0.15);
-  color: var(--success-color, #006600);
-}
-
-.save:hover {
-  background-color: var(--success-color);
-  color: white;
-}
-
-.cancel {
-  background-color: var(--background-color);
-  color: var(--text-color);
-}
-
-.cancel:hover {
-  background-color: var(--border-color);
-}
-
-.category-edit {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.category-edit input {
-  flex: 1;
-  background-color: var(--card-color);
-  color: var(--text-color);
-}
-
-.add-category-form {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  /* 确保垂直对齐 */
-}
-
-.add-category-btn {
-  /* 添加分类按钮特定样式 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  /* 调整内边距以适应图标 */
-  min-width: 40px;
-  /* 根据图标大小调整 */
-  height: 40px;
-  /* 与输入框高度一致 */
-  box-sizing: border-box;
-  /* 确保高度计算包括内边距和边框 */
-  border: 1px solid #ddd;
-  /* 新增：匹配输入框的边框 */
-  /* background-color and color will be inherited from .primary class */
-  /* border-radius will be inherited from .btn class */
-}
-
-.add-icon {
-  /* 图标样式 */
-  width: 20px;
-  /* 根据你的SVG图标大小调整 */
-  height: 20px;
-  /* 根据你的SVG图标大小调整 */
-}
-
-.btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s, opacity 0.2s;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.primary {
-  background-color: var(--primary-color, #4caf50);
-  color: white;
-}
-
-.primary:hover:not(:disabled) {
-  background-color: var(--primary-hover-color, #388e3c);
-}
-
-.form-control {
-  padding: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  font-size: 1rem;
-  height: 40px;
-  background-color: var(--card-color);
-  color: var(--text-color);
-  /* 确保输入框有明确高度以便对齐 */
-  box-sizing: border-box;
-  /* 确保padding和border不增加总高度 */
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb, 76, 175, 80), 0.2);
-}
+/* All styles removed as the template is now empty. */
+/* Ensure this component is no longer imported or used in HomeView.vue if it's fully deprecated. */
 </style>

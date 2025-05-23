@@ -2,7 +2,7 @@
 import { ref, reactive, onMounted, onUnmounted, computed, watch } from "vue";
 import { useTaskStore } from "../../store/task";
 import { useCategoryStore } from "../../store/category";
-import TabNavigation from "../common/TabNavigation.vue";
+// TabNavigation import removed
 import { useToast } from "../../composables/useToast";
 import { useRouter } from 'vue-router';
 
@@ -30,12 +30,9 @@ const categoryStore = useCategoryStore(); // 使用集中的分类状态管理
 const { showToast } = useToast();
 const router = useRouter(); // Added
 
-const tabs = [
-  { id: "category", name: "分类" },
-  { id: "dueDate", name: "截止日期" },
-];
+// tabs array removed
+// activeTab ref removed
 
-const activeTab = ref("category");
 const showDatePicker = ref(false);
 const datePickerRef = ref<HTMLElement | null>(null);
 
@@ -131,13 +128,7 @@ function nextMonth() {
   }
 }
 
-function handleTabChange(tabId: string) {
-  activeTab.value = tabId;
-  // 在切换到非日期选择器标签时，始终关闭日期选择器
-  if (tabId !== "dueDate") {
-    showDatePicker.value = false;
-  }
-}
+// handleTabChange function removed
 
 function handleDateSelect(day: number) {
   const date = new Date(currentYear.value, currentMonth.value, day);
@@ -206,7 +197,7 @@ onUnmounted(() => {
 });
 
 async function handleSubmit() {
-  if (!props.canOperate) { 
+  if (!props.canOperate) {
     router.push('/auth');
     showToast('请先登录再操作', 'warning');
     return;
@@ -219,7 +210,7 @@ async function handleSubmit() {
     return;
   } else if (categoryStore.categories.length === 0) {
     showToast("请先添加分类后再创建任务", "error");
-    activeTab.value = "category"; // 提示用户切换到分类tab可能不直接，但保留原意
+    // activeTab.value = "category"; // Removed: No longer relevant
     // 更好的做法可能是引导用户到分类管理页面
     return;
   }
@@ -268,7 +259,7 @@ async function handleSubmit() {
     selectedMinute.value = resetTimeInfo.minute;
     newTask.dueDate = resetTimeInfo.date.toISOString();
 
-    activeTab.value = "category";
+    // activeTab.value = "category"; // Removed: No longer relevant
   } catch (error) {
     // 显示添加失败的 Toast // 已在 store 中处理，由 api.ts 抛出错误时统一处理
     // showToast("任务添加失败，请重试", "error");
@@ -284,17 +275,20 @@ async function handleSubmit() {
       <input v-model="newTask.title" class="form-control task-title" placeholder="输入任务标题..."
         @keyup.enter="handleSubmit" />
 
-      <textarea v-model="newTask.content" class="form-control task-content" placeholder="输入任务内容..." rows="3"></textarea> 
+      <textarea v-model="newTask.content" class="form-control task-content" placeholder="输入任务内容..." rows="3"></textarea>
     </div>
 
-    <TabNavigation :tabs="tabs" :active-tab="activeTab" @change="handleTabChange" />
+    <!-- TabNavigation removed -->
 
-    <div v-if="activeTab === 'category'" class="tab-content">
+    <!-- Combined content for category and due date -->
+    <div class="tab-content form-section">
       <p class="field-label">选择分类：</p>
       <div class="category-selector">
-        <select class="form-control select-control" :disabled="categoryStore.loading || categoryStore.categories.length === 0" v-model="newTask.categoryId"> 
+        <select class="form-control select-control"
+          :disabled="categoryStore.loading || categoryStore.categories.length === 0" v-model="newTask.categoryId">
           <option v-if="categoryStore.loading" value="" disabled>加载中...</option>
-          <option v-else-if="!categoryStore.loading && categoryStore.categories.length === 0" value="" disabled>暂无分类，请先添加</option>
+          <option v-else-if="!categoryStore.loading && categoryStore.categories.length === 0" value="" disabled>
+            暂无分类，请先添加</option>
           <option v-for="category in categoryStore.categories" :key="category.categoryId" :value="category.categoryId">
             {{ category.categoryName }}
           </option>
@@ -303,8 +297,8 @@ async function handleSubmit() {
       </div>
     </div>
 
-    <div v-else-if="activeTab === 'dueDate'" class="tab-content">
-      <p class="field-label">截止日期 ({{ newTask.category }})：</p>
+    <div class="tab-content form-section"> <!-- Added class form-section for potential styling -->
+      <p class="field-label">截止日期：</p> <!-- Removed ({{ newTask.category }}) as it might be confusing now -->
       <div class="date-picker-trigger" @click="showDatePicker = true">
         <input :value="formatDateTime(newTask.dueDate)" class="form-control" placeholder="选择日期" readonly />
         <span class="calendar-icon">📅</span>
@@ -339,7 +333,7 @@ async function handleSubmit() {
     </div>
 
     <div class="form-actions">
-      <button class="btn btn-primary submit-btn" :disabled="!newTask.title.trim()" @click="handleSubmit"> 
+      <button class="btn btn-primary submit-btn" :disabled="!newTask.title.trim()" @click="handleSubmit">
         <span class="icon">✓</span>
         添加
       </button>
@@ -556,7 +550,12 @@ select {
 }
 
 .tab-content {
-  padding: 12px 0;
+  padding: 0 0;
+}
+
+.form-section {
+  /* Added for spacing if needed */
+  margin-bottom: 16px;
 }
 
 .select-control {

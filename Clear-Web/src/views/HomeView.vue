@@ -7,7 +7,6 @@ import { useAuthStore } from '../store/auth' // Added
 import AppHeader from '../components/common/AppHeader.vue'
 import TaskForm from '../components/task/TaskForm.vue'
 import TaskList from '../components/task/TaskList.vue'
-import CategoryManagement from '../components/task/CategoryManagement.vue'
 
 const router = useRouter()
 const taskStore = useTaskStore()
@@ -62,9 +61,8 @@ onMounted(() => {
     </AppHeader>
 
     <div class="task-container">
-      <TaskForm :can-operate="isAuthenticated" /> 
-      <CategoryManagement :can-operate="isAuthenticated" /> 
-      <TaskList title="待办清单" :can-operate="isAuthenticated" /> 
+      <TaskForm :can-operate="isAuthenticated" />
+      <TaskList title="待办清单" :can-operate="isAuthenticated" />
     </div>
   </div>
 </template>

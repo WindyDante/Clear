@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, onUnmounted } from 'vue' // 引入 onUnmounted
+import { computed, onMounted, ref, onUnmounted, nextTick } from 'vue' // 引入 onUnmounted and nextTick
 import { useTaskStore } from '../../store/task'
-import { useCategoryStore } from '../../store/category'
-import { useToast } from '../../composables/useToast' // 引入 Toast 功能
+import { useCategoryStore, type Category } from '../../store/category' // Import Category type
+import { useToast } from '../../composables/useToast'
 import { useRouter } from 'vue-router';
 
 const props = defineProps<{
@@ -15,10 +15,15 @@ const categoryStore = useCategoryStore()
 const { showToast } = useToast()
 const router = useRouter();
 
-// 本地 ref 用于绑定日期和关键字输入
-const startDateInput = ref('')
-const endDateInput = ref('')
-const keywordInput = ref('')
+// --- Category Management State ---
+const showAddCategoryInput = ref(false);
+const newCategoryName = ref('');
+const editingCategoryId = ref<string | null>(null);
+const editingCategoryName = ref('');
+// const categoryActionVisible = ref<string | null>(null); // Removed
+const openedCategoryMenuId = ref<string | null>(null); // New: Tracks open actions menu
+const categoryEditInputRef = ref<HTMLInputElement | null>(null);
+const newCategoryInputRef = ref<HTMLInputElement | null>(null);
 
 // --- 日期选择器状态 ---
 const showStartDatePicker = ref(false)
@@ -85,11 +90,11 @@ const openPicker = (type: 'start' | 'end') => {
   if (currentDateVal) {
     const [year, month, day] = currentDateVal.split('-').map(Number);
     if (year && month && day) {
-        pickerCurrentYear.value = year;
-        pickerCurrentMonth.value = month - 1; // Month is 0-indexed
+      pickerCurrentYear.value = year;
+      pickerCurrentMonth.value = month - 1; // Month is 0-indexed
     } else { // Fallback to today if date format is invalid
-        pickerCurrentYear.value = today.getFullYear();
-        pickerCurrentMonth.value = today.getMonth();
+      pickerCurrentYear.value = today.getFullYear();
+      pickerCurrentMonth.value = today.getMonth();
     }
   } else {
     pickerCurrentYear.value = today.getFullYear();
@@ -115,7 +120,6 @@ const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as HTMLElement;
   // Check for start date picker
   if (showStartDatePicker.value && startDatePickerContainerRef.value && !startDatePickerContainerRef.value.contains(target)) {
-    // Check if the click was on the trigger for the start date picker
     const startDateTrigger = document.querySelector('.start-date-input-trigger');
     if (!startDateTrigger || !startDateTrigger.contains(target)) {
       showStartDatePicker.value = false;
@@ -123,28 +127,146 @@ const handleClickOutside = (event: MouseEvent) => {
   }
   // Check for end date picker
   if (showEndDatePicker.value && endDatePickerContainerRef.value && !endDatePickerContainerRef.value.contains(target)) {
-     const endDateTrigger = document.querySelector('.end-date-input-trigger');
+    const endDateTrigger = document.querySelector('.end-date-input-trigger');
     if (!endDateTrigger || !endDateTrigger.contains(target)) {
       showEndDatePicker.value = false;
     }
   }
-};
+}
+
+function closeCategoryMenuOnClickOutside(event: MouseEvent) {
+  if (openedCategoryMenuId.value) {
+    const target = event.target as HTMLElement;
+    const menuElement = document.querySelector(`.category-actions-menu[data-category-id="${openedCategoryMenuId.value}"]`);
+    const triggerElement = document.querySelector(`.category-actions-trigger[data-category-id="${openedCategoryMenuId.value}"]`);
+    if (menuElement && !menuElement.contains(target) && triggerElement && !triggerElement.contains(target)) {
+      openedCategoryMenuId.value = null;
+    }
+  }
+}
 
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside, true); // Use capture phase
+  document.addEventListener('click', handleClickOutside, true);
+  document.addEventListener('click', closeCategoryMenuOnClickOutside, true);
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside, true);
+  document.removeEventListener('click', closeCategoryMenuOnClickOutside, true);
 });
 
+// --- Category Management Methods ---
 
-// --- End 日期选择器状态 ---
+function closeAllCategoryInputsAndMenus() {
+  openedCategoryMenuId.value = null;
+  editingCategoryId.value = null;
+  showAddCategoryInput.value = false;
+}
 
-// 添加对所有任务的引用，而不仅仅是待办任务
-const tasksToShow = computed(() => {
-  return taskStore.tasks
-})
+function toggleCategoryActionsMenu(categoryId: string) {
+  if (openedCategoryMenuId.value === categoryId) {
+    openedCategoryMenuId.value = null;
+  } else {
+    closeAllCategoryInputsAndMenus(); // Close others before opening a new one
+    openedCategoryMenuId.value = categoryId;
+  }
+}
+
+function toggleAddCategoryInput() {
+  if (!props.canOperate) {
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
+  if (showAddCategoryInput.value) {
+    showAddCategoryInput.value = false;
+  } else {
+    closeAllCategoryInputsAndMenus();
+    showAddCategoryInput.value = true;
+    nextTick(() => newCategoryInputRef.value?.focus());
+  }
+}
+
+async function handleAddCategory() {
+  if (!props.canOperate) {
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
+  if (!newCategoryName.value.trim()) {
+    showToast('分类名称不能为空', 'error');
+    return;
+  }
+  try {
+    await categoryStore.addCategory(newCategoryName.value.trim());
+    newCategoryName.value = '';
+    showAddCategoryInput.value = false; // Hide input after adding
+  } catch (error) {
+    // Error toast is handled by the store/API
+    console.error('Failed to add category:', error);
+  }
+}
+
+function startEditCategory(category: Category) {
+  if (!props.canOperate) {
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
+  closeAllCategoryInputsAndMenus();
+  editingCategoryId.value = category.categoryId;
+  editingCategoryName.value = category.categoryName;
+  nextTick(() => categoryEditInputRef.value?.focus());
+}
+
+function cancelEditCategory() {
+  editingCategoryId.value = null;
+  editingCategoryName.value = '';
+}
+
+async function handleSaveCategory() {
+  if (!props.canOperate) {
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
+  if (!editingCategoryName.value.trim() || !editingCategoryId.value) {
+    cancelEditCategory();
+    return;
+  }
+  try {
+    await categoryStore.updateCategory(editingCategoryId.value, editingCategoryName.value.trim());
+    cancelEditCategory();
+  } catch (error) {
+    console.error('Failed to update category:', error);
+  }
+}
+
+async function handleDeleteCategory(category: Category) {
+  if (!props.canOperate) {
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
+  openedCategoryMenuId.value = null; // Close menu before confirm dialog
+  if (confirm(`确定要删除分类 "${category.categoryName}" 吗？此操作不可恢复。分类下的任务将变为无分类状态。`)) {
+    try {
+      await categoryStore.deleteCategory(category.categoryId);
+      if (taskStore.selectedCategoryId === category.categoryId) {
+        taskStore.setCategory(undefined);
+      }
+    } catch (error) {
+      console.error('Failed to delete category:', error);
+    }
+  }
+}
+
+// --- End Category Management Methods ---
+
+// 本地 ref 用于绑定日期和关键字输入
+const startDateInput = ref('')
+const endDateInput = ref('')
+const keywordInput = ref('')
 
 // 用于UI展示的当前筛选条件
 const currentFilters = computed(() => {
@@ -178,8 +300,13 @@ const currentFilters = computed(() => {
   return filters
 })
 
+// 添加对所有任务的引用，而不仅仅是待办任务
+const tasksToShow = computed(() => {
+  return taskStore.tasks
+})
+
 async function handleToggleCompletion(taskId: string) {
-  if (!props.canOperate) { 
+  if (!props.canOperate) {
     router.push('/auth');
     showToast('请先登录再操作', 'warning');
     return;
@@ -199,7 +326,7 @@ async function handleToggleCompletion(taskId: string) {
 }
 
 async function handleDeleteTask(taskId: string) {
-  if (!props.canOperate) { 
+  if (!props.canOperate) {
     router.push('/auth');
     showToast('请先登录再操作', 'warning');
     return;
@@ -256,12 +383,13 @@ function goToNextPage() {
 
 // 设置分类筛选
 function filterByCategory(categoryId: number | string | undefined) {
-  if (!props.canOperate && categoryId !== undefined) { 
+  if (!props.canOperate && categoryId !== undefined) {
     router.push('/auth');
     showToast('请先登录再操作', 'warning');
     return;
   }
-  taskStore.setCategory(categoryId)
+  taskStore.setCategory(categoryId);
+  closeAllCategoryInputsAndMenus(); // Close menus/inputs when a filter is applied
 }
 
 // 设置任务状态筛选
@@ -293,6 +421,7 @@ function clearAllFilters() {
   showStartDatePicker.value = false; // Close picker
   showEndDatePicker.value = false;   // Close picker
   taskStore.clearFilters()
+  closeAllCategoryInputsAndMenus(); // Clear category states
 }
 
 // 确保组件挂载时加载分类数据和任务数据
@@ -312,16 +441,57 @@ onMounted(() => {
     <div class="filters-section">
       <div class="filter-controls">
         <!-- 分类筛选 -->
-        <div class="filter-group">
+        <div class="filter-group category-filter-group">
           <label>分类筛选:</label>
-          <div class="filter-buttons">
-            <button class="filter-btn" :class="{ 'active': taskStore.selectedCategoryId === undefined }"
-              @click="filterByCategory(undefined)">全部</button>
-            <button v-for="category in categoryStore.categories" :key="category.categoryId" class="filter-btn"
-              :class="{ 'active': taskStore.selectedCategoryId === category.categoryId }"
-              @click="filterByCategory(category.categoryId)">
-              {{ category.categoryName }}
+          <div class="filter-buttons category-buttons">
+            <button class="filter-btn"
+              :class="{ 'active': taskStore.selectedCategoryId === undefined && !editingCategoryId && !showAddCategoryInput }"
+              @click="filterByCategory(undefined)" :disabled="!!editingCategoryId || showAddCategoryInput">
+              全部
             </button>
+            <div v-for="category in categoryStore.categories" :key="category.categoryId" class="category-filter-item">
+
+              <div v-if="editingCategoryId === category.categoryId" class="category-edit-mode">
+                <input v-model="editingCategoryName" class="filter-input category-edit-input" ref="categoryEditInputRef"
+                  placeholder="分类名称" @keyup.enter="handleSaveCategory" @keyup.esc="cancelEditCategory" />
+                <button class="btn-action save-icon" @click="handleSaveCategory" title="保存">✓</button>
+                <button class="btn-action cancel-icon" @click="cancelEditCategory" title="取消">✕</button>
+              </div>
+
+              <button v-else class="filter-btn category-btn"
+                :class="{ 'active': taskStore.selectedCategoryId === category.categoryId }"
+                @click="filterByCategory(category.categoryId)" :disabled="!!editingCategoryId || showAddCategoryInput">
+                {{ category.categoryName }}
+              </button>
+
+              <div v-if="props.canOperate && editingCategoryId !== category.categoryId"
+                class="category-actions-trigger-wrapper">
+                <button class="btn-action category-actions-trigger" :data-category-id="category.categoryId"
+                  @click.stop="toggleCategoryActionsMenu(category.categoryId)" title="更多操作"
+                  :disabled="!!editingCategoryId || showAddCategoryInput">
+                  ⋮
+                </button>
+                <div v-if="openedCategoryMenuId === category.categoryId" class="category-actions-menu"
+                  :data-category-id="category.categoryId">
+                  <button @click.stop="startEditCategory(category)">编辑</button>
+                  <button @click.stop="handleDeleteCategory(category)">删除</button>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="props.canOperate && !editingCategoryId" class="add-category-wrapper">
+              <button v-if="!showAddCategoryInput" class="filter-btn add-category-btn-toggle"
+                @click="toggleAddCategoryInput" title="添加分类">
+                +
+              </button>
+              <div v-if="showAddCategoryInput" class="category-add-mode">
+                <input v-model="newCategoryName" class="filter-input category-add-input" ref="newCategoryInputRef"
+                  placeholder="新分类名称" @keyup.enter="handleAddCategory" @keyup.esc="toggleAddCategoryInput" />
+                <button class="btn-action save-icon" @click="handleAddCategory" title="添加">✓</button>
+                <button class="btn-action cancel-icon" @click="toggleAddCategoryInput" title="取消">✕</button>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -343,7 +513,8 @@ onMounted(() => {
           <label>日期筛选:</label>
           <div class="date-filter-inputs">
             <div class="date-input-container">
-              <input type="text" :value="startDateInput" placeholder="开始日期" @click="openPicker('start')" readonly class="filter-input date-input start-date-input-trigger">
+              <input type="text" :value="startDateInput" placeholder="开始日期" @click="openPicker('start')" readonly
+                class="filter-input date-input start-date-input-trigger">
               <div v-if="showStartDatePicker" class="date-picker-popover" ref="startDatePickerContainerRef">
                 <div class="date-picker-header">
                   <button class="picker-nav" @click.stop="pickerPrevMonth">◀</button>
@@ -351,10 +522,9 @@ onMounted(() => {
                   <button class="picker-nav" @click.stop="pickerNextMonth">▶</button>
                 </div>
                 <div class="date-grid">
-                  <div v-for="day in pickerDaysInMonth" :key="day" 
-                       class="date-cell" 
-                       :class="{ 'active': startDateInput === formatDateToYYYYMMDD(new Date(pickerCurrentYear, pickerCurrentMonth, day)) }"
-                       @click.stop="selectDate(day, 'start')">
+                  <div v-for="day in pickerDaysInMonth" :key="day" class="date-cell"
+                    :class="{ 'active': startDateInput === formatDateToYYYYMMDD(new Date(pickerCurrentYear, pickerCurrentMonth, day)) }"
+                    @click.stop="selectDate(day, 'start')">
                     {{ day }}
                   </div>
                 </div>
@@ -362,18 +532,19 @@ onMounted(() => {
             </div>
             <span>-</span>
             <div class="date-input-container">
-              <input type="text" :value="endDateInput" placeholder="结束日期 (可选)" @click="openPicker('end')" readonly class="filter-input date-input end-date-input-trigger">
-              <div v-if="showEndDatePicker" class="date-picker-popover date-picker-popover-end" ref="endDatePickerContainerRef">
+              <input type="text" :value="endDateInput" placeholder="结束日期 (可选)" @click="openPicker('end')" readonly
+                class="filter-input date-input end-date-input-trigger">
+              <div v-if="showEndDatePicker" class="date-picker-popover date-picker-popover-end"
+                ref="endDatePickerContainerRef">
                 <div class="date-picker-header">
                   <button class="picker-nav" @click.stop="pickerPrevMonth">◀</button>
                   <div class="current-month">{{ pickerCurrentMonthName }}</div>
                   <button class="picker-nav" @click.stop="pickerNextMonth">▶</button>
                 </div>
                 <div class="date-grid">
-                  <div v-for="day in pickerDaysInMonth" :key="day" 
-                       class="date-cell" 
-                       :class="{ 'active': endDateInput === formatDateToYYYYMMDD(new Date(pickerCurrentYear, pickerCurrentMonth, day)) }"
-                       @click.stop="selectDate(day, 'end')">
+                  <div v-for="day in pickerDaysInMonth" :key="day" class="date-cell"
+                    :class="{ 'active': endDateInput === formatDateToYYYYMMDD(new Date(pickerCurrentYear, pickerCurrentMonth, day)) }"
+                    @click.stop="selectDate(day, 'end')">
                     {{ day }}
                   </div>
                 </div>
@@ -385,7 +556,8 @@ onMounted(() => {
         <!-- 关键字筛选 -->
         <div class="filter-group">
           <label>关键字筛选:</label>
-          <input type="text" v-model="keywordInput" placeholder="输入关键字" @keyup.enter="applyKeywordFilter" @blur="applyKeywordFilter" class="filter-input keyword-input">
+          <input type="text" v-model="keywordInput" placeholder="输入关键字" @keyup.enter="applyKeywordFilter"
+            @blur="applyKeywordFilter" class="filter-input keyword-input">
         </div>
       </div>
 
@@ -480,7 +652,8 @@ onMounted(() => {
 .filter-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px; /* 调整整体间距 */
+  gap: 16px;
+  /* 调整整体间距 */
   margin-bottom: 12px;
 }
 
@@ -488,8 +661,10 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex-grow: 1; /* 让筛选组在空间足够时可以扩展 */
+  flex-grow: 1;
+  /* 让筛选组在空间足够时可以扩展 */
 }
+
 .filter-group label {
   font-size: 13px;
   color: var(--text-secondary);
@@ -516,7 +691,15 @@ onMounted(() => {
 .filter-btn.active {
   background-color: var(--primary-color);
   color: white;
+  /* Ensure text is white on active */
   border-color: var(--primary-color);
+}
+
+.filter-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: var(--background-color-soft);
+  /* Slightly different background for disabled */
 }
 
 /* 新增输入框样式 */
@@ -525,10 +708,12 @@ onMounted(() => {
   font-size: 13px;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  background-color: var(--background-color); /* 改为背景色以区分按钮 */
+  background-color: var(--background-color);
+  /* 改为背景色以区分按钮 */
   color: var(--text-primary);
   transition: border-color var(--transition-speed);
-  box-sizing: border-box; /* 确保padding和border不会增加元素总宽度 */
+  box-sizing: border-box;
+  /* 确保padding和border不会增加元素总宽度 */
 }
 
 .filter-input:focus {
@@ -547,32 +732,42 @@ onMounted(() => {
 }
 
 .date-input {
-  width: 120px; /* 根据需要调整日期输入框宽度 */
-  cursor: pointer; /* Indicate it's clickable */
+  width: 120px;
+  /* 根据需要调整日期输入框宽度 */
+  cursor: pointer;
+  /* Indicate it's clickable */
 }
 
 .date-input-container {
-  position: relative; /* For positioning the date picker */
+  position: relative;
+  /* For positioning the date picker */
 }
 
 .keyword-input {
-  width: 100%; /* 关键字输入框可以更宽 */
-  max-width: 200px; /* 但也给一个最大宽度 */
+  width: 100%;
+  /* 关键字输入框可以更宽 */
+  max-width: 200px;
+  /* 但也给一个最大宽度 */
 }
 
 
 /* Date Picker Styles (adapted from TaskForm.vue) */
 .date-picker-popover {
   position: absolute;
-  top: calc(100% + 8px); /* Position below the input */
+  top: calc(100% + 8px);
+  /* Position below the input */
   left: 0;
-  z-index: 1000; /* Ensure it's above other elements */
-  background: var(--card-color); /* Use card color for background */
+  z-index: 1000;
+  /* Ensure it's above other elements */
+  background: var(--card-color);
+  /* Use card color for background */
   border-radius: var(--border-radius);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  max-width: 280px; /* Adjust width as needed */
+  max-width: 280px;
+  /* Adjust width as needed */
   padding: 12px;
-  color: var(--text-primary); /* Use primary text color */
+  color: var(--text-primary);
+  /* Use primary text color */
   border: 1px solid var(--border-color);
 }
 
@@ -610,15 +805,18 @@ onMounted(() => {
 .date-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 5px; /* Adjust gap as needed */
+  gap: 5px;
+  /* Adjust gap as needed */
 }
 
 .date-cell {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 30px; /* Adjust size as needed */
-  width: 30px;  /* Adjust size as needed */
+  height: 30px;
+  /* Adjust size as needed */
+  width: 30px;
+  /* Adjust size as needed */
   border-radius: 50%;
   cursor: pointer;
   font-size: 13px;
@@ -632,6 +830,7 @@ onMounted(() => {
 .date-cell.active {
   background-color: var(--primary-color);
   color: white;
+  /* Ensure text is white on active */
 }
 
 
@@ -849,4 +1048,152 @@ onMounted(() => {
   font-weight: 600;
   color: var(--primary-color);
 }
+
+/* Category specific styles */
+.category-filter-group .filter-buttons {
+  align-items: center;
+  /* Align items for better layout with add/edit inputs */
+}
+
+.category-filter-item {
+  position: relative;
+  display: flex;
+  /* Changed to flex for better alignment of button and actions trigger */
+  align-items: center;
+}
+
+.category-btn {
+  /* Adjust if needed, ensure it doesn't overlap with actions trigger */
+  flex-grow: 1;
+  /* Allow button to take space if category name is long */
+}
+
+/* Removed .category-actions-overlay styles */
+
+.category-actions-trigger-wrapper {
+  position: relative;
+  /* For positioning the menu */
+  display: flex;
+  align-items: center;
+}
+
+.category-actions-trigger {
+  background: none;
+  /* border: none; */
+  /* Removed to add a new border */
+  border: 1px solid var(--border-color);
+  /* Added border */
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 18px;
+  line-height: 1;
+  margin-left: 3px;
+  /* Adjusted margin to account for the new border */
+  border-radius: var(--border-radius-sm);
+  width: 20px;
+  text-align: center;
+  box-sizing: border-box;
+  /* Ensure padding and border are included in the element's total width and height */
+}
+
+.category-actions-trigger:hover {
+  background-color: var(--background-color-soft);
+  color: var(--text-primary);
+  border-color: var(--primary-color);
+  /* Optional: highlight border on hover */
+}
+
+.category-actions-menu {
+  position: absolute;
+  top: 100%;
+  /* Position below the trigger */
+  right: 0;
+  /* Align to the right of the trigger wrapper */
+  background-color: var(--card-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+  /* Ensure it's above other filter items */
+  padding: 4px 0;
+  /* Padding for menu items */
+  min-width: 80px;
+  /* Minimum width for the menu */
+}
+
+.category-actions-menu button {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.category-actions-menu button:hover {
+  background-color: var(--primary-light);
+}
+
+.category-edit-mode,
+.category-add-mode {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px;
+  /* Minimal padding */
+  border: 1px solid var(--primary-color);
+  border-radius: var(--border-radius);
+  background-color: var(--card-color);
+  /* margin-right: 4px; */
+  /* Ensure space if it replaces a button */
+}
+
+.category-edit-input,
+.category-add-input {
+  padding: 4px 6px;
+  font-size: 12px;
+  border: none;
+  outline: none;
+  flex-grow: 1;
+  min-width: 90px;
+  /* Adjusted min-width */
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+.add-category-btn-toggle {
+  padding: 4px 8px;
+  font-size: 14px;
+  min-width: 30px;
+  line-height: 1;
+}
+
+.add-category-wrapper {
+  display: flex;
+  align-items: center;
+  margin-left: 6px;
+  /* Space from the last category or 'All' button */
+}
+
+/* Ensure filter buttons are not overly affected by flex changes if names are long */
+.filter-buttons.category-buttons .filter-btn {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  /* Adjust as needed, prevents very long names from breaking layout */
+}
+
+.filter-btn:disabled,
+.category-actions-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  /* background-color: var(--background-color-soft) !important; */
+}
+
+/* ...rest of the existing styles... */
 </style>
