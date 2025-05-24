@@ -83,7 +83,8 @@ onMounted(() => {
 
 .task-container {
   flex: 1;
-  padding: 16px;
+  padding: 12px;
+  /* 从16px减少到12px */
   display: flex;
   flex-direction: column;
 }
@@ -122,7 +123,8 @@ onMounted(() => {
 
 @media (min-width: 768px) {
   .task-container {
-    padding: 24px;
+    padding: 18px;
+    /* 从24px减少到18px */
   }
 }
 </style>

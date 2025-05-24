@@ -10,6 +10,14 @@ const props = defineProps<{ // Added
   canOperate?: boolean
 }>()
 
+// 添加任务表单展开/收起状态
+const isTaskFormExpanded = ref(false) // 改为默认展开
+
+// 切换添加任务表单展开状态
+function toggleTaskForm() {
+  isTaskFormExpanded.value = !isTaskFormExpanded.value
+}
+
 // Helper to get time with an offset from now
 function getOffsetTime(hoursOffset: number = 0, minutesOffset: number = 0) {
   const now = new Date();
@@ -269,74 +277,83 @@ async function handleSubmit() {
 
 <template>
   <div class="task-form card">
-    <h3 class="form-title"><span class="icon">📦</span> 添加任务</h3>
+    <h3 class="form-title">
+      <span class="icon">📦</span> 添加任务
+      <button class="arrow-toggle" @click="toggleTaskForm" :class="{ expanded: isTaskFormExpanded }">
+        <span class="arrow">{{ isTaskFormExpanded ? '▲' : '▼' }}</span>
+      </button>
+    </h3>
 
-    <div class="task-inputs">
-      <input v-model="newTask.title" class="form-control task-title" placeholder="输入任务标题..."
-        @keyup.enter="handleSubmit" />
+    <div v-show="isTaskFormExpanded" class="task-form-content">
+      <div class="task-inputs">
+        <input v-model="newTask.title" class="form-control task-title" placeholder="输入任务标题..."
+          @keyup.enter="handleSubmit" />
 
-      <textarea v-model="newTask.content" class="form-control task-content" placeholder="输入任务内容..." rows="3"></textarea>
-    </div>
-
-    <!-- TabNavigation removed -->
-
-    <!-- Combined content for category and due date -->
-    <div class="tab-content form-section">
-      <p class="field-label">选择分类：</p>
-      <div class="category-selector">
-        <select class="form-control select-control"
-          :disabled="categoryStore.loading || categoryStore.categories.length === 0" v-model="newTask.categoryId">
-          <option v-if="categoryStore.loading" value="" disabled>加载中...</option>
-          <option v-else-if="!categoryStore.loading && categoryStore.categories.length === 0" value="" disabled>
-            暂无分类，请先添加</option>
-          <option v-for="category in categoryStore.categories" :key="category.categoryId" :value="category.categoryId">
-            {{ category.categoryName }}
-          </option>
-        </select>
-        <span class="select-arrow">▼</span>
-      </div>
-    </div>
-
-    <div class="tab-content form-section"> <!-- Added class form-section for potential styling -->
-      <p class="field-label">截止日期：</p> <!-- Removed ({{ newTask.category }}) as it might be confusing now -->
-      <div class="date-picker-trigger" @click="showDatePicker = true">
-        <input :value="formatDateTime(newTask.dueDate)" class="form-control" placeholder="选择日期" readonly />
-        <span class="calendar-icon">📅</span>
+        <textarea v-model="newTask.content" class="form-control task-content" placeholder="输入任务内容..."
+          rows="3"></textarea>
       </div>
 
-      <div v-if="showDatePicker" class="date-picker-demo" ref="datePickerRef">
-        <div class="date-picker-header">
-          <button class="picker-nav" @click="prevMonth">◀</button>
-          <div class="current-month">{{ currentMonthName }}</div>
-          <button class="picker-nav" @click="nextMonth">▶</button>
+      <!-- TabNavigation removed -->
+
+      <!-- Combined content for category and due date -->
+      <div class="tab-content form-section">
+        <p class="field-label">选择分类：</p>
+        <div class="category-selector">
+          <select class="form-control select-control"
+            :disabled="categoryStore.loading || categoryStore.categories.length === 0" v-model="newTask.categoryId">
+            <option v-if="categoryStore.loading" value="" disabled>加载中...</option>
+            <option v-else-if="!categoryStore.loading && categoryStore.categories.length === 0" value="" disabled>
+              暂无分类，请先添加</option>
+            <option v-for="category in categoryStore.categories" :key="category.categoryId"
+              :value="category.categoryId">
+              {{ category.categoryName }}
+            </option>
+          </select>
+          <span class="select-arrow">▼</span>
         </div>
-        <div class="date-grid">
-          <div v-for="day in daysInMonth" :key="day" class="date-cell" :class="{ active: day === selectedDay }"
-            @click="handleDateSelect(day)">
-            {{ day }}
+      </div>
+
+      <div class="tab-content form-section"> <!-- Added class form-section for potential styling -->
+        <p class="field-label">截止日期：</p> <!-- Removed ({{ newTask.category }}) as it might be confusing now -->
+        <div class="date-picker-trigger" @click="showDatePicker = true">
+          <input :value="formatDateTime(newTask.dueDate)" class="form-control" placeholder="选择日期" readonly />
+          <span class="calendar-icon">📅</span>
+        </div>
+
+        <div v-if="showDatePicker" class="date-picker-demo" ref="datePickerRef">
+          <div class="date-picker-header">
+            <button class="picker-nav" @click="prevMonth">◀</button>
+            <div class="current-month">{{ currentMonthName }}</div>
+            <button class="picker-nav" @click="nextMonth">▶</button>
+          </div>
+          <div class="date-grid">
+            <div v-for="day in daysInMonth" :key="day" class="date-cell" :class="{ active: day === selectedDay }"
+              @click="handleDateSelect(day)">
+              {{ day }}
+            </div>
+          </div>
+        </div>
+
+        <div class="time-picker">
+          <p class="field-label">选择时间：</p>
+          <div class="time-selectors">
+            <select v-model="selectedHour" class="form-control time-select" @change="handleTimeChange">
+              <option v-for="hour in hours" :key="hour" :value="hour">{{ hour }}</option>
+            </select>
+            <span class="separator">:</span>
+            <select v-model="selectedMinute" class="form-control time-select" @change="handleTimeChange">
+              <option v-for="minute in minutes" :key="minute" :value="minute">{{ minute }}</option>
+            </select>
           </div>
         </div>
       </div>
 
-      <div class="time-picker">
-        <p class="field-label">选择时间：</p>
-        <div class="time-selectors">
-          <select v-model="selectedHour" class="form-control time-select" @change="handleTimeChange">
-            <option v-for="hour in hours" :key="hour" :value="hour">{{ hour }}</option>
-          </select>
-          <span class="separator">:</span>
-          <select v-model="selectedMinute" class="form-control time-select" @change="handleTimeChange">
-            <option v-for="minute in minutes" :key="minute" :value="minute">{{ minute }}</option>
-          </select>
-        </div>
+      <div class="form-actions">
+        <button class="btn btn-primary submit-btn" :disabled="!newTask.title.trim()" @click="handleSubmit">
+          <span class="icon">✓</span>
+          添加
+        </button>
       </div>
-    </div>
-
-    <div class="form-actions">
-      <button class="btn btn-primary submit-btn" :disabled="!newTask.title.trim()" @click="handleSubmit">
-        <span class="icon">✓</span>
-        添加
-      </button>
     </div>
   </div>
 </template>
@@ -588,5 +605,38 @@ select {
 .category-selector {
   position: relative;
   overflow: visible;
+}
+
+/* 箭头切换按钮样式 */
+.arrow-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: auto;
+  font-size: 16px;
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+  border-radius: 4px;
+}
+
+.arrow-toggle:hover {
+  color: var(--primary-light);
+  background-color: var(--primary-color-alpha, rgba(64, 158, 255, 0.1));
+}
+
+.arrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+  font-size: 14px;
+}
+
+/* 任务表单内容区域样式 */
+.task-form-content {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
 }
 </style>

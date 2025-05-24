@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
+import { useTaskStore } from '../../store/task'
+import { useCategoryStore } from '../../store/category'
 import { useToast } from '../../composables/useToast' // 引入 Toast 功能
 import SvgIcon from './SvgIcon.vue'
 
@@ -12,6 +14,8 @@ defineProps<{
 
 const router = useRouter()
 const authStore = useAuthStore()
+const taskStore = useTaskStore()
+const categoryStore = useCategoryStore()
 const { showToast } = useToast() // 使用 Toast 功能
 
 function navigateHome() {
@@ -19,7 +23,13 @@ function navigateHome() {
 }
 
 function logout() {
+  // 清除认证信息
   authStore.logout()
+
+  // 重置任务和分类数据
+  taskStore.reset()
+  categoryStore.reset()
+
   showToast('您已成功退出登录', 'info') // 添加退出时的 Toast 通知
   router.push('/auth')
 }
@@ -51,7 +61,8 @@ function logout() {
 
 <style scoped>
 .app-header {
-  padding: 16px;
+  padding: 12px;
+  /* 从16px减少到12px */
   background-color: var(--card-color);
   border-bottom: 1px solid var(--border-color);
 }

@@ -83,12 +83,20 @@ const settingsForm = reactive({
   newPassword: '',
   confirmPassword: '',
   email: authStore.user?.email || '',
-  verificationCode: '', // 添加验证码字段
-  codeSent: false, // 标记验证码是否已发送
-  countDown: 0, // 倒计时计数器
+  verificationCode: '',
+  codeSent: false,
+  countDown: 0,
   loading: false,
   success: ''
 })
+
+// 基本设置展开/收起状态
+const isBasicSettingsExpanded = ref(false)
+
+// 切换基本设置展开状态
+function toggleBasicSettings() {
+  isBasicSettingsExpanded.value = !isBasicSettingsExpanded.value
+}
 
 // Function to handle password change
 async function handleChangePassword() {
@@ -275,56 +283,61 @@ onMounted(() => {
       <div class="settings-card card">
         <h2 class="card-title">
           <span class="emoji">⚙️</span> 基本设置
+          <button class="arrow-toggle" @click="toggleBasicSettings" :class="{ expanded: isBasicSettingsExpanded }">
+            <span class="arrow">{{ isBasicSettingsExpanded ? '▲' : '▼' }}</span>
+          </button>
         </h2>
-        <form @submit.prevent="handleChangePassword" class="settings-form">
-          <h3 class="form-section-title">修改密码</h3>
-          <div class="form-group">
-            <label for="current-password">当前密码</label>
-            <input id="current-password" type="password" v-model="settingsForm.currentPassword" class="form-control"
-              placeholder="请输入当前密码">
-          </div>
-          <div class="form-group">
-            <label for="new-password">新密码</label>
-            <input id="new-password" type="password" v-model="settingsForm.newPassword" class="form-control"
-              placeholder="请输入新密码">
-          </div>
-          <div class="form-group">
-            <label for="confirm-password">确认新密码</label>
-            <input id="confirm-password" type="password" v-model="settingsForm.confirmPassword" class="form-control"
-              placeholder="请再次输入新密码">
-          </div>
-          <button type="submit" class="btn btn-primary" :disabled="settingsForm.loading">
-            {{ settingsForm.loading ? '处理中...' : '修改密码' }}
-          </button>
-        </form>
-
-        <form @submit.prevent="handleChangeEmail" class="settings-form email-form">
-          <h3 class="form-section-title">修改邮箱</h3>
-          <div class="form-group">
-            <label for="email">邮箱地址</label>
-            <input id="email" type="email" v-model="settingsForm.email" class="form-control" placeholder="请输入新的邮箱地址">
-          </div>
-
-          <!-- 验证码输入框和按钮组 -->
-          <div class="form-group verification-group">
-            <label for="verification-code">验证码</label>
-            <div class="verification-input-group">
-              <input id="verification-code" type="text" v-model="settingsForm.verificationCode" class="form-control"
-                placeholder="请输入验证码" :disabled="!settingsForm.codeSent">
-              <button type="button" class="btn send-code-btn"
-                :class="{ 'btn-secondary': !isEmailValid, 'btn-valid': isEmailValid }" @click="sendVerificationCode"
-                :disabled="settingsForm.loading || settingsForm.countDown > 0 || !isEmailValid">
-                {{ settingsForm.loading && !settingsForm.codeSent ? '发送中...' : (settingsForm.countDown > 0 ?
-                  `${settingsForm.countDown}秒` : '获取验证码') }}
-              </button>
+        <div v-show="isBasicSettingsExpanded" class="settings-content">
+          <form @submit.prevent="handleChangePassword" class="settings-form">
+            <h3 class="form-section-title">修改密码</h3>
+            <div class="form-group">
+              <label for="current-password">当前密码</label>
+              <input id="current-password" type="password" v-model="settingsForm.currentPassword" class="form-control"
+                placeholder="请输入当前密码">
             </div>
-          </div>
+            <div class="form-group">
+              <label for="new-password">新密码</label>
+              <input id="new-password" type="password" v-model="settingsForm.newPassword" class="form-control"
+                placeholder="请输入新密码">
+            </div>
+            <div class="form-group">
+              <label for="confirm-password">确认新密码</label>
+              <input id="confirm-password" type="password" v-model="settingsForm.confirmPassword" class="form-control"
+                placeholder="请再次输入新密码">
+            </div>
+            <button type="submit" class="btn btn-primary" :disabled="settingsForm.loading">
+              {{ settingsForm.loading ? '处理中...' : '修改密码' }}
+            </button>
+          </form>
 
-          <button type="submit" class="btn btn-primary"
-            :disabled="settingsForm.loading || !settingsForm.verificationCode || !settingsForm.codeSent">
-            {{ settingsForm.loading && settingsForm.codeSent ? '处理中...' : '修改邮箱' }}
-          </button>
-        </form>
+          <form @submit.prevent="handleChangeEmail" class="settings-form email-form">
+            <h3 class="form-section-title">修改邮箱</h3>
+            <div class="form-group">
+              <label for="email">邮箱地址</label>
+              <input id="email" type="email" v-model="settingsForm.email" class="form-control" placeholder="请输入新的邮箱地址">
+            </div>
+
+            <!-- 验证码输入框和按钮组 -->
+            <div class="form-group verification-group">
+              <label for="verification-code">验证码</label>
+              <div class="verification-input-group">
+                <input id="verification-code" type="text" v-model="settingsForm.verificationCode" class="form-control"
+                  placeholder="请输入验证码" :disabled="!settingsForm.codeSent">
+                <button type="button" class="btn send-code-btn"
+                  :class="{ 'btn-secondary': !isEmailValid, 'btn-valid': isEmailValid }" @click="sendVerificationCode"
+                  :disabled="settingsForm.loading || settingsForm.countDown > 0 || !isEmailValid">
+                  {{ settingsForm.loading && !settingsForm.codeSent ? '发送中...' : (settingsForm.countDown > 0 ?
+                    `${settingsForm.countDown}秒` : '获取验证码') }}
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary"
+              :disabled="settingsForm.loading || !settingsForm.verificationCode || !settingsForm.codeSent">
+              {{ settingsForm.loading && settingsForm.codeSent ? '处理中...' : '修改邮箱' }}
+            </button>
+          </form>
+        </div>
       </div>
 
       <div class="stats-card card">
@@ -367,35 +380,42 @@ onMounted(() => {
 
 .about-content {
   flex: 1;
-  padding: 16px;
+  padding: 12px;
+  /* 从16px减少到12px */
 }
 
 .card {
-  margin-bottom: 16px;
-  padding: 20px;
+  margin-bottom: 12px;
+  /* 从16px减少到12px */
+  padding: 16px;
+  /* 从20px减少到16px */
 }
 
 .card-title {
   font-size: 18px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  /* 从16px减少到12px */
   display: flex;
   align-items: center;
 }
 
 .settings-form {
-  margin-bottom: 24px;
+  margin-bottom: 18px;
+  /* 从24px减少到18px */
 }
 
 .email-form {
-  margin-top: 24px;
+  margin-top: 18px;
+  /* 从24px减少到18px */
   /* Add some space between forms */
 }
 
 .form-section-title {
   font-size: 16px;
   font-weight: 500;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  /* 从12px减少到10px */
   color: var(--text-secondary);
 }
 
@@ -431,8 +451,10 @@ onMounted(() => {
 
 .theme-selector {
   display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 12px;
+  /* 从16px减少到12px */
+  margin-bottom: 18px;
+  /* 从24px减少到18px */
   flex-wrap: wrap;
 }
 
@@ -497,7 +519,8 @@ onMounted(() => {
 }
 
 .verification-group {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  /* 从16px减少到12px */
 }
 
 .verification-input-group {
@@ -540,13 +563,62 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
+.btn-toggle {
+  background-color: transparent;
+  color: var(--primary-color);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 箭头切换按钮样式 */
+.arrow-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: auto;
+  font-size: 16px;
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+  border-radius: 4px;
+}
+
+.arrow-toggle:hover {
+  color: var(--primary-light);
+  background-color: var(--primary-color-alpha, rgba(64, 158, 255, 0.1));
+}
+
+.arrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+  font-size: 14px;
+}
+
+/* 设置内容区域样式 */
+.settings-content {
+  margin-top: 12px;
+  /* 从16px减少到12px */
+  padding-top: 12px;
+  /* 从16px减少到12px */
+  border-top: 1px solid var(--border-color);
+}
+
 @media (min-width: 768px) {
   .about-content {
-    padding: 24px;
+    padding: 18px;
+    /* 从24px减少到18px */
   }
 
   .card {
-    padding: 24px;
+    padding: 20px;
+    /* 从24px减少到20px */
   }
 }
 </style>
