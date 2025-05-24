@@ -120,5 +120,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
     }
 
+    @Override
+    public UserStatusVO getUserStatus() {
+        return todoService.getTodoStatus(RedisContext.getCurrentId());
+    }
+
 
 }

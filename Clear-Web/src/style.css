@@ -33,6 +33,11 @@
   --font-family: 'LXGW WenKai Screen', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --border-radius: 4px;
 
+  /* 图标颜色变量 */
+  --icon-color: #3c4858;
+  --icon-primary: #3498db;
+  --icon-secondary: #8492a6;
+
   /* 其他可能的变量 */
   --button-text-color: var(--text-on-primary);
   --button-primary-bg: var(--primary-color);

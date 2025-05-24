@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 import AppHeader from '../components/common/AppHeader.vue'
 import TabNavigation from '../components/common/TabNavigation.vue'
+import SvgIcon from '../components/common/SvgIcon.vue'
 import { useToast } from '../composables/useToast' // 引入 Toast 功能
 
 const router = useRouter()
@@ -77,7 +78,7 @@ const handleRegister = async () => {
       <template #right-actions>
         <button class="icon-button github-button">
           <a href="https://github.com/WindyDante/Clear" class="github-link" target="_blank" rel="noopener noreferrer">
-            <img src="/github.svg" alt="Github" class="icon-img" />
+            <SvgIcon name="github" color="default" :size="24" alt="Github" />
           </a>
         </button>
       </template>

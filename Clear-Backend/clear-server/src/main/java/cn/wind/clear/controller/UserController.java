@@ -67,6 +67,14 @@ public class UserController {
         return Result.success(vo);
     }
 
+    /**
+     * 更新用户主题设置
+     * <p>
+     * 根据提供的主题值更新当前登录用户的界面主题偏好
+     *
+     * @param theme 主题标识值，整数类型
+     * @return Result 操作结果，成功返回提示信息
+     */
     @PutMapping("/theme/{theme}")
     public Result<String> updateTheme(@PathVariable Integer theme) {
         userService.updateTheme(theme);
@@ -98,6 +106,19 @@ public class UserController {
     public Result<String> check(@PathVariable String mail, @PathVariable String code){
 //        String token = emailService.check(mail,code);
         return Result.success("当前功能正在开发中,请耐心等待");
+    }
+
+    /**
+     * 获取用户状态信息
+     * <p>
+     * 获取当前登录用户的任务状态统计信息，包括待办事项和已完成事项的数量等统计数据
+     *
+     * @return Result 包含用户状态信息的结果对象
+     */
+    @GetMapping("/status")
+    public Result<UserStatusVO> getUserStatus() {
+        UserStatusVO userStatus = userService.getUserStatus();
+        return Result.success(userStatus);
     }
 
 

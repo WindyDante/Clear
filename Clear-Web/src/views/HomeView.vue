@@ -7,6 +7,7 @@ import { useAuthStore } from '../store/auth' // Added
 import AppHeader from '../components/common/AppHeader.vue'
 import TaskForm from '../components/task/TaskForm.vue'
 import TaskList from '../components/task/TaskList.vue'
+import SvgIcon from '../components/common/SvgIcon.vue' // 导入 SvgIcon 组件
 
 const router = useRouter()
 const taskStore = useTaskStore()
@@ -52,7 +53,7 @@ onMounted(() => {
     <AppHeader :show-logout-icon="isAuthenticated">
       <template #left-actions>
         <button class="icon-button about-button" @click="navigateToAbout">
-          <img src="/about.svg" alt="关于" class="icon-img" />
+          <SvgIcon name="about" color="default" :size="20" alt="关于" />
         </button>
       </template>
       <template #default>

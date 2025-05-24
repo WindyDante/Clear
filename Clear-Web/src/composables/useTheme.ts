@@ -38,6 +38,10 @@ const actualThemes = ref<Theme[]>(
                 '--datepicker-text-color': '#3c4858',
                 '--datepicker-hover-bg': '#ecf5ff',
                 '--datepicker-active-text-color': '#ffffff',
+                // 图标颜色
+                '--icon-color': '#3c4858',
+                '--icon-primary': '#3498db',
+                '--icon-secondary': '#8492a6',
             },
         },
         {
@@ -62,6 +66,10 @@ const actualThemes = ref<Theme[]>(
                 '--datepicker-text-color': '#dcdfe6',
                 '--datepicker-hover-bg': '#383b3e',
                 '--datepicker-active-text-color': '#ffffff',
+                // 图标颜色
+                '--icon-color': '#dcdfe6',
+                '--icon-primary': '#409eff',
+                '--icon-secondary': '#a0a5ac',
             },
         },
         {
@@ -86,6 +94,10 @@ const actualThemes = ref<Theme[]>(
                 '--datepicker-text-color': '#5a2a27',
                 '--datepicker-hover-bg': '#f8e9e7',
                 '--datepicker-active-text-color': '#ffffff',
+                // 图标颜色
+                '--icon-color': '#5a2a27',
+                '--icon-primary': '#c74c3c',
+                '--icon-secondary': '#a1665e',
             },
         },
         {
@@ -110,6 +122,10 @@ const actualThemes = ref<Theme[]>(
                 '--datepicker-text-color': '#79550a',
                 '--datepicker-hover-bg': '#faebcc',
                 '--datepicker-active-text-color': '#ffffff',
+                // 图标颜色
+                '--icon-color': '#79550a',
+                '--icon-primary': '#f39c12',
+                '--icon-secondary': '#b18933',
             },
         },
         {
@@ -134,6 +150,10 @@ const actualThemes = ref<Theme[]>(
                 '--datepicker-text-color': '#4a148c',
                 '--datepicker-hover-bg': '#f2e7fe',
                 '--datepicker-active-text-color': '#ffffff',
+                // 图标颜色
+                '--icon-color': '#4a148c',
+                '--icon-primary': '#8e44ad',
+                '--icon-secondary': '#884ea0',
             },
         },
         {
@@ -158,6 +178,10 @@ const actualThemes = ref<Theme[]>(
                 '--datepicker-text-color': '#0e6251',
                 '--datepicker-hover-bg': '#d1f2eb',
                 '--datepicker-active-text-color': '#ffffff',
+                // 图标颜色
+                '--icon-color': '#0e6251',
+                '--icon-primary': '#1abc9c',
+                '--icon-secondary': '#54998c',
             },
         }
     ]
@@ -231,27 +255,32 @@ export function useTheme() {
                 const themeToApply = actualThemes.value[userThemeId - 1]; // Convert 1-based ID to 0-based index
                 if (themeToApply) {
                     _applyThemeStyles(themeToApply.name);
-                } else {
-                    // Should not happen if IDs are consistent
-                    if (actualThemes.value.length > 0) _applyThemeStyles(actualThemes.value[0].name);
                 }
             } else {
-                // Invalid theme ID from user data, apply default
-                if (actualThemes.value.length > 0) _applyThemeStyles(actualThemes.value[0].name);
+                // Invalid theme ID, apply default theme
+                if (actualThemes.value.length > 0) {
+                    _applyThemeStyles(actualThemes.value[0].name);
+                }
             }
         } else {
-            // No theme preference in user data, or no user logged in, apply default
-            if (actualThemes.value.length > 0) _applyThemeStyles(actualThemes.value[0].name);
+            // No user or no theme preference, apply default theme
+            if (actualThemes.value.length > 0) {
+                _applyThemeStyles(actualThemes.value[0].name);
+            }
         }
     };
 
-    // Expose the reactive themes array for iteration in components
+    const currentTheme = computed(() => {
+        return actualThemes.value.find(t => t.name === activeThemeName.value);
+    });
+
     const themes = computed(() => actualThemes.value);
 
     return {
-        themes, // For iterating in AboutView.vue
-        activeThemeName, // For :class="{ active: ... }" in AboutView.vue
-        applyTheme, // For @click handler in AboutView.vue
-        initTheme, // To be called globally on app startup
+        themes,
+        currentTheme,
+        activeThemeName,
+        applyTheme,
+        initTheme
     };
 }

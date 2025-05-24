@@ -14,6 +14,7 @@ import cn.wind.clear.result.PageResult;
 import cn.wind.clear.service.CategoryService;
 import cn.wind.clear.service.TodoService;
 import cn.wind.clear.vo.TodoVO;
+import cn.wind.clear.vo.UserStatusVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -144,5 +145,18 @@ public class TodoServiceImpl extends ServiceImpl<TodoMapper, Todo>
                 .eq(Todo::getUserId, currentId)
                 .eq(Todo::getStatus, enabled)
                 .count();
+    }
+
+    @Override
+    public UserStatusVO getTodoStatus(String currentId) {
+        Long numOfDone = this.lambdaQuery()
+                .eq(Todo::getUserId, currentId)
+                .eq(Todo::getStatus, StatusConstant.ENABLED)
+                .count();
+        Long numOfUndone = this.lambdaQuery()
+                .eq(Todo::getUserId, currentId)
+                .eq(Todo::getStatus, StatusConstant.DISABLED)
+                .count();
+        return new UserStatusVO(null,numOfDone, numOfUndone);
     }
 }

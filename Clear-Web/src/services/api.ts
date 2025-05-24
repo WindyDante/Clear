@@ -22,16 +22,20 @@ async function handleApiResponse<T>(
   errorMessage = '操作失败',
   showDataInToast = false // 控制是否在toast中显示data
 ): Promise<T> {
+  const showToast = getToastFunction();
+
   try {
     const response = await apiCall();
     const result = await response.json();
-    const showToast = getToastFunction();
 
     if (result.code !== 1) {
       // 错误情况：使用API返回的msg，如果不存在则使用默认错误消息
       const message = result.msg || errorMessage;
       showToast(message, 'error');
-      throw new Error(message);
+      // 创建一个特殊的错误对象，标记已经显示过Toast
+      const error = new Error(message);
+      (error as any).toastShown = true;
+      throw error;
     }
 
     // 成功情况：根据需要选择显示API返回的data或msg
@@ -48,10 +52,11 @@ async function handleApiResponse<T>(
 
     return result.data;
   } catch (error) {
-    // 处理网络错误等非API响应错误
-    if (!(error instanceof Error && error.message !== errorMessage)) {
-      const showToast = getToastFunction();
-      showToast(error instanceof Error ? error.message : errorMessage, 'error');
+    // 只有当错误没有显示过Toast时才显示
+    if (!(error as any).toastShown) {
+      showToast(errorMessage, 'error');
+      // 标记这个错误已经显示过Toast
+      (error as any).toastShown = true;
     }
     throw error;
   }
@@ -460,6 +465,32 @@ const api = {
       }),
       '验证码验证失败',
       true // 启用展示data数据到toast
+    );
+  },
+
+  // 获取用户任务统计信息
+  async getUserTaskStatus() {
+    const token = localStorage.getItem('user')
+      ? JSON.parse(localStorage.getItem('user') || '{}').tk
+      : null;
+
+    if (!token) {
+      throw new Error('未登录!');
+    }
+
+    return handleApiResponse<{
+      username: string;
+      numOfDone: number;
+      numOfUndone: number;
+    }>(
+      () => fetch(`${API_BASE_URL}/user/status`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token
+        }
+      }),
+      '获取任务统计失败'
     );
   },
 }

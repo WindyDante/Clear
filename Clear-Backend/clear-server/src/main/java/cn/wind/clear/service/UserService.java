@@ -21,4 +21,7 @@ public interface UserService extends IService<User> {
     User register(UserDTO userDTO);
 
     void updateTheme(Integer theme);
+
+    UserStatusVO getUserStatus();
+
 }

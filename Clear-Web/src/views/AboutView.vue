@@ -15,6 +15,32 @@ const { themes, activeThemeName, applyTheme } = useTheme() // 使用主题管理
 const router = useRouter()
 const countdownTimer = ref<number | null>(null) // 倒计时定时器引用
 
+// 任务统计数据
+const taskStats = ref({
+  numOfDone: 0,
+  numOfUndone: 0,
+  loading: false
+})
+
+// 获取用户任务统计信息
+async function fetchUserTaskStats() {
+  if (!authStore.isAuthenticated) {
+    return
+  }
+
+  try {
+    taskStats.value.loading = true
+    const data = await api.getUserTaskStatus()
+    taskStats.value.numOfDone = data.numOfDone
+    taskStats.value.numOfUndone = data.numOfUndone
+  } catch (error: any) {
+    // 错误已由 API 层处理
+    console.error('获取任务统计失败:', error)
+  } finally {
+    taskStats.value.loading = false
+  }
+}
+
 // 邮箱格式验证
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -47,8 +73,9 @@ function getThemePreviewColor(theme: any) {
   }
 }
 
-const totalCompleted = computed(() => taskStore.totalCompletedTasks)
-const totalPending = computed(() => taskStore.totalPendingTasks)
+// 使用API获取的统计数据替代本地计算
+const totalCompleted = computed(() => taskStats.value.numOfDone)
+const totalPending = computed(() => taskStats.value.numOfUndone)
 
 // Form state for user settings
 const settingsForm = reactive({
@@ -71,7 +98,7 @@ async function handleChangePassword() {
     router.push('/auth');
     return;
   }
-  
+
   settingsForm.success = ''
   if (settingsForm.newPassword !== settingsForm.confirmPassword) {
     showToast('新密码和确认密码不匹配', 'error')
@@ -111,7 +138,7 @@ async function handleChangeEmail() {
     router.push('/auth');
     return;
   }
-  
+
   settingsForm.success = ''
   if (!settingsForm.email) {
     showToast('请输入邮箱地址', 'error')
@@ -164,7 +191,7 @@ async function sendVerificationCode() {
     router.push('/auth');
     return;
   }
-  
+
   if (!settingsForm.email) {
     showToast('请先输入邮箱地址', 'error')
     return
@@ -212,7 +239,9 @@ onUnmounted(() => {
 })
 
 onMounted(() => {
-  taskStore.fetchTasks()
+  // 获取用户任务统计信息
+  fetchUserTaskStats()
+
   // Initialize email from store if not already done
   if (authStore.user && !settingsForm.email) {
     settingsForm.email = authStore.user.email || ''
@@ -303,7 +332,10 @@ onMounted(() => {
           <span class="emoji">✨</span> 关于
         </h2>
 
-        <p class="stats-text">
+        <div v-if="taskStats.loading" class="stats-loading">
+          <p class="info-text">正在加载任务统计数据...</p>
+        </div>
+        <p v-else class="stats-text">
           您一共完成了 <span class="highlight">{{ totalCompleted }}</span> 个任务。
           当前还剩下 <span class="highlight">{{ totalPending }}</span> 个未完成的任务。
         </p>

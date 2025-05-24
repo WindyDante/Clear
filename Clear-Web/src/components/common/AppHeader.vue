@@ -2,6 +2,7 @@
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
 import { useToast } from '../../composables/useToast' // 引入 Toast 功能
+import SvgIcon from './SvgIcon.vue'
 
 defineProps<{
   title?: string
@@ -29,7 +30,7 @@ function logout() {
     <div class="header-content">
       <div class="left-actions">
         <button v-if="showHomeIcon" class="icon-button home-button" @click="navigateHome">
-          <img src="/primary.svg" alt="首页" class="icon-img" />
+          <SvgIcon name="primary" color="primary" :size="20" alt="首页" />
         </button>
         <slot name="left-actions"></slot>
       </div>
@@ -40,7 +41,7 @@ function logout() {
 
       <div class="right-actions">
         <button v-if="showLogoutIcon" class="icon-button logout-button" @click="logout">
-          <img src="/exit.svg" alt="退出" class="icon-img" />
+          <SvgIcon name="exit" color="default" :size="20" alt="退出" />
         </button>
         <slot name="right-actions"></slot>
       </div>

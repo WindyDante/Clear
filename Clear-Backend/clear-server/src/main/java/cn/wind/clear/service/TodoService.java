@@ -6,6 +6,7 @@ import cn.wind.clear.dto.UpdateTodoDTO;
 import cn.wind.clear.entity.Todo;
 import cn.wind.clear.result.PageResult;
 import cn.wind.clear.vo.TodoVO;
+import cn.wind.clear.vo.UserStatusVO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 public interface TodoService extends IService<Todo> {
@@ -35,4 +36,6 @@ public interface TodoService extends IService<Todo> {
     void udpateTodo(UpdateTodoDTO updateTodoDTO);
 
     Long getNumOfDoneOrUndone(String currentId, Integer enabled);
+
+    UserStatusVO getTodoStatus(String currentId);
 }
