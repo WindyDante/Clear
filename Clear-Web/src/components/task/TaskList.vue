@@ -651,8 +651,7 @@ onMounted(() => {
   padding: 12px 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
-  max-height: 30vh;
-  overflow-y: auto;
+  /* 移除max-height和overflow-y限制，让日期选择器可以正常弹出 */
 }
 
 .filter-controls {
@@ -739,6 +738,8 @@ onMounted(() => {
 
 .date-input-container {
   position: relative;
+  /* 确保日期选择器不被父容器裁剪 */
+  z-index: 10;
 }
 
 .keyword-input {
@@ -759,6 +760,8 @@ onMounted(() => {
   padding: 12px;
   color: var(--text-primary);
   border: 1px solid var(--border-color);
+  /* 确保日期选择器可以超出父容器边界 */
+  overflow: visible;
 }
 
 .date-picker-popover-end {
@@ -1181,9 +1184,18 @@ onMounted(() => {
 
 /* 响应式优化 */
 @media (max-width: 767px) {
+  .filters-section {
+    padding: 8px 12px;
+    /* 移动端添加固定高度和滚动条 */
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
   .filter-controls {
     grid-template-columns: 1fr;
     gap: 8px;
+    /* 移动端移除margin-bottom，避免影响滚动区域 */
+    margin-bottom: 8px;
   }
 
   .date-filter-inputs {
@@ -1197,11 +1209,6 @@ onMounted(() => {
 
   .keyword-input {
     max-width: none;
-  }
-
-  .filters-section {
-    padding: 8px 12px;
-    max-height: 40vh;
   }
 
   .task-item {

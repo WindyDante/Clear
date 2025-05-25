@@ -36,7 +36,7 @@ if not exist "Dockerfile" (
     goto error
 )
 
-docker build -t eastwind996/clear-frontend:0.1.5 .
+docker build -t eastwind996/clear-frontend:0.1.8 .
 if !errorlevel! neq 0 (
     echo ERROR: Frontend image build failed
     set ERROR_OCCURRED=1
