@@ -1,0 +1,9 @@
+server:
+  port: 6633
+  host: "0.0.0.0"
+  mode: "debug"
+
+database:
+    type: "sqlite"
+    path: "data/clear.db"
+
