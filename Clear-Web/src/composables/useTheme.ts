@@ -26,6 +26,7 @@ const actualThemes = ref<Theme[]>(
                 '--secondary-color': '#2ecc71',
                 '--background-color': '#f5f7fa',
                 '--card-color': '#ffffff',
+                '--card-bg': '#ffffff', // 添加卡片背景变量
                 '--text-color': '#3c4858',
                 '--text-secondary': '#8492a6',
                 '--text-on-primary': '#ffffff',
@@ -53,7 +54,8 @@ const actualThemes = ref<Theme[]>(
                 '--primary-rgb': '64, 158, 255',
                 '--secondary-color': '#85ce61',
                 '--background-color': '#1d1e20',
-                '--card-color': '#2c2f33',
+                '--card-color': '#2c2f33', // 提高卡片背景亮度
+                '--card-bg': '#363a3f', // 添加更亮的卡片背景变量
                 '--text-color': '#dcdfe6',
                 '--text-secondary': '#a0a5ac',
                 '--text-on-primary': '#ffffff',
@@ -62,9 +64,9 @@ const actualThemes = ref<Theme[]>(
                 '--danger-color': '#f56c6c',
                 '--warning-color': '#e6a23c',
                 '--info-color': '#909399',
-                '--datepicker-bg': '#26282b',
+                '--datepicker-bg': '#363a3f', // 更亮的日期选择器背景
                 '--datepicker-text-color': '#dcdfe6',
-                '--datepicker-hover-bg': '#383b3e',
+                '--datepicker-hover-bg': '#41454a',
                 '--datepicker-active-text-color': '#ffffff',
                 // 图标颜色
                 '--icon-color': '#dcdfe6',
@@ -82,6 +84,7 @@ const actualThemes = ref<Theme[]>(
                 '--secondary-color': '#d35400',
                 '--background-color': '#fdf6f5',
                 '--card-color': '#ffffff',
+                '--card-bg': '#ffffff', // 添加卡片背景变量
                 '--text-color': '#5a2a27',
                 '--text-secondary': '#a1665e',
                 '--text-on-primary': '#ffffff',
@@ -110,6 +113,7 @@ const actualThemes = ref<Theme[]>(
                 '--secondary-color': '#e67e22',
                 '--background-color': '#fffcf5',
                 '--card-color': '#ffffff',
+                '--card-bg': '#ffffff', // 添加卡片背景变量
                 '--text-color': '#79550a',
                 '--text-secondary': '#b18933',
                 '--text-on-primary': '#ffffff',
@@ -138,6 +142,7 @@ const actualThemes = ref<Theme[]>(
                 '--secondary-color': '#c39bd3',
                 '--background-color': '#fbf5ff',
                 '--card-color': '#ffffff',
+                '--card-bg': '#ffffff', // 添加卡片背景变量
                 '--text-color': '#4a148c',
                 '--text-secondary': '#884ea0',
                 '--text-on-primary': '#ffffff',
@@ -166,6 +171,7 @@ const actualThemes = ref<Theme[]>(
                 '--secondary-color': '#76d7c4',
                 '--background-color': '#f4fcfb',
                 '--card-color': '#ffffff',
+                '--card-bg': '#ffffff', // 添加卡片背景变量
                 '--text-color': '#0e6251',
                 '--text-secondary': '#54998c',
                 '--text-on-primary': '#ffffff',

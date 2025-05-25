@@ -2,21 +2,21 @@
 import { ref, reactive, onMounted, onUnmounted, computed, watch } from "vue";
 import { useTaskStore } from "../../store/task";
 import { useCategoryStore } from "../../store/category";
-// TabNavigation import removed
 import { useToast } from "../../composables/useToast";
 import { useRouter } from 'vue-router';
 
-const props = defineProps<{ // Added
+const props = defineProps<{
   canOperate?: boolean
+  isDrawerMode?: boolean // 新增：是否为抽屉模式
 }>()
 
-// 添加任务表单展开/收起状态
-const isTaskFormExpanded = ref(false) // 改为默认展开
+const emit = defineEmits<{
+  taskAdded: [] // 新增：任务添加成功事件
+}>()
 
-// 切换添加任务表单展开状态
-function toggleTaskForm() {
-  isTaskFormExpanded.value = !isTaskFormExpanded.value
-}
+// 移除展开/收起状态管理
+// const isTaskFormExpanded = ref(false)
+// function toggleTaskForm() { ... }
 
 // Helper to get time with an offset from now
 function getOffsetTime(hoursOffset: number = 0, minutesOffset: number = 0) {
@@ -37,9 +37,6 @@ const taskStore = useTaskStore();
 const categoryStore = useCategoryStore(); // 使用集中的分类状态管理
 const { showToast } = useToast();
 const router = useRouter(); // Added
-
-// tabs array removed
-// activeTab ref removed
 
 const showDatePicker = ref(false);
 const datePickerRef = ref<HTMLElement | null>(null);
@@ -218,8 +215,6 @@ async function handleSubmit() {
     return;
   } else if (categoryStore.categories.length === 0) {
     showToast("请先添加分类后再创建任务", "error");
-    // activeTab.value = "category"; // Removed: No longer relevant
-    // 更好的做法可能是引导用户到分类管理页面
     return;
   }
 
@@ -227,13 +222,12 @@ async function handleSubmit() {
   if (newTask.dueDate) {
     const selectedDueDate = new Date(newTask.dueDate);
     const now = new Date();
-    // 比较时，确保比较到分钟级别，忽略秒和毫秒
     const selectedDateComparable = new Date(selectedDueDate.getFullYear(), selectedDueDate.getMonth(), selectedDueDate.getDate(), selectedDueDate.getHours(), selectedDueDate.getMinutes());
     const nowDateComparable = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
 
     if (selectedDateComparable < nowDateComparable) {
       showToast("截止日期不能小于当前时间", "error");
-      return; // 阻止提交并保持当前表单状态
+      return;
     }
   }
 
@@ -242,7 +236,7 @@ async function handleSubmit() {
       title: newTask.title,
       content: newTask.content,
       category: newTask.category,
-      categoryId: newTask.categoryId, // 添加分类ID
+      categoryId: newTask.categoryId,
       dueDate: newTask.dueDate,
     });
 
@@ -267,36 +261,32 @@ async function handleSubmit() {
     selectedMinute.value = resetTimeInfo.minute;
     newTask.dueDate = resetTimeInfo.date.toISOString();
 
-    // activeTab.value = "category"; // Removed: No longer relevant
+    // 发射任务添加成功事件
+    emit('taskAdded');
   } catch (error) {
-    // 显示添加失败的 Toast // 已在 store 中处理，由 api.ts 抛出错误时统一处理
-    // showToast("任务添加失败，请重试", "error");
+    // 显示添加失败的 Toast
   }
 }
 </script>
 
 <template>
-  <div class="task-form card">
-    <h3 class="form-title">
+  <div class="task-form" :class="{ 'drawer-mode': isDrawerMode }">
+    <!-- 移除标题和切换按钮，在抽屉模式下不需要 -->
+    <div v-if="!isDrawerMode" class="form-title">
       <span class="icon">📦</span> 添加任务
-      <button class="arrow-toggle" @click="toggleTaskForm" :class="{ expanded: isTaskFormExpanded }">
-        <span class="arrow">{{ isTaskFormExpanded ? '▲' : '▼' }}</span>
-      </button>
-    </h3>
+    </div>
 
-    <div v-show="isTaskFormExpanded" class="task-form-content">
+    <!-- 移除条件显示，表单内容始终显示 -->
+    <div class="task-form-content">
       <div class="task-inputs">
         <input v-model="newTask.title" class="form-control task-title" placeholder="输入任务标题..."
           @keyup.enter="handleSubmit" />
 
         <textarea v-model="newTask.content" class="form-control task-content" placeholder="输入任务内容..."
-          rows="3"></textarea>
+          :rows="isDrawerMode ? 2 : 3"></textarea>
       </div>
 
-      <!-- TabNavigation removed -->
-
-      <!-- Combined content for category and due date -->
-      <div class="tab-content form-section">
+      <div class="form-section">
         <p class="field-label">选择分类：</p>
         <div class="category-selector">
           <select class="form-control select-control"
@@ -313,8 +303,8 @@ async function handleSubmit() {
         </div>
       </div>
 
-      <div class="tab-content form-section"> <!-- Added class form-section for potential styling -->
-        <p class="field-label">截止日期：</p> <!-- Removed ({{ newTask.category }}) as it might be confusing now -->
+      <div class="form-section">
+        <p class="field-label">截止日期：</p>
         <div class="date-picker-trigger" @click="showDatePicker = true">
           <input :value="formatDateTime(newTask.dueDate)" class="form-control" placeholder="选择日期" readonly />
           <span class="calendar-icon">📅</span>
@@ -351,7 +341,7 @@ async function handleSubmit() {
       <div class="form-actions">
         <button class="btn btn-primary submit-btn" :disabled="!newTask.title.trim()" @click="handleSubmit">
           <span class="icon">✓</span>
-          添加
+          添加任务
         </button>
       </div>
     </div>
@@ -361,6 +351,20 @@ async function handleSubmit() {
 <style scoped>
 .task-form {
   padding: 16px;
+}
+
+.task-form.drawer-mode {
+  padding: 16px 24px;
+  background: none;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-form.drawer-mode .card {
+  background: none;
+  box-shadow: none;
+  border: none;
 }
 
 .form-title {
@@ -376,20 +380,21 @@ async function handleSubmit() {
 }
 
 .task-inputs {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .task-title {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   font-weight: 500;
 }
 
 .task-content {
   resize: vertical;
+  min-height: 60px;
 }
 
 .field-label {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-size: 14px;
   color: var(--text-secondary);
 }
@@ -417,6 +422,89 @@ async function handleSubmit() {
   margin-top: 8px;
   padding: 16px;
   color: var(--datepicker-text-color);
+  /* 移动端优化：防止超出屏幕 */
+  left: 0;
+  right: 0;
+  max-width: calc(100vw - 48px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 移动端特殊处理 */
+@media (max-width: 480px) {
+  .date-picker-demo {
+    position: fixed;
+    top: 40%;
+    left: 20px;
+    right: 20px;
+    transform: translateY(-50%);
+    max-width: none;
+    width: calc(100vw - 40px);
+    margin: 0;
+    z-index: 1001;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+  }
+
+  /* 添加遮罩层 */
+  .date-picker-demo::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: -1;
+  }
+
+  /* 移动端日期选择器内容优化 */
+  .date-picker-demo .date-picker-header {
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .date-picker-demo .current-month {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .date-picker-demo .picker-nav {
+    padding: 8px 12px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 16px;
+  }
+
+  .date-picker-demo .date-cell {
+    height: 36px;
+    width: 36px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+/* PC端样式恢复（桌面端保持原样） */
+@media (min-width: 481px) {
+  .date-picker-demo {
+    position: absolute;
+    max-width: 320px;
+    margin-top: 8px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    margin-left: 0;
+    margin-right: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: none;
+  }
+
+  /* PC端不需要遮罩层 */
+  .date-picker-demo::before {
+    display: none;
+  }
 }
 
 .date-picker-header {
@@ -473,14 +561,13 @@ async function handleSubmit() {
 }
 
 .time-picker {
-  margin-top: 16px;
+  margin-top: 12px;
   position: relative;
 }
 
 .time-selectors {
   display: flex;
   justify-content: flex-start;
-  /* Align to the left */
   align-items: center;
   height: 40px;
   position: relative;
@@ -489,7 +576,6 @@ async function handleSubmit() {
   border: 1px solid var(--border-color);
   max-width: 100px;
   margin: 0;
-  /* Ensure no auto margins interfere with left alignment */
 }
 
 .time-select {
@@ -499,7 +585,8 @@ async function handleSubmit() {
   height: 100%;
   border: none;
   border-radius: var(--border-radius);
-  background-color: transparent;
+  background-color: var(--card-bg);
+  /* 改为使用卡片背景色，提高可见度 */
   color: var(--text-color);
   font-size: 15px;
   appearance: none;
@@ -509,70 +596,44 @@ async function handleSubmit() {
   text-align: center;
   text-align-last: center;
   line-height: 40px;
+  opacity: 1;
+  /* 确保完全不透明 */
 }
 
-/* Style for the dropdown list to make it scrollable and mobile-friendly */
 .time-select option {
   background-color: var(--card-bg);
   color: var(--text-color);
   font-size: 14px;
-  /* Reduced font size for options on mobile */
+  opacity: 1;
+  /* 确保选项也不透明 */
 }
 
-/* Limit height and enable scrolling for the select dropdown */
-.time-select:focus {
-  outline: none;
-}
-
-/* Styling for the actual dropdown list (browser-dependent, might need more specific selectors for some browsers) */
-/* For Webkit browsers */
 select {
   max-height: 200px;
-  /* Limit the height of the dropdown */
   overflow-y: auto;
-  /* Enable vertical scrolling */
 }
-
 
 .separator {
   font-size: 18px;
   color: var(--text-color);
   margin: 0 5px;
-  /* Adjusted margin */
 }
 
 .form-actions {
   display: flex;
   justify-content: space-between;
-  margin-top: 20px;
+  margin-top: 16px;
+  margin-bottom: 0;
 }
 
 .submit-btn {
   flex-grow: 1;
-}
-
-.icon-button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: var(--background-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color var(--transition-speed);
-}
-
-.icon-button:hover {
-  background-color: var(--primary-light);
-}
-
-.tab-content {
-  padding: 0 0;
+  min-height: 44px;
+  font-weight: 500;
 }
 
 .form-section {
-  /* Added for spacing if needed */
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .select-control {
@@ -607,36 +668,72 @@ select {
   overflow: visible;
 }
 
-/* 箭头切换按钮样式 */
-.arrow-toggle {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  margin-left: auto;
-  font-size: 16px;
-  color: var(--primary-color);
-  display: flex;
-  align-items: center;
-  transition: color 0.2s ease;
-  border-radius: 4px;
-}
-
-.arrow-toggle:hover {
-  color: var(--primary-light);
-  background-color: var(--primary-color-alpha, rgba(64, 158, 255, 0.1));
-}
-
-.arrow {
-  display: inline-block;
-  transition: transform 0.3s ease;
-  font-size: 14px;
-}
-
 /* 任务表单内容区域样式 */
 .task-form-content {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-color);
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 抽屉模式下的特殊样式 */
+.task-form.drawer-mode .task-form-content {
+  margin-top: 0;
+  height: 100%;
+}
+
+.task-form.drawer-mode .submit-btn {
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+  /* 使用主题定义的文字颜色 */
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 16px;
+  margin-top: auto;
+  opacity: 1;
+  /* 确保按钮不透明 */
+}
+
+.task-form.drawer-mode .submit-btn:hover:not(:disabled) {
+  background-color: var(--primary-light);
+}
+
+.task-form.drawer-mode .task-content {
+  min-height: 48px;
+  background-color: var(--card-bg);
+  /* 确保输入框背景不透明 */
+  color: var(--text-color);
+  /* 确保文字颜色清晰 */
+  opacity: 1;
+}
+
+.task-form.drawer-mode .task-title {
+  margin-bottom: 8px;
+  background-color: var(--card-bg);
+  /* 确保输入框背景不透明 */
+  color: var(--text-color);
+  /* 确保文字颜色清晰 */
+  opacity: 1;
+}
+
+.task-form.drawer-mode .form-control {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  opacity: 1 !important;
+}
+
+.task-form.drawer-mode .field-label {
+  color: var(--text-color);
+  /* 使用主文字颜色而不是次要颜色 */
+  opacity: 1;
+}
+
+.task-form.drawer-mode .select-control {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  opacity: 1 !important;
 }
 </style>

@@ -1,23 +1,63 @@
 <script setup lang="ts">
-import { onMounted, watch, computed } from 'vue' // Added computed
+import { onMounted, watch, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTaskStore } from '../store/task'
 import { useCategoryStore } from '../store/category'
-import { useAuthStore } from '../store/auth' // Added
+import { useAuthStore } from '../store/auth'
 import AppHeader from '../components/common/AppHeader.vue'
 import TaskForm from '../components/task/TaskForm.vue'
 import TaskList from '../components/task/TaskList.vue'
-import SvgIcon from '../components/common/SvgIcon.vue' // 导入 SvgIcon 组件
+import SvgIcon from '../components/common/SvgIcon.vue'
+import AppDrawer from '../components/common/AppDrawer.vue'
+import AboutContent from '../components/common/AboutContent.vue'
+import SettingsContent from '../components/common/SettingsContent.vue'
 
 const router = useRouter()
 const taskStore = useTaskStore()
 const categoryStore = useCategoryStore()
-const authStore = useAuthStore() // Added
+const authStore = useAuthStore()
 
-const isAuthenticated = computed(() => authStore.isAuthenticated) // Added
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
-function navigateToAbout() {
-  router.push('/about')
+// 抽屉状态管理
+const isTaskDrawerOpen = ref(false)
+const isAboutDrawerOpen = ref(false)
+const isSettingsDrawerOpen = ref(false)
+
+// 任务抽屉操作
+function openTaskDrawer() {
+  isTaskDrawerOpen.value = true
+}
+
+function closeTaskDrawer() {
+  isTaskDrawerOpen.value = false
+}
+
+// 关于抽屉操作
+function openAboutDrawer() {
+  isAboutDrawerOpen.value = true
+}
+
+function closeAboutDrawer() {
+  isAboutDrawerOpen.value = false
+}
+
+// 设置抽屉操作
+function openSettingsDrawer() {
+  isSettingsDrawerOpen.value = true
+}
+
+function closeSettingsDrawer() {
+  isSettingsDrawerOpen.value = false
+}
+
+// 点击遮罩层关闭抽屉
+function handleOverlayClick(event: MouseEvent) {
+  if (event.target === event.currentTarget) {
+    closeTaskDrawer()
+    closeAboutDrawer()
+    closeSettingsDrawer()
+  }
 }
 
 // 监听分类变更并刷新任务列表
@@ -52,8 +92,11 @@ onMounted(() => {
   <div class="home-view">
     <AppHeader :show-logout-icon="isAuthenticated">
       <template #left-actions>
-        <button class="icon-button about-button" @click="navigateToAbout">
+        <button class="icon-button about-button" @click="openAboutDrawer">
           <SvgIcon name="about" color="default" :size="20" alt="关于" />
+        </button>
+        <button v-if="isAuthenticated" class="icon-button settings-button" @click="openSettingsDrawer">
+          <SvgIcon name="primary" color="primary" :size="20" alt="设置" />
         </button>
       </template>
       <template #default>
@@ -62,17 +105,39 @@ onMounted(() => {
     </AppHeader>
 
     <div class="task-container">
-      <TaskForm :can-operate="isAuthenticated" />
       <TaskList title="待办清单" :can-operate="isAuthenticated" />
     </div>
+
+    <!-- 浮动添加按钮 -->
+    <button class="fab-button" @click="openTaskDrawer" :disabled="!isAuthenticated"
+      :title="isAuthenticated ? '添加任务' : '请先登录'">
+      <SvgIcon name="add" color="white" :size="24" alt="添加任务" />
+    </button>
+
+    <!-- 添加任务抽屉 -->
+    <AppDrawer :is-open="isTaskDrawerOpen" title="添加新任务" @close="closeTaskDrawer">
+      <TaskForm :can-operate="isAuthenticated" :is-drawer-mode="true" @task-added="closeTaskDrawer" />
+    </AppDrawer>
+
+    <!-- 关于抽屉 -->
+    <AppDrawer :is-open="isAboutDrawerOpen" title="关于与主题" @close="closeAboutDrawer" max-height="90vh">
+      <AboutContent />
+    </AppDrawer>
+
+    <!-- 设置抽屉 -->
+    <AppDrawer :is-open="isSettingsDrawerOpen" title="设置" @close="closeSettingsDrawer" max-height="90vh">
+      <SettingsContent />
+    </AppDrawer>
   </div>
 </template>
 
 <style scoped>
 .home-view {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
 .app-title {
@@ -84,9 +149,11 @@ onMounted(() => {
 .task-container {
   flex: 1;
   padding: 12px;
-  /* 从16px减少到12px */
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  /* 重要：允许flex子项收缩 */
+  overflow: hidden;
 }
 
 .about-button {
@@ -98,19 +165,31 @@ onMounted(() => {
   min-height: 32px;
   white-space: nowrap;
   background-color: transparent !important;
-  /* 强制移除默认背景色 */
+}
+
+.settings-button {
+  font-size: 14px;
+  width: auto;
+  padding: 0 10px;
+  border: none;
+  height: auto;
+  min-height: 32px;
+  white-space: nowrap;
+  background-color: transparent !important;
+  margin-left: 8px;
 }
 
 .icon-img {
   width: 20px;
-  /* 你可以根据需要调整图标大小 */
   height: 20px;
-  /* 你可以根据需要调整图标大小 */
 }
 
 .about-button:hover {
   background-color: var(--background-color) !important;
-  /* 恢复悬停时的背景效果 */
+}
+
+.settings-button:hover {
+  background-color: var(--background-color) !important;
 }
 
 .about-button .material-icon {
@@ -121,10 +200,186 @@ onMounted(() => {
   white-space: nowrap;
 }
 
+/* 浮动添加按钮样式 */
+.fab-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.fab-button:hover:not(:disabled) {
+  background-color: var(--primary-light);
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.fab-button:disabled {
+  background-color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* 抽屉样式 */
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: flex-end;
+  animation: fadeIn 0.3s ease;
+}
+
+.drawer-content {
+  background-color: var(--card-bg);
+  width: 100%;
+  max-height: 85vh;
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px 24px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--card-bg);
+  flex-shrink: 0;
+}
+
+.drawer-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+  opacity: 1;
+}
+
+.drawer-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--background-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.drawer-close-btn:hover {
+  background-color: var(--border-color);
+}
+
+.close-icon {
+  font-size: 20px;
+  color: var(--text-color);
+  line-height: 1;
+  opacity: 1;
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background-color: var(--card-bg);
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* 移动端优化 */
+@media (max-width: 767px) {
+  .task-container {
+    padding: 8px;
+  }
+
+  .fab-button {
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .drawer-content {
+    max-height: 90vh;
+  }
+}
+
+/* 桌面端适配 */
 @media (min-width: 768px) {
   .task-container {
-    padding: 18px;
-    /* 从24px减少到18px */
+    padding: 16px 24px;
+  }
+
+  .drawer-content {
+    max-width: 500px;
+    margin: 0 auto;
+    max-height: 75vh;
+    border-radius: 16px;
+    margin-bottom: 10vh;
+  }
+
+  .drawer-overlay {
+    align-items: center;
+  }
+
+  .fab-button {
+    bottom: 32px;
+    right: 32px;
+  }
+}
+
+/* 大屏幕适配 */
+@media (min-width: 1200px) {
+  .task-container {
+    padding: 20px 32px;
+  }
+
+  .drawer-content {
+    max-width: 600px;
+    max-height: 70vh;
   }
 }
 </style>

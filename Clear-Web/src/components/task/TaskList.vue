@@ -623,37 +623,42 @@ onMounted(() => {
 
 <style scoped>
 .task-list {
-  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 .list-title {
   font-size: 16px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .icon {
   margin-right: 8px;
   color: var(--text-primary);
-  /* Ensure icon color is visible */
 }
 
 /* 筛选区样式 */
 .filters-section {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   background-color: var(--card-color);
   border-radius: var(--border-radius);
   padding: 12px 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+  max-height: 30vh;
+  overflow-y: auto;
 }
 
 .filter-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  /* 调整整体间距 */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
   margin-bottom: 12px;
 }
 
@@ -661,13 +666,12 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex-grow: 1;
-  /* 让筛选组在空间足够时可以扩展 */
 }
 
 .filter-group label {
   font-size: 13px;
   color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .filter-buttons {
@@ -683,15 +687,14 @@ onMounted(() => {
   border-radius: var(--border-radius);
   background-color: transparent;
   color: var(--text-primary);
-  /* 添加默认文字颜色 */
   cursor: pointer;
   transition: all var(--transition-speed);
+  white-space: nowrap;
 }
 
 .filter-btn.active {
   background-color: var(--primary-color);
   color: white;
-  /* Ensure text is white on active */
   border-color: var(--primary-color);
 }
 
@@ -699,7 +702,6 @@ onMounted(() => {
   opacity: 0.7;
   cursor: not-allowed;
   background-color: var(--background-color-soft);
-  /* Slightly different background for disabled */
 }
 
 /* 新增输入框样式 */
@@ -709,11 +711,9 @@ onMounted(() => {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   background-color: var(--background-color);
-  /* 改为背景色以区分按钮 */
   color: var(--text-primary);
   transition: border-color var(--transition-speed);
   box-sizing: border-box;
-  /* 确保padding和border不会增加元素总宽度 */
 }
 
 .filter-input:focus {
@@ -725,6 +725,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .date-filter-inputs span {
@@ -733,41 +734,30 @@ onMounted(() => {
 
 .date-input {
   width: 120px;
-  /* 根据需要调整日期输入框宽度 */
   cursor: pointer;
-  /* Indicate it's clickable */
 }
 
 .date-input-container {
   position: relative;
-  /* For positioning the date picker */
 }
 
 .keyword-input {
   width: 100%;
-  /* 关键字输入框可以更宽 */
   max-width: 200px;
-  /* 但也给一个最大宽度 */
 }
 
-
-/* Date Picker Styles (adapted from TaskForm.vue) */
+/* Date Picker Styles */
 .date-picker-popover {
   position: absolute;
   top: calc(100% + 8px);
-  /* Position below the input */
   left: 0;
   z-index: 1000;
-  /* Ensure it's above other elements */
   background: var(--card-color);
-  /* Use card color for background */
   border-radius: var(--border-radius);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   max-width: 280px;
-  /* Adjust width as needed */
   padding: 12px;
   color: var(--text-primary);
-  /* Use primary text color */
   border: 1px solid var(--border-color);
 }
 
@@ -806,7 +796,6 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 5px;
-  /* Adjust gap as needed */
 }
 
 .date-cell {
@@ -814,9 +803,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   height: 30px;
-  /* Adjust size as needed */
   width: 30px;
-  /* Adjust size as needed */
   border-radius: 50%;
   cursor: pointer;
   font-size: 13px;
@@ -830,9 +817,7 @@ onMounted(() => {
 .date-cell.active {
   background-color: var(--primary-color);
   color: white;
-  /* Ensure text is white on active */
 }
-
 
 .active-filters {
   display: flex;
@@ -872,9 +857,23 @@ onMounted(() => {
 }
 
 .tasks-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.loading-indicator,
+.empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
 }
 
 .task-item {
@@ -882,7 +881,9 @@ onMounted(() => {
   border-radius: var(--border-radius);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   padding: 12px 16px;
+  margin-bottom: 12px;
   transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+  flex-shrink: 0;
 }
 
 .task-item.completed {
@@ -923,11 +924,9 @@ onMounted(() => {
   font-size: 11px;
   background-color: var(--primary-light);
   color: var(--primary-dark);
-  /* Changed from --primary-color for potentially better contrast */
   padding: 2px 6px;
   border-radius: 10px;
   font-weight: 500;
-  /* Added for better readability */
 }
 
 .task-status {
@@ -951,7 +950,6 @@ onMounted(() => {
   gap: 8px;
   opacity: 1;
   visibility: visible;
-  /* Ensure actions are always visible */
 }
 
 .action-btn {
@@ -968,11 +966,8 @@ onMounted(() => {
 }
 
 .action-btn .icon {
-  /* Targeting icons specifically within action buttons */
   color: var(--text-primary);
-  /* Ensure icons in action buttons are visible */
   margin-right: 0;
-  /* Reset margin if not needed here */
 }
 
 .toggle-btn {
@@ -1008,19 +1003,14 @@ onMounted(() => {
   margin: 4px 0 0 0;
 }
 
-.loading-indicator,
-.empty-state {
-  text-align: center;
-  padding: 24px;
-  color: var(--text-secondary);
-}
-
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 20px;
+  margin-top: 16px;
   gap: 12px;
+  flex-shrink: 0;
+  padding: 8px 0;
 }
 
 .pagination-btn {
@@ -1031,12 +1021,9 @@ onMounted(() => {
   justify-content: center;
   border-radius: var(--border-radius);
   background-color: var(--card-color);
-  /* Changed to card-color for better visibility */
   border: 1px solid var(--border-color);
-  /* Added border */
   cursor: pointer;
   color: var(--primary-color);
-  /* Added text color for < and > */
 }
 
 .pagination-btn:disabled {
@@ -1052,74 +1039,56 @@ onMounted(() => {
 /* Category specific styles */
 .category-filter-group .filter-buttons {
   align-items: center;
-  /* Align items for better layout with add/edit inputs */
 }
 
 .category-filter-item {
   position: relative;
   display: flex;
-  /* Changed to flex for better alignment of button and actions trigger */
   align-items: center;
 }
 
 .category-btn {
-  /* Adjust if needed, ensure it doesn't overlap with actions trigger */
   flex-grow: 1;
-  /* Allow button to take space if category name is long */
 }
-
-/* Removed .category-actions-overlay styles */
 
 .category-actions-trigger-wrapper {
   position: relative;
-  /* For positioning the menu */
   display: flex;
   align-items: center;
 }
 
 .category-actions-trigger {
   background: none;
-  /* border: none; */
-  /* Removed to add a new border */
   border: 1px solid var(--border-color);
-  /* Added border */
   color: var(--text-secondary);
   cursor: pointer;
   padding: 2px 4px;
   font-size: 18px;
   line-height: 1;
   margin-left: 3px;
-  /* Adjusted margin to account for the new border */
   border-radius: var(--border-radius-sm);
   width: 20px;
   text-align: center;
   box-sizing: border-box;
-  /* Ensure padding and border are included in the element's total width and height */
 }
 
 .category-actions-trigger:hover {
   background-color: var(--background-color-soft);
   color: var(--text-primary);
   border-color: var(--primary-color);
-  /* Optional: highlight border on hover */
 }
 
 .category-actions-menu {
   position: absolute;
   top: 100%;
-  /* Position below the trigger */
   right: 0;
-  /* Align to the right of the trigger wrapper */
   background-color: var(--card-color);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 20;
-  /* Ensure it's above other filter items */
   padding: 4px 0;
-  /* Padding for menu items */
   min-width: 80px;
-  /* Minimum width for the menu */
 }
 
 .category-actions-menu button {
@@ -1144,12 +1113,9 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   padding: 1px;
-  /* Minimal padding */
   border: 1px solid var(--primary-color);
   border-radius: var(--border-radius);
   background-color: var(--card-color);
-  /* margin-right: 4px; */
-  /* Ensure space if it replaces a button */
 }
 
 .category-edit-input,
@@ -1160,7 +1126,6 @@ onMounted(() => {
   outline: none;
   flex-grow: 1;
   min-width: 90px;
-  /* Adjusted min-width */
   background-color: transparent;
   color: var(--text-primary);
 }
@@ -1176,24 +1141,93 @@ onMounted(() => {
   display: flex;
   align-items: center;
   margin-left: 6px;
-  /* Space from the last category or 'All' button */
 }
 
-/* Ensure filter buttons are not overly affected by flex changes if names are long */
 .filter-buttons.category-buttons .filter-btn {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 150px;
-  /* Adjust as needed, prevents very long names from breaking layout */
 }
 
 .filter-btn:disabled,
 .category-actions-trigger:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  /* background-color: var(--background-color-soft) !important; */
 }
 
-/* ...rest of the existing styles... */
+.btn-action {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: var(--border-radius);
+  transition: all var(--transition-speed);
+}
+
+.btn-action:hover {
+  background-color: var(--primary-light);
+}
+
+.save-icon {
+  color: var(--success-color);
+}
+
+.cancel-icon {
+  color: var(--danger-color);
+}
+
+/* 响应式优化 */
+@media (max-width: 767px) {
+  .filter-controls {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .date-filter-inputs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .date-input {
+    width: 100%;
+  }
+
+  .keyword-input {
+    max-width: none;
+  }
+
+  .filters-section {
+    padding: 8px 12px;
+    max-height: 40vh;
+  }
+
+  .task-item {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+
+  .task-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .task-actions {
+    align-self: flex-end;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .filter-controls {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .filter-controls {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
 </style>

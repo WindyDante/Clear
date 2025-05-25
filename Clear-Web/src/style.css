@@ -56,6 +56,16 @@
   box-sizing: border-box;
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden; /* 防止页面级别的滚动条 */
+}
+
+#app {
+  height: 100vh;
+  overflow: hidden;
+}
+
 body {
   font-family: var(--font-family);
   background-color: var(--background-color);
@@ -153,7 +163,6 @@ button:hover {
   opacity: 0.8;
 }
 
-
 /* 辅助类 */
 .text-danger {
   color: var(--danger-color);
@@ -179,4 +188,30 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+/* 自定义滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Firefox 滚动条样式 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) var(--background-color);
 }

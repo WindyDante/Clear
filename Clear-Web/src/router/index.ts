@@ -13,12 +13,6 @@ const routes = [
     name: 'Auth',
     component: () => import('../views/AuthView.vue'),
     meta: { guest: true }
-  },
-  {
-    path: '/about',
-    name: 'About',
-    component: () => import('../views/AboutView.vue'),
-    meta: { requiresAuth: false } // 修改为false，允许未登录用户访问
   }
 ]
 

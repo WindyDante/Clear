@@ -57,6 +57,10 @@ const loadSvg = async () => {
             svg = svg.replace(/fill="#fff"/g, `fill="${currentColor}"`)
             svg = svg.replace(/fill="white"/g, `fill="${currentColor}"`)
 
+            // 添加对 #C4C6CF 这个特定颜色的替换
+            svg = svg.replace(/fill="#C4C6CF"/g, `fill="${currentColor}"`)
+            svg = svg.replace(/fill="#c4c6cf"/g, `fill="${currentColor}"`)
+
             // 更通用的颜色替换：替换所有深色值（RGB值都小于50的颜色）
             svg = svg.replace(/fill="#([0-9a-fA-F]{6})"/g, (match, color) => {
                 const r = parseInt(color.substr(0, 2), 16)
