@@ -90,7 +90,7 @@ onMounted(() => {
 
 <template>
   <div class="home-view">
-    <AppHeader :show-logout-icon="isAuthenticated">
+    <AppHeader :show-logout-icon="true">
       <template #left-actions>
         <button class="icon-button about-button" @click="openAboutDrawer">
           <SvgIcon name="about" color="default" :size="20" alt="关于" />

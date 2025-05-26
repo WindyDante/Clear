@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/auth'
 import { useTaskStore } from '../../store/task'
 import { useCategoryStore } from '../../store/category'
 import { useToast } from '../../composables/useToast' // 引入 Toast 功能
+import { computed } from 'vue'
 import SvgIcon from './SvgIcon.vue'
 
 defineProps<{
@@ -18,6 +19,9 @@ const taskStore = useTaskStore()
 const categoryStore = useCategoryStore()
 const { showToast } = useToast() // 使用 Toast 功能
 
+// 计算是否已登录
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+
 function navigateHome() {
   router.push('/')
 }
@@ -31,6 +35,10 @@ function logout() {
   categoryStore.reset()
 
   showToast('您已成功退出登录', 'info') // 添加退出时的 Toast 通知
+  router.push('/auth')
+}
+
+function login() {
   router.push('/auth')
 }
 </script>
@@ -50,8 +58,12 @@ function logout() {
       </h1>
 
       <div class="right-actions">
-        <button v-if="showLogoutIcon" class="icon-button logout-button" @click="logout">
+        <!-- 根据登录状态显示不同的按钮 -->
+        <button v-if="showLogoutIcon && isAuthenticated" class="icon-button logout-button" @click="logout">
           <SvgIcon name="exit" color="default" :size="20" alt="退出" />
+        </button>
+        <button v-else-if="showLogoutIcon && !isAuthenticated" class="icon-button login-button" @click="login">
+          <SvgIcon name="exit" color="primary" :size="20" alt="登录" />
         </button>
         <slot name="right-actions"></slot>
       </div>
@@ -117,7 +129,8 @@ function logout() {
   /* 你可以根据需要调整图标大小 */
 }
 
-.logout-button {
+.logout-button,
+.login-button {
   margin-right: 8px;
   color: var(--text-color);
   width: auto;
@@ -131,7 +144,8 @@ function logout() {
   /* 确保这些按钮也没有边框 */
 }
 
-.logout-button .material-icon {
+.logout-button .material-icon,
+.login-button .material-icon {
   display: flex;
   align-items: center;
   flex-direction: row;
@@ -141,6 +155,10 @@ function logout() {
 
 .logout-button:hover {
   background-color: rgba(255, 0, 0, 0.1);
+}
+
+.login-button:hover {
+  background-color: var(--primary-light);
 }
 
 .home-button {

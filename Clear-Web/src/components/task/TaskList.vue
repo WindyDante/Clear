@@ -4,6 +4,7 @@ import { useTaskStore } from '../../store/task'
 import { useCategoryStore, type Category } from '../../store/category' // Import Category type
 import { useToast } from '../../composables/useToast'
 import { useRouter } from 'vue-router';
+import DatePickerDrawer from '../common/DatePickerDrawer.vue'
 
 const props = defineProps<{
   title: string
@@ -20,140 +21,14 @@ const showAddCategoryInput = ref(false);
 const newCategoryName = ref('');
 const editingCategoryId = ref<string | null>(null);
 const editingCategoryName = ref('');
-// const categoryActionVisible = ref<string | null>(null); // Removed
 const openedCategoryMenuId = ref<string | null>(null); // New: Tracks open actions menu
 const categoryEditInputRef = ref<HTMLInputElement | null>(null);
 const newCategoryInputRef = ref<HTMLInputElement | null>(null);
 
-// --- 日期选择器状态 ---
-const showStartDatePicker = ref(false)
-const showEndDatePicker = ref(false)
-const startDatePickerContainerRef = ref<HTMLElement | null>(null)
-const endDatePickerContainerRef = ref<HTMLElement | null>(null)
-
-const pickerCurrentYear = ref(new Date().getFullYear())
-const pickerCurrentMonth = ref(new Date().getMonth()) // 0-indexed
-
-const monthNames = [
-  "一月", "二月", "三月", "四月", "五月", "六月",
-  "七月", "八月", "九月", "十月", "十一月", "十二月"
-];
-
-const pickerDaysInMonth = computed(() => {
-  return new Date(pickerCurrentYear.value, pickerCurrentMonth.value + 1, 0).getDate();
-});
-
-const pickerCurrentMonthName = computed(() => {
-  return `${monthNames[pickerCurrentMonth.value]} ${pickerCurrentYear.value}`;
-});
-
-function pickerPrevMonth() {
-  if (pickerCurrentMonth.value === 0) {
-    pickerCurrentMonth.value = 11;
-    pickerCurrentYear.value--;
-  } else {
-    pickerCurrentMonth.value--;
-  }
-}
-
-function pickerNextMonth() {
-  if (pickerCurrentMonth.value === 11) {
-    pickerCurrentMonth.value = 0;
-    pickerCurrentYear.value++;
-  } else {
-    pickerCurrentMonth.value++;
-  }
-}
-
-const formatDateToYYYYMMDD = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const openPicker = (type: 'start' | 'end') => {
-  const today = new Date();
-  let currentDateVal: string | undefined;
-
-  if (type === 'start') {
-    showStartDatePicker.value = !showStartDatePicker.value; // Toggle
-    showEndDatePicker.value = false; // Close other picker
-    currentDateVal = startDateInput.value;
-  } else {
-    showEndDatePicker.value = !showEndDatePicker.value; // Toggle
-    showStartDatePicker.value = false; // Close other picker
-    currentDateVal = endDateInput.value;
-  }
-
-  // Initialize picker date
-  if (currentDateVal) {
-    const [year, month, day] = currentDateVal.split('-').map(Number);
-    if (year && month && day) {
-      pickerCurrentYear.value = year;
-      pickerCurrentMonth.value = month - 1; // Month is 0-indexed
-    } else { // Fallback to today if date format is invalid
-      pickerCurrentYear.value = today.getFullYear();
-      pickerCurrentMonth.value = today.getMonth();
-    }
-  } else {
-    pickerCurrentYear.value = today.getFullYear();
-    pickerCurrentMonth.value = today.getMonth();
-  }
-};
-
-const selectDate = (day: number, type: 'start' | 'end') => {
-  const selectedDate = new Date(pickerCurrentYear.value, pickerCurrentMonth.value, day);
-  const formattedDate = formatDateToYYYYMMDD(selectedDate);
-
-  if (type === 'start') {
-    startDateInput.value = formattedDate;
-    showStartDatePicker.value = false;
-  } else {
-    endDateInput.value = formattedDate;
-    showEndDatePicker.value = false;
-  }
-  taskStore.setDateRange(startDateInput.value || undefined, endDateInput.value || undefined);
-};
-
-const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target as HTMLElement;
-  // Check for start date picker
-  if (showStartDatePicker.value && startDatePickerContainerRef.value && !startDatePickerContainerRef.value.contains(target)) {
-    const startDateTrigger = document.querySelector('.start-date-input-trigger');
-    if (!startDateTrigger || !startDateTrigger.contains(target)) {
-      showStartDatePicker.value = false;
-    }
-  }
-  // Check for end date picker
-  if (showEndDatePicker.value && endDatePickerContainerRef.value && !endDatePickerContainerRef.value.contains(target)) {
-    const endDateTrigger = document.querySelector('.end-date-input-trigger');
-    if (!endDateTrigger || !endDateTrigger.contains(target)) {
-      showEndDatePicker.value = false;
-    }
-  }
-}
-
-function closeCategoryMenuOnClickOutside(event: MouseEvent) {
-  if (openedCategoryMenuId.value) {
-    const target = event.target as HTMLElement;
-    const menuElement = document.querySelector(`.category-actions-menu[data-category-id="${openedCategoryMenuId.value}"]`);
-    const triggerElement = document.querySelector(`.category-actions-trigger[data-category-id="${openedCategoryMenuId.value}"]`);
-    if (menuElement && !menuElement.contains(target) && triggerElement && !triggerElement.contains(target)) {
-      openedCategoryMenuId.value = null;
-    }
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside, true);
-  document.addEventListener('click', closeCategoryMenuOnClickOutside, true);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside, true);
-  document.removeEventListener('click', closeCategoryMenuOnClickOutside, true);
-});
+// --- 日期选择器抽屉状态 ---
+const showStartDateDrawer = ref(false)
+const showEndDateDrawer = ref(false)
+const currentDatePickerType = ref<'start' | 'end' | null>(null)
 
 // --- Category Management Methods ---
 
@@ -261,6 +136,61 @@ async function handleDeleteCategory(category: Category) {
   }
 }
 
+// --- 日期选择器方法 ---
+function openDatePicker(type: 'start' | 'end') {
+  if (!props.canOperate && (startDateInput.value || endDateInput.value)) {
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
+
+  currentDatePickerType.value = type;
+  if (type === 'start') {
+    showStartDateDrawer.value = true;
+  } else {
+    showEndDateDrawer.value = true;
+  }
+}
+
+function handleDateSelect(date: string) {
+  if (currentDatePickerType.value === 'start') {
+    startDateInput.value = date;
+    showStartDateDrawer.value = false;
+  } else if (currentDatePickerType.value === 'end') {
+    endDateInput.value = date;
+    showEndDateDrawer.value = false;
+  }
+
+  // 应用日期筛选
+  taskStore.setDateRange(startDateInput.value || undefined, endDateInput.value || undefined);
+  currentDatePickerType.value = null;
+}
+
+function closeDatePicker() {
+  showStartDateDrawer.value = false;
+  showEndDateDrawer.value = false;
+  currentDatePickerType.value = null;
+}
+
+function closeCategoryMenuOnClickOutside(event: MouseEvent) {
+  if (openedCategoryMenuId.value) {
+    const target = event.target as HTMLElement;
+    const menuElement = document.querySelector(`.category-actions-menu[data-category-id="${openedCategoryMenuId.value}"]`);
+    const triggerElement = document.querySelector(`.category-actions-trigger[data-category-id="${openedCategoryMenuId.value}"]`);
+    if (menuElement && !menuElement.contains(target) && triggerElement && !triggerElement.contains(target)) {
+      openedCategoryMenuId.value = null;
+    }
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', closeCategoryMenuOnClickOutside, true);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeCategoryMenuOnClickOutside, true);
+});
+
 // --- End Category Management Methods ---
 
 // 本地 ref 用于绑定日期和关键字输入
@@ -313,15 +243,8 @@ async function handleToggleCompletion(taskId: string) {
   }
   try {
     await taskStore.toggleTaskCompletion(taskId)
-
-    // The success toast for toggling completion is now handled in the taskStore's updateTask action
-    // if (task) {
-    //   showToast(`任务"${task.title}"已标记为${task.completed ? '未完成' : '完成'}`, 'success')
-    // }
   } catch (error) {
-    // Error toast is handled by the API service or store
-    // showToast('操作失败，请重试', 'error')
-    console.error('Error toggling task completion:', error) // Keep console error for debugging
+    console.error('Error toggling task completion:', error)
   }
 }
 
@@ -332,17 +255,9 @@ async function handleDeleteTask(taskId: string) {
     return;
   }
   try {
-    // const task = taskStore.getTaskById(taskId) // No longer needed here for toast
     await taskStore.deleteTask(taskId)
-
-    // Success toast is now handled in the taskStore's deleteTask action
-    // if (task) {
-    //   showToast(`任务"${task.title}"已删除`, 'info')
-    // }
   } catch (error) {
-    // Error toast is handled by the API service or store
-    // showToast('删除失败，请重试', 'error')
-    console.error('Error deleting task:', error) // Keep console error for debugging
+    console.error('Error deleting task:', error)
   }
 }
 
@@ -418,8 +333,6 @@ function clearAllFilters() {
   startDateInput.value = ''
   endDateInput.value = ''
   keywordInput.value = ''
-  showStartDatePicker.value = false; // Close picker
-  showEndDatePicker.value = false;   // Close picker
   taskStore.clearFilters()
   closeAllCategoryInputsAndMenus(); // Clear category states
 }
@@ -513,42 +426,13 @@ onMounted(() => {
           <label>日期筛选:</label>
           <div class="date-filter-inputs">
             <div class="date-input-container">
-              <input type="text" :value="startDateInput" placeholder="开始日期" @click="openPicker('start')" readonly
+              <input type="text" :value="startDateInput" placeholder="开始日期" @click="openDatePicker('start')" readonly
                 class="filter-input date-input start-date-input-trigger">
-              <div v-if="showStartDatePicker" class="date-picker-popover" ref="startDatePickerContainerRef">
-                <div class="date-picker-header">
-                  <button class="picker-nav" @click.stop="pickerPrevMonth">◀</button>
-                  <div class="current-month">{{ pickerCurrentMonthName }}</div>
-                  <button class="picker-nav" @click.stop="pickerNextMonth">▶</button>
-                </div>
-                <div class="date-grid">
-                  <div v-for="day in pickerDaysInMonth" :key="day" class="date-cell"
-                    :class="{ 'active': startDateInput === formatDateToYYYYMMDD(new Date(pickerCurrentYear, pickerCurrentMonth, day)) }"
-                    @click.stop="selectDate(day, 'start')">
-                    {{ day }}
-                  </div>
-                </div>
-              </div>
             </div>
             <span>-</span>
             <div class="date-input-container">
-              <input type="text" :value="endDateInput" placeholder="结束日期 (可选)" @click="openPicker('end')" readonly
+              <input type="text" :value="endDateInput" placeholder="结束日期 (可选)" @click="openDatePicker('end')" readonly
                 class="filter-input date-input end-date-input-trigger">
-              <div v-if="showEndDatePicker" class="date-picker-popover date-picker-popover-end"
-                ref="endDatePickerContainerRef">
-                <div class="date-picker-header">
-                  <button class="picker-nav" @click.stop="pickerPrevMonth">◀</button>
-                  <div class="current-month">{{ pickerCurrentMonthName }}</div>
-                  <button class="picker-nav" @click.stop="pickerNextMonth">▶</button>
-                </div>
-                <div class="date-grid">
-                  <div v-for="day in pickerDaysInMonth" :key="day" class="date-cell"
-                    :class="{ 'active': endDateInput === formatDateToYYYYMMDD(new Date(pickerCurrentYear, pickerCurrentMonth, day)) }"
-                    @click.stop="selectDate(day, 'end')">
-                    {{ day }}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -618,6 +502,12 @@ onMounted(() => {
         </button>
       </div>
     </div>
+
+    <!-- 日期选择器抽屉组件 -->
+    <DatePickerDrawer :is-open="showStartDateDrawer" :title="'选择开始日期'" :selected-date="startDateInput"
+      @select="handleDateSelect" @close="closeDatePicker" />
+    <DatePickerDrawer :is-open="showEndDateDrawer" :title="'选择结束日期'" :selected-date="endDateInput"
+      @select="handleDateSelect" @close="closeDatePicker" />
   </div>
 </template>
 

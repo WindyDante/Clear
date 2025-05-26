@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, computed, watch } from "vue";
+import { ref, reactive, onMounted, computed, watch } from "vue";
 import { useTaskStore } from "../../store/task";
 import { useCategoryStore } from "../../store/category";
 import { useToast } from "../../composables/useToast";
 import { useRouter } from 'vue-router';
+import DatePickerDrawer from '../common/DatePickerDrawer.vue'
 
 const props = defineProps<{
   canOperate?: boolean
@@ -13,10 +14,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   taskAdded: [] // 新增：任务添加成功事件
 }>()
-
-// 移除展开/收起状态管理
-// const isTaskFormExpanded = ref(false)
-// function toggleTaskForm() { ... }
 
 // Helper to get time with an offset from now
 function getOffsetTime(hoursOffset: number = 0, minutesOffset: number = 0) {
@@ -38,8 +35,8 @@ const categoryStore = useCategoryStore(); // 使用集中的分类状态管理
 const { showToast } = useToast();
 const router = useRouter(); // Added
 
-const showDatePicker = ref(false);
-const datePickerRef = ref<HTMLElement | null>(null);
+// 日期选择器抽屉状态
+const showDatePickerDrawer = ref(false);
 
 // 时间选择器数据
 const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
@@ -64,7 +61,6 @@ watch(() => categoryStore.categories, (categories) => {
     newTask.category = firstCategory.categoryName;
     // 使用字符串类型的分类ID
     newTask.categoryId = firstCategory.categoryId;
-    // console.log('已设置默认分类:', firstCategory.categoryName, firstCategory.categoryId); // 移除或注释掉这行
   } else {
     // 没有分类时，清空选择
     newTask.category = "";
@@ -85,64 +81,42 @@ function formatDateTime(dateString: string | null) {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
-// 计算当前选中的日期
-const selectedDay = computed(() => {
-  if (!newTask.dueDate) return null;
-  const dateObj = new Date(newTask.dueDate);
-  return dateObj.getDate();
-});
-
-// 当前日期
-const currentDate = new Date();
-const currentYear = ref(currentDate.getFullYear());
-const currentMonth = ref(currentDate.getMonth());
-
-// 计算当前月份的天数
-const daysInMonth = computed(() => {
-  return new Date(currentYear.value, currentMonth.value + 1, 0).getDate();
-});
-
-// 月份名称
-const monthNames = [
-  "一月", "二月", "三月", "四月", "五月", "六月",
-  "七月", "八月", "九月", "十月", "十一月", "十二月"
-];
-
-// 计算当前显示的月份名称和年份
-const currentMonthName = computed(() => {
-  return `${monthNames[currentMonth.value]} ${currentYear.value}`;
-});
-
-// 导航到上个月
-function prevMonth() {
-  if (currentMonth.value === 0) {
-    currentMonth.value = 11;
-    currentYear.value--;
-  } else {
-    currentMonth.value--;
-  }
+// 格式化日期为 YYYY-MM-DD 格式（用于日期选择器抽屉）
+function formatDateToYYYYMMDD(dateString: string): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
-// 导航到下个月
-function nextMonth() {
-  if (currentMonth.value === 11) {
-    currentMonth.value = 0;
-    currentYear.value++;
-  } else {
-    currentMonth.value++;
+// 日期选择器相关方法
+function openDatePicker() {
+  if (!props.canOperate) {
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
   }
+  showDatePickerDrawer.value = true;
 }
 
-// handleTabChange function removed
+function handleDateSelect(dateStr: string) {
+  // dateStr 格式为 YYYY-MM-DD
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(year, month - 1, day); // month is 0-indexed
 
-function handleDateSelect(day: number) {
-  const date = new Date(currentYear.value, currentMonth.value, day);
   // 使用当前选择的时间
   const [hours, minutes] = newTask.dueTime.split(':').map(Number);
   date.setHours(hours, minutes);
 
   // 格式化为ISO字符串并保存
   newTask.dueDate = date.toISOString();
+  showDatePickerDrawer.value = false;
+}
+
+function closeDatePicker() {
+  showDatePickerDrawer.value = false;
 }
 
 // 处理时间选择器更改
@@ -158,24 +132,8 @@ function handleTimeChange() {
   }
 }
 
-// 点击外部区域关闭日期选择器
-function handleClickOutside(event: MouseEvent) {
-  const target = event.target as HTMLElement;
-  // 检查点击是否在日期选择器外部，且不是日期选择器触发器
-  if (
-    datePickerRef.value &&
-    !datePickerRef.value.contains(target) &&
-    !target.closest(".date-picker-trigger") && // Ensure not clicking the trigger itself
-    showDatePicker.value
-  ) {
-    showDatePicker.value = false;
-  }
-}
-
-// 生命周期钩子，用于添加和移除点击事件监听器
+// 生命周期钩子
 onMounted(() => {
-  document.addEventListener("click", handleClickOutside);
-
   // 不再单独获取分类数据，而是使用父组件已加载的共享状态
   // 初始化任务的分类选项
   if (categoryStore.categories.length > 0) {
@@ -195,10 +153,6 @@ onMounted(() => {
     selectedHour.value = hour;
     selectedMinute.value = minute;
   }
-});
-
-onUnmounted(() => {
-  document.removeEventListener("click", handleClickOutside);
 });
 
 async function handleSubmit() {
@@ -305,23 +259,9 @@ async function handleSubmit() {
 
       <div class="form-section">
         <p class="field-label">截止日期：</p>
-        <div class="date-picker-trigger" @click="showDatePicker = true">
+        <div class="date-picker-trigger" @click="openDatePicker">
           <input :value="formatDateTime(newTask.dueDate)" class="form-control" placeholder="选择日期" readonly />
           <span class="calendar-icon">📅</span>
-        </div>
-
-        <div v-if="showDatePicker" class="date-picker-demo" ref="datePickerRef">
-          <div class="date-picker-header">
-            <button class="picker-nav" @click="prevMonth">◀</button>
-            <div class="current-month">{{ currentMonthName }}</div>
-            <button class="picker-nav" @click="nextMonth">▶</button>
-          </div>
-          <div class="date-grid">
-            <div v-for="day in daysInMonth" :key="day" class="date-cell" :class="{ active: day === selectedDay }"
-              @click="handleDateSelect(day)">
-              {{ day }}
-            </div>
-          </div>
         </div>
 
         <div class="time-picker">
@@ -345,6 +285,10 @@ async function handleSubmit() {
         </button>
       </div>
     </div>
+
+    <!-- 日期选择器抽屉组件 -->
+    <DatePickerDrawer :is-open="showDatePickerDrawer" :title="'选择截止日期'"
+      :selected-date="formatDateToYYYYMMDD(newTask.dueDate)" @select="handleDateSelect" @close="closeDatePicker" />
   </div>
 </template>
 

@@ -11,6 +11,11 @@ const router = useRouter()
 const authStore = useAuthStore()
 const { showToast } = useToast() // 使用 Toast 功能
 
+// 添加跳转到主页的函数
+const navigateToHome = () => {
+  router.push('/')
+}
+
 const tabs = [
   { id: 'login', name: '登录' },
   { id: 'register', name: '注册' }
@@ -72,7 +77,7 @@ const handleRegister = async () => {
     <AppHeader>
       <template #default>
         <h1 class="auth-header-title">
-          欢迎使用 <span class="clear-text">Clear</span>
+          欢迎使用 <span class="clear-text clickable" @click="navigateToHome">Clear</span>
         </h1>
       </template>
       <template #right-actions>
@@ -211,6 +216,26 @@ const handleRegister = async () => {
 
 .clear-text {
   color: var(--primary-color);
+}
+
+.clickable {
+  cursor: pointer;
+  /* 添加手型光标 */
+  transition: all 0.2s ease;
+  /* 添加平滑过渡效果 */
+  border-radius: 4px;
+  /* 添加圆角 */
+  padding: 2px 4px;
+  /* 添加一点内边距 */
+}
+
+.clickable:hover {
+  background-color: var(--primary-light);
+  /* hover时的背景色 */
+  color: white;
+  /* hover时的文字颜色 */
+  transform: scale(1.05);
+  /* 轻微放大效果 */
 }
 
 .icon-img {
