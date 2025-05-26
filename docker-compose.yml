@@ -10,7 +10,7 @@ services:
       - clear-network
 
   frontend:
-    image: eastwind996/clear-frontend:0.2.0
+    image: eastwind996/clear-frontend:0.2.1
     container_name: clear-frontend
     ports:
       - "5172:80"
