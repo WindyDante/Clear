@@ -1,6 +1,6 @@
 services:
   backend:
-    image: eastwind996/clear-java-backend:0.1.5
+    image: eastwind996/clear-java-backend:0.1.6
     container_name: clear-backend
     env_file:
       - ./.env
@@ -10,7 +10,7 @@ services:
       - clear-network
 
   frontend:
-    image: eastwind996/clear-frontend:0.1.9
+    image: eastwind996/clear-frontend:0.2.0
     container_name: clear-frontend
     ports:
       - "5172:80"

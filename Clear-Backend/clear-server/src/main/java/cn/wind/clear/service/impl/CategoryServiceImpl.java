@@ -34,12 +34,13 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
                 .list();
     }
 
-    @Override
+
     /**
      * 获取用户的分类数据
      *
      * @return
      */
+    @Override
     public List<CategoryVO> getCategories() {
         String currentId = RedisContext.getCurrentId();
         List<Category> categories = this.getCategoriesByUserId(currentId);

@@ -2,6 +2,7 @@ package cn.wind.clear.config;
 
 import cn.wind.clear.interceptor.JwtTokenInterceptor;
 import cn.wind.clear.json.JacksonObjectMapper;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +20,7 @@ import java.util.List;
 @Slf4j
 public class WebMvcConfiguration extends WebMvcConfigurationSupport {
 
-    @Autowired
+    @Resource
     private JwtTokenInterceptor jwtTokenInterceptor;
 
 
@@ -32,6 +33,7 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
         registry.addInterceptor(jwtTokenInterceptor)
                 .addPathPatterns("/user/**")
                 .addPathPatterns("/todo/**")
+                .addPathPatterns("/category/**")
                 .excludePathPatterns("/user/login")
                 .excludePathPatterns("/user/register");
     }
