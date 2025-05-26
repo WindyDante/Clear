@@ -291,7 +291,7 @@ watch(() => props.isOpen, (newVal) => {
 .date-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
+    /* gap: 6px; */
     /* 减少间距防止溢出 */
     width: 100%;
     /* 确保网格不会超出容器 */
@@ -383,7 +383,7 @@ watch(() => props.isOpen, (newVal) => {
     }
 
     .date-grid {
-        gap: 8px;
+        /* gap: 8px; */
         /* 桌面端恢复正常间距 */
     }
 

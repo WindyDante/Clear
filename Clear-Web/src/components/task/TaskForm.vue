@@ -480,7 +480,7 @@ async function handleSubmit() {
 .date-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  /* gap: 8px; */
 }
 
 .date-cell {
