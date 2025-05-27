@@ -1,5 +1,6 @@
 package cn.wind.clear.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -13,6 +14,7 @@ public class UpdateTodoDTO implements Serializable {
     private String content;
     private String categoryId;
     private Integer status;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime dueDate;
     private String userId;
 }

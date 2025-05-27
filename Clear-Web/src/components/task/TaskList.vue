@@ -5,6 +5,9 @@ import { useCategoryStore, type Category } from '../../store/category' // Import
 import { useToast } from '../../composables/useToast'
 import { useRouter } from 'vue-router';
 import DatePickerDrawer from '../common/DatePickerDrawer.vue'
+import TaskEditForm from './TaskEditForm.vue'
+import AppDrawer from '../common/AppDrawer.vue'
+import SvgIcon from '../common/SvgIcon.vue'
 
 const props = defineProps<{
   title: string
@@ -15,6 +18,10 @@ const taskStore = useTaskStore()
 const categoryStore = useCategoryStore()
 const { showToast } = useToast()
 const router = useRouter();
+
+// --- 编辑任务状态 ---
+const editingTaskId = ref<string | null>(null)
+const showEditTaskDrawer = ref(false)
 
 // --- Category Management State ---
 const showAddCategoryInput = ref(false);
@@ -234,6 +241,28 @@ const currentFilters = computed(() => {
 const tasksToShow = computed(() => {
   return taskStore.tasks
 })
+
+// --- 编辑任务方法 ---
+function handleEditTask(taskId: string) {
+  if (!props.canOperate) {
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
+  editingTaskId.value = taskId;
+  showEditTaskDrawer.value = true;
+}
+
+function closeEditTaskDrawer() {
+  editingTaskId.value = null;
+  showEditTaskDrawer.value = false;
+}
+
+function handleTaskUpdated() {
+  // 任务更新成功后，刷新任务列表
+  taskStore.fetchTasks();
+  // 移除重复的toast，因为store中已经会显示成功提示
+}
 
 async function handleToggleCompletion(taskId: string) {
   if (!props.canOperate) {
@@ -477,11 +506,14 @@ onMounted(() => {
               </span>
             </div>
             <div class="task-actions">
+              <button class="action-btn edit-btn" @click="handleEditTask(task.id)" title="编辑任务">
+                <SvgIcon name="edit" color="text" :size="16" />
+              </button>
               <button class="action-btn toggle-btn" @click="handleToggleCompletion(task.id)">
                 <span class="icon">{{ task.completed ? '↺' : '✓' }}</span>
               </button>
-              <button class="action-btn delete-btn" @click="handleDeleteTask(task.id)">
-                <span class="icon">🗑️</span>
+              <button class="action-btn delete-btn" @click="handleDeleteTask(task.id)" title="删除任务">
+                <SvgIcon name="del" color="text" :size="16" />
               </button>
             </div>
           </div>
@@ -508,6 +540,12 @@ onMounted(() => {
       @select="handleDateSelect" @close="closeDatePicker" />
     <DatePickerDrawer :is-open="showEndDateDrawer" :title="'选择结束日期'" :selected-date="endDateInput"
       @select="handleDateSelect" @close="closeDatePicker" />
+
+    <!-- 编辑任务抽屉组件 -->
+    <AppDrawer :is-open="showEditTaskDrawer" :title="'编辑任务'" @close="closeEditTaskDrawer">
+      <TaskEditForm v-if="editingTaskId" :task-id="editingTaskId" :can-operate="canOperate" :is-drawer-mode="true" 
+        @close="closeEditTaskDrawer" @task-updated="handleTaskUpdated" />
+    </AppDrawer>
   </div>
 </template>
 
@@ -855,7 +893,8 @@ onMounted(() => {
   border: none;
   background-color: transparent;
   cursor: pointer;
-  transition: background-color var(--transition-speed);
+  transition: all var(--transition-speed);
+  position: relative;
 }
 
 .action-btn .icon {
@@ -863,13 +902,37 @@ onMounted(() => {
   margin-right: 0;
 }
 
-.toggle-btn {
-  background-color: var(--primary-light);
+/* SVG图标按钮的基础样式 */
+.action-btn :deep(.svg-icon) {
+  transition: all var(--transition-speed);
+}
+
+.edit-btn {
+  background-color: var(--warning-light);
+}
+
+.edit-btn:hover {
+  background-color: var(--warning-color);
+}
+
+.edit-btn:hover :deep(.svg-icon svg) {
+  fill: white !important;
+}
+
+.delete-btn {
+  background-color: var(--danger-light);
 }
 
 .delete-btn:hover {
   background-color: var(--danger-color);
-  color: white;
+}
+
+.delete-btn:hover :deep(.svg-icon svg) {
+  fill: white !important;
+}
+
+.toggle-btn {
+  background-color: var(--primary-light);
 }
 
 .task-title {
