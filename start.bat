@@ -18,7 +18,7 @@ if not exist "Dockerfile" (
     goto error
 )
 
-docker build -t eastwind996/clear-java-backend:0.1.6 .
+docker build -t eastwind996/clear-java-backend:0.1.7 .
 if !errorlevel! neq 0 (
     echo ERROR: Backend image build failed
     set ERROR_OCCURRED=1
@@ -36,7 +36,7 @@ if not exist "Dockerfile" (
     goto error
 )
 
-docker build -t eastwind996/clear-frontend:0.2.0
+docker build -t eastwind996/clear-frontend:0.2.2 .
 if !errorlevel! neq 0 (
     echo ERROR: Frontend image build failed
     set ERROR_OCCURRED=1
