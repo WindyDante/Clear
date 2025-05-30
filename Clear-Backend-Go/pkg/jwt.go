@@ -5,7 +5,7 @@ import (
 	"clear/internal/models"
 	"crypto/md5"
 	"encoding/hex"
-	"log"
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -47,10 +47,8 @@ func ParseToken(tokenString string) (*models.Cliams, error) {
 	} else if claims, ok := token.Claims.(*models.Cliams); ok {
 		return claims, nil
 	} else {
-		log.Println("unknown claims type, cannot proceed")
+		return nil, errors.New(models.InvalidTokenMessage)
 	}
-
-	return nil, nil
 }
 
 // MD5 加密

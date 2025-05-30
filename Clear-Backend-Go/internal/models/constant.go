@@ -13,6 +13,7 @@ const (
 	DirCreateErrorMessage     = "创建目录失败"
 	InvalidRequestBodyMessage = "无效的请求体"
 	GenerateTokenErrorMessage = "生成令牌失败"
+	InvalidTokenMessage       = "无效的令牌"
 )
 
 // 数据库相关
@@ -38,7 +39,7 @@ const (
 
 // Version
 const (
-	Version = "0.0.1" // 当前版本号
+	Version = "0.0.5" // 当前版本号
 )
 
 // console Banner
