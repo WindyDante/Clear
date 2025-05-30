@@ -2,6 +2,7 @@ package main
 
 import (
 	"clear/config"
+	"clear/internal/database"
 	"clear/internal/models"
 	routers "clear/internal/router"
 	"fmt"
@@ -22,11 +23,15 @@ func printGreetings(port string) {
 
 func main() {
 	// 加载系统配置
-	if err := config.InitConfig(); err != nil {
+	var err error
+	if err = config.InitConfig(); err != nil {
 		log.Fatalf(models.LoadConfigErrorMessage+":%v", err)
 	}
 
 	// 初始化数据库
+	if err = database.InitDB(); err != nil {
+		log.Fatalf(models.DatabaseInitErrorMessage+": %v", err)
+	}
 
 	// 设置Gin模式
 	ginMode := config.Config.Server.Mode
@@ -44,7 +49,7 @@ func main() {
 	// 启动服务
 	address := config.Config.Server.Host + ":" + config.Config.Server.Port
 	printGreetings(config.Config.Server.Port)
-	if err := r.Run(address); err != nil {
+	if err = r.Run(address); err != nil {
 		log.Fatalf(models.ServerLaunchErrorMessage+": %v", err)
 	}
 }
