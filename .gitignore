@@ -58,3 +58,4 @@ build/
 ### VS Code ###
 .vscode/
 
+Clear-Backend-Go/data/clear.db

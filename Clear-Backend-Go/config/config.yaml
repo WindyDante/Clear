@@ -7,3 +7,9 @@ database:
     type: "sqlite"
     path: "data/clear.db"
 
+auth:
+  jwt:
+    expires: 2592000 # 30天（单位秒）
+    issuer: "clears"
+    audience: "clears"
+

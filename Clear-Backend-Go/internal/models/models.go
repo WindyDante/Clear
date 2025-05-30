@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+)
 
 type User struct {
 	ID        string    `gorm:"primaryKey;size:50" json:"id"`
@@ -30,4 +34,10 @@ type Todo struct {
 	DueDate    time.Time `json:"dueDate"`
 	CreatedAt  time.Time `json:"createdAt"`
 	UpdatedAt  time.Time `json:"updatedAt"`
+}
+
+type Cliams struct {
+	Userid   string `json:"user_id"`
+	Username string `json:"username"`
+	jwt.RegisteredClaims
 }
