@@ -1,7 +1,6 @@
 package routers
 
 import (
-	"clear/internal/controllers"
 	"clear/internal/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -13,16 +12,11 @@ func SetupRouters() *gin.Engine {
 	// 设置CORS
 	r.Use(middleware.Cors())
 
-	// 设置路由组
-	publicRoutes := r.Group("/api")
-	{
-		// 公共路由
-		publicRoutes.POST("/user/login", controllers.Login)
-		publicRoutes.POST("/user/register", controllers.Register)
-	}
+	// 设置公共路由
+	PublicRouter(r)
 
 	// 需要鉴权的路由
-	// authRoutes := r.Group("/api")
+	AuthRouter(r)
 
 	return r
 }
