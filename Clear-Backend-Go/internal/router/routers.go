@@ -18,6 +18,7 @@ func SetupRouters() *gin.Engine {
 	{
 		// 公共路由
 		publicRoutes.POST("/user/login", controllers.Login)
+		publicRoutes.POST("/user/register", controllers.Register)
 	}
 
 	// 需要鉴权的路由

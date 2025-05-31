@@ -46,9 +46,8 @@ func ParseToken(tokenString string) (*models.Cliams, error) {
 		return nil, err
 	} else if claims, ok := token.Claims.(*models.Cliams); ok {
 		return claims, nil
-	} else {
-		return nil, errors.New(models.InvalidTokenMessage)
 	}
+	return nil, errors.New(models.InvalidTokenMessage)
 }
 
 // MD5 加密

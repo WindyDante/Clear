@@ -2,8 +2,9 @@ package models
 
 // 成功相关
 const (
-	SuccessMessage      = "操作成功"
-	LoginSuccessMessage = "登录成功"
+	SuccessMessage         = "操作成功"
+	LoginSuccessMessage    = "登录成功"
+	RegisterSuccessMessage = "注册成功"
 )
 
 // 失败相关
@@ -14,6 +15,7 @@ const (
 	InvalidRequestBodyMessage = "无效的请求体"
 	GenerateTokenErrorMessage = "生成令牌失败"
 	InvalidTokenMessage       = "无效的令牌"
+	SystemErrorMessage        = "系统错误，请稍后再试"
 )
 
 // 数据库相关
@@ -29,6 +31,7 @@ const (
 	UsernameOrPasswordEmptyMessage = "用户名或密码不能为空"
 	UserNotFoundMessage            = "用户不存在"
 	PasswordErrorMessage           = "密码错误"
+	UserExistMessage               = "用户已存在"
 )
 
 // Todo 状态枚举
