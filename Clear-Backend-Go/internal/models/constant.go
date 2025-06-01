@@ -15,6 +15,7 @@ const (
 	InvalidRequestBodyMessage = "无效的请求体"
 	GenerateTokenErrorMessage = "生成令牌失败"
 	InvalidTokenMessage       = "无效的令牌"
+	MissingTokenMessage       = "缺少令牌"
 	SystemErrorMessage        = "系统错误，请稍后再试"
 )
 
