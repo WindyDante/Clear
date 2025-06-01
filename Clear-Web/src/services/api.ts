@@ -135,7 +135,7 @@ const api = {
         method: 'PUT', // 通常更新操作使用 PUT 或 PATCH
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         },
         // body: JSON.stringify({ themeId }) // 如果API需要请求体
       }),
@@ -159,7 +159,7 @@ const api = {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         }
       }),
       '获取分类失败'
@@ -186,7 +186,7 @@ const api = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(requestBody)
       }),
@@ -215,7 +215,7 @@ const api = {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(requestBody)
       }),
@@ -238,7 +238,7 @@ const api = {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         }
       }),
       '删除分类失败'
@@ -277,7 +277,7 @@ const api = {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         }
       }),
       '获取任务列表失败'
@@ -333,7 +333,7 @@ const api = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(todoDTO)
       }),
@@ -393,7 +393,7 @@ const api = {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(updatePayload)
       }),
@@ -415,7 +415,7 @@ const api = {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         }
       }),
       '删除任务失败'
@@ -437,7 +437,7 @@ const api = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         }
       }),
       '发送验证码失败',
@@ -460,7 +460,7 @@ const api = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         }
       }),
       '验证码验证失败',
@@ -487,7 +487,7 @@ const api = {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         }
       }),
       '获取任务统计失败'

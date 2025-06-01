@@ -39,10 +39,24 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
         // 1. 从请求头中获取令牌
         String token = request.getHeader(jwtProperties.getTokenName());
 
+        // 分割令牌，获取Bearer后面的部分
+        if (token == null){
+            // 如果令牌不存在，响应401状态码
+            response.setStatus(401);
+            return false;
+        }
+
+        String[] res = token.split(" ");
+        if (res.length != 2 || !("Bearer".equals(res[0]))) {
+            // 如果令牌格式不正确，响应401状态码
+            response.setStatus(401);
+            return false;
+        }
+
         // 2. 校验令牌
         try {
-            log.info("jwt校验: {}", token);
-            Claims claims = JwtUtil.parseJWT(jwtProperties.getSecretKey(), token);
+            log.info("jwt校验: {}", res[1]);
+            Claims claims = JwtUtil.parseJWT(jwtProperties.getSecretKey(), res[1]);
             String userId = claims.get(JwtClaimsConstant.USER_ID).toString();
             log.info("当前用户id: {}", userId);
             RedisContext.setCurrentId(userId);
