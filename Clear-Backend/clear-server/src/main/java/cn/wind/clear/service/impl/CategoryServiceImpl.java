@@ -41,7 +41,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
      * @return
      */
     @Override
-    public List<CategoryVO> getCategories() {
+    public List<CategoryVO>     getCategories() {
         String currentId = RedisContext.getCurrentId();
         List<Category> categories = this.getCategoriesByUserId(currentId);
 

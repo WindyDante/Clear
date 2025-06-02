@@ -40,6 +40,11 @@ const (
 	ThemeEmptyMessage              = "主题不能为空"
 )
 
+// 分类相关
+const (
+	CategoryListMessage = "获取分类列表成功"
+)
+
 // Todo 状态枚举
 const (
 	TodoStatusPending   = iota // 0: pending
