@@ -9,6 +9,18 @@ import (
 	"errors"
 )
 
+func UpdateTheme(userId, theme string) error {
+	if theme == "" {
+		return errors.New(models.ThemeEmptyMessage)
+	}
+
+	if err := repository.UpdateTheme(userId, theme); err != nil {
+		return errors.New(err.Error())
+	}
+
+	return nil
+}
+
 func Status(userId string) (vo.UserStatusVo, error) {
 	var err error
 	var numOfDone, numOfUndone int64

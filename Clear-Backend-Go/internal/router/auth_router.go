@@ -16,4 +16,7 @@ func AuthRouter(r *gin.Engine) {
 
 func user(rg *gin.RouterGroup) {
 	rg.GET("/user/status", controllers.UserStatus)
+	rg.POST("/user/check/:mail/:code", controllers.CheckEmail)
+	rg.POST("/user/send/:mail", controllers.SendMail)
+	rg.PUT("/user/theme/:theme", controllers.UpdateTheme)
 }

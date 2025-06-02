@@ -2,21 +2,23 @@ package models
 
 // 成功相关
 const (
-	SuccessMessage         = "操作成功"
-	LoginSuccessMessage    = "登录成功"
-	RegisterSuccessMessage = "注册成功"
+	SuccessMessage            = "操作成功"
+	LoginSuccessMessage       = "登录成功"
+	RegisterSuccessMessage    = "注册成功"
+	UpdateThemeSuccessMessage = "主题更新成功"
 )
 
 // 失败相关
 const (
-	LoadConfigErrorMessage    = "加载系统配置失败"
-	ServerLaunchErrorMessage  = "服务器启动失败"
-	DirCreateErrorMessage     = "创建目录失败"
-	InvalidRequestBodyMessage = "无效的请求体"
-	GenerateTokenErrorMessage = "生成令牌失败"
-	InvalidTokenMessage       = "无效的令牌"
-	MissingTokenMessage       = "缺少令牌"
-	SystemErrorMessage        = "系统错误，请稍后再试"
+	MethodDevelopmentErrorMessage = "当前功能正在开发中,请耐心等待"
+	LoadConfigErrorMessage        = "加载系统配置失败"
+	ServerLaunchErrorMessage      = "服务器启动失败"
+	DirCreateErrorMessage         = "创建目录失败"
+	InvalidRequestBodyMessage     = "无效的请求体"
+	GenerateTokenErrorMessage     = "生成令牌失败"
+	InvalidTokenMessage           = "无效的令牌"
+	MissingTokenMessage           = "缺少令牌"
+	SystemErrorMessage            = "系统错误，请稍后再试"
 )
 
 // 数据库相关
@@ -34,6 +36,8 @@ const (
 	PasswordErrorMessage           = "密码错误"
 	UserExistMessage               = "用户已存在"
 	UserStatusMessage              = "获取用户状态成功"
+	EmailOrCodeRequiredMessage     = "邮箱或验证码不能为空"
+	ThemeEmptyMessage              = "主题不能为空"
 )
 
 // Todo 状态枚举

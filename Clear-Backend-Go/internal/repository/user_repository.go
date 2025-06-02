@@ -5,6 +5,12 @@ import (
 	"clear/internal/models"
 )
 
+func UpdateTheme(userId, theme string) error {
+	return database.DB.Model(&models.User{}).
+		Where("id = ?", userId).
+		Update("theme", theme).Error
+}
+
 func Status(userId string, todoStatus int) (int64, error) {
 	var status int64
 	err := database.DB.Model(&models.Todo{}).
