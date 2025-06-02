@@ -33,6 +33,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		}
 
 		res, err := pkg.ParseToken(parts[1])
+
 		if err != nil {
 			ctx.JSON(http.StatusOK, dto.Fail[any](models.InvalidTokenMessage))
 			ctx.Abort()

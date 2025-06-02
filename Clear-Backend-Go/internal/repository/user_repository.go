@@ -5,12 +5,19 @@ import (
 	"clear/internal/models"
 )
 
-func CreateUser(user *models.User) error {
-	err := database.DB.Create(&user).Error
+func Status(userId string, todoStatus int) (int64, error) {
+	var status int64
+	err := database.DB.Model(&models.Todo{}).
+		Where("user_id = ?", userId).Where("status = ?", models.TodoStatusPending).
+		Count(&status).Error
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return status, nil
+}
+
+func CreateUser(user *models.User) error {
+	return database.DB.Create(user).Error
 }
 
 func GetUserByUsername(username string) (models.User, error) {

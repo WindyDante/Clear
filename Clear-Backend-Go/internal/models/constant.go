@@ -33,6 +33,7 @@ const (
 	UserNotFoundMessage            = "用户不存在"
 	PasswordErrorMessage           = "密码错误"
 	UserExistMessage               = "用户已存在"
+	UserStatusMessage              = "获取用户状态成功"
 )
 
 // Todo 状态枚举
