@@ -38,11 +38,16 @@ const (
 	UserStatusMessage              = "获取用户状态成功"
 	EmailOrCodeRequiredMessage     = "邮箱或验证码不能为空"
 	ThemeEmptyMessage              = "主题不能为空"
+	InvalidThemeMessage            = "无效的主题值，请选择正确的主题"
 )
 
 // 分类相关
 const (
-	CategoryListMessage = "获取分类列表成功"
+	CategoryListMessage          = "获取分类列表成功"
+	CategorySuccessMessage       = "分类处理成功"
+	CategoryNameExistsMessage    = "分类名称已存在"
+	CategoryNameNotExistsMessage = "分类名称不能为空"
+	CategoryIdNotExistsMessage   = "分类ID不能为空"
 )
 
 // Todo 状态枚举

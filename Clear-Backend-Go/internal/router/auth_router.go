@@ -16,7 +16,10 @@ func AuthRouter(r *gin.Engine) {
 }
 
 func category(rg *gin.RouterGroup) {
-	rg.GET("/category/categories", controllers.GetCategorys)
+	rg.GET("/category", controllers.GetCategorys)
+	rg.POST("/category", controllers.CreateOrUpdateCategory)
+	rg.PUT("/category", controllers.CreateOrUpdateCategory)
+	rg.DELETE("/category/:id", controllers.DelCategory)
 }
 
 func user(rg *gin.RouterGroup) {

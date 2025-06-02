@@ -6,12 +6,19 @@ import (
 	"clear/internal/services"
 	"clear/pkg"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func UpdateTheme(c *gin.Context) {
-	theme := c.Param("theme")
+	themeStr := c.Param("theme")
+	theme, err := strconv.Atoi(themeStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, dto.Fail[string](models.InvalidThemeMessage))
+		return
+	}
+
 	userId, err := pkg.GetCurrentUserId(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, dto.Fail[string](err.Error()))

@@ -9,8 +9,8 @@ import (
 	"errors"
 )
 
-func UpdateTheme(userId, theme string) error {
-	if theme == "" {
+func UpdateTheme(userId string, theme int) error {
+	if theme == 0 {
 		return errors.New(models.ThemeEmptyMessage)
 	}
 
