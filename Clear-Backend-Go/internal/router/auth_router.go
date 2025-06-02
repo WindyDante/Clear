@@ -12,6 +12,11 @@ func AuthRouter(r *gin.Engine) {
 	authRoutes.Use(middleware.JWTAuthMiddleware())
 
 	user(authRoutes)
+	category(authRoutes)
+}
+
+func category(rg *gin.RouterGroup) {
+
 }
 
 func user(rg *gin.RouterGroup) {
