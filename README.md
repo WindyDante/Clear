@@ -174,7 +174,7 @@ go run cmd/server/main.go
 
 #### 4. 访问应用
 - 前端地址：http://localhost:5173
-- 后端API：http://localhost:8080
+- 后端API：http://localhost:6633
 
 
 ## 📚 API文档
