@@ -4,7 +4,27 @@ import (
 	"clear/internal/database"
 	"clear/internal/dto"
 	"clear/internal/models"
+	"errors"
+
+	"gorm.io/gorm"
 )
+
+func GetCategoryNameById(id string) (string, error) {
+	if id == "" {
+		return "", errors.New("分类ID不能为空")
+	}
+
+	var category models.Category
+	err := database.DB.Select("name").Where("id = ?", id).First(&category).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", errors.New("分类不存在")
+		}
+		return "", err
+	}
+	return category.Name, nil
+}
 
 // DelCategory 删除分类
 func DelCategory(id string) error {

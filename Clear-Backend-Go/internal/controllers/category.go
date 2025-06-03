@@ -12,6 +12,10 @@ import (
 
 func DelCategory(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, dto.Fail[string](models.CategoryIdNotExistsMessage))
+		return
+	}
 	err := services.DelCategory(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, dto.Fail[string](err.Error()))

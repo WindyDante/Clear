@@ -13,6 +13,14 @@ func AuthRouter(r *gin.Engine) {
 
 	user(authRoutes)
 	category(authRoutes)
+	todo(authRoutes)
+}
+
+func todo(rg *gin.RouterGroup) {
+	rg.GET("/todo", controllers.PageTodo)
+	rg.POST("/todo", controllers.CreateOrUpdateTodo)
+	rg.PUT("/todo", controllers.CreateOrUpdateTodo)
+	rg.DELETE("/todo/:id", controllers.DelTodo)
 }
 
 func category(rg *gin.RouterGroup) {

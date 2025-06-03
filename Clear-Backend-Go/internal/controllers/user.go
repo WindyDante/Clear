@@ -34,20 +34,22 @@ func UpdateTheme(c *gin.Context) {
 
 func SendMail(c *gin.Context) {
 	email := c.Param("email")
-	c.JSON(http.StatusOK, dto.OK(models.UpdateThemeSuccessMessage))
 	if email == "" {
-		// c.JSON(http.StatusBadRequest, dto.Fail[string](models.EmailOrCodeRequiredMessage))
+		c.JSON(http.StatusBadRequest, dto.Fail[string](models.EmailOrCodeRequiredMessage))
 		return
 	}
+	// TODO: 实现发送邮件逻辑
+	c.JSON(http.StatusOK, dto.OK(models.SuccessMessage))
 }
 
 func CheckEmail(c *gin.Context) {
 	email, code := c.Param("email"), c.Param("code")
-	c.JSON(http.StatusOK, dto.OK(models.UpdateThemeSuccessMessage))
 	if email == "" || code == "" {
-		// c.JSON(http.StatusBadRequest, dto.Fail[string](models.EmailOrCodeRequiredMessage))
+		c.JSON(http.StatusBadRequest, dto.Fail[string](models.EmailOrCodeRequiredMessage))
 		return
 	}
+	// TODO: 实现验证邮件逻辑
+	c.JSON(http.StatusOK, dto.OK(models.SuccessMessage))
 }
 
 func UserStatus(c *gin.Context) {
@@ -58,7 +60,7 @@ func UserStatus(c *gin.Context) {
 	}
 	Status, err := services.Status(userId)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, dto.Fail[string](err.Error()))
+		c.JSON(http.StatusInternalServerError, dto.Fail[string](err.Error()))
 		return
 	}
 	c.JSON(http.StatusOK, dto.OK(Status, models.UserStatusMessage))

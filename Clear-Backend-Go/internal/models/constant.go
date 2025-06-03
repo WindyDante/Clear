@@ -19,6 +19,7 @@ const (
 	InvalidTokenMessage           = "无效的令牌"
 	MissingTokenMessage           = "缺少令牌"
 	SystemErrorMessage            = "系统错误，请稍后再试"
+	InvalidParameterMessage       = "无效的参数"
 )
 
 // 数据库相关
@@ -50,6 +51,14 @@ const (
 	CategoryIdNotExistsMessage   = "分类ID不能为空"
 )
 
+// Todo 相关
+const (
+	TodoCreatedMessage                = "任务操作成功"
+	TodoTitleOrContentNotEmptyMessage = "任务标题或内容不能为空"
+	TodoDeletedMessage                = "任务删除成功"
+	TodoNotExistsMessage              = "任务不存在"
+)
+
 // Todo 状态枚举
 const (
 	TodoStatusPending   = iota // 0: pending
@@ -58,7 +67,7 @@ const (
 
 // Version
 const (
-	Version = "0.0.5" // 当前版本号
+	Version = "0.1.0" // 当前版本号
 )
 
 // console Banner
