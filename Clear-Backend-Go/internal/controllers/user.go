@@ -35,11 +35,11 @@ func UpdateTheme(c *gin.Context) {
 func SendMail(c *gin.Context) {
 	email := c.Param("email")
 	if email == "" {
-		c.JSON(http.StatusBadRequest, dto.Fail[string](models.EmailOrCodeRequiredMessage))
+		c.JSON(http.StatusBadRequest, dto.Fail[string](models.EmailRequiredMessage))
 		return
 	}
 	// TODO: 实现发送邮件逻辑
-	c.JSON(http.StatusOK, dto.OK(models.SuccessMessage))
+	c.JSON(http.StatusOK, dto.OK(models.MethodDevelopmentErrorMessage))
 }
 
 func CheckEmail(c *gin.Context) {
@@ -49,7 +49,7 @@ func CheckEmail(c *gin.Context) {
 		return
 	}
 	// TODO: 实现验证邮件逻辑
-	c.JSON(http.StatusOK, dto.OK(models.SuccessMessage))
+	c.JSON(http.StatusOK, dto.OK(models.MethodDevelopmentErrorMessage))
 }
 
 func UserStatus(c *gin.Context) {

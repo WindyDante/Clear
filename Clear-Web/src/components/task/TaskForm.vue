@@ -59,8 +59,8 @@ watch(() => categoryStore.categories, (categories) => {
     // 如果分类数据变化且有数据，设置默认选中第一个分类
     const firstCategory = categories[0];
     newTask.category = firstCategory.categoryName;
-    // 使用字符串类型的分类ID
-    newTask.categoryId = firstCategory.categoryId;
+    // 使用正确的字段名 id
+    newTask.categoryId = firstCategory.id;
   } else {
     // 没有分类时，清空选择
     newTask.category = "";
@@ -139,8 +139,8 @@ onMounted(() => {
   if (categoryStore.categories.length > 0) {
     const firstCategory = categoryStore.categories[0];
     newTask.category = firstCategory.categoryName;
-    // 使用字符串类型的分类ID
-    newTask.categoryId = firstCategory.categoryId;
+    // 使用正确的字段名 id
+    newTask.categoryId = firstCategory.id;
   } else {
     // 如果分类列表为空，清空选择
     newTask.category = "";
@@ -155,13 +155,41 @@ onMounted(() => {
   }
 });
 
+// 添加表单验证状态
+const titleError = ref('');
+
+// 实时验证标题输入
+function validateTitle() {
+  if (!newTask.title.trim()) {
+    titleError.value = '请输入任务标题';
+  } else {
+    titleError.value = '';
+  }
+}
+
+// 监听标题输入变化
+watch(() => newTask.title, () => {
+  if (titleError.value) {
+    validateTitle();
+  }
+});
+
 async function handleSubmit() {
   if (!props.canOperate) {
     router.push('/auth');
     showToast('请先登录再操作', 'warning');
     return;
   }
-  if (!newTask.title.trim()) return;
+  
+  // 改进标题验证，添加明确的错误提示
+  if (!newTask.title.trim()) {
+    titleError.value = '请输入任务标题';
+    showToast('请输入任务标题', 'error');
+    return;
+  }
+
+  // 清除标题错误状态
+  titleError.value = '';
 
   // 校验分类是否选择
   if (!newTask.categoryId && categoryStore.categories.length > 0) {
@@ -202,7 +230,7 @@ async function handleSubmit() {
     if (categoryStore.categories.length > 0) {
       const firstCategory = categoryStore.categories[0];
       newTask.category = firstCategory.categoryName;
-      newTask.categoryId = firstCategory.categoryId;
+      newTask.categoryId = firstCategory.id;
     } else {
       newTask.category = "";
       newTask.categoryId = "";
@@ -248,8 +276,8 @@ async function handleSubmit() {
             <option v-if="categoryStore.loading" value="" disabled>加载中...</option>
             <option v-else-if="!categoryStore.loading && categoryStore.categories.length === 0" value="" disabled>
               暂无分类，请先添加</option>
-            <option v-for="category in categoryStore.categories" :key="category.categoryId"
-              :value="category.categoryId">
+            <option v-for="category in categoryStore.categories" :key="category.id"
+              :value="category.id">
               {{ category.categoryName }}
             </option>
           </select>

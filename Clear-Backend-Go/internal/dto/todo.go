@@ -3,12 +3,12 @@ package dto
 import "time"
 
 type TodoCreateDto struct {
-	Id         string `json:"id"`                            // 任务ID, 用于更新时传入
-	CategoryId string `json:"categoryId" binding:"required"` // 分类ID
-	Title      string `json:"title" binding:"required"`      // 任务标题
-	Content    string `json:"content"`                       // 任务内容
-	DueDate    string `json:"dueDate"`                       // 截止日期
-	Status     int    `json:"status"`                        // 任务状态, 0:未完成, 1:已完成
+	Id         string `json:"id"`          // 任务ID, 用于更新时传入
+	CategoryId string `json:"categoryId" ` // 分类ID
+	Title      string `json:"title" `      // 任务标题
+	Content    string `json:"content"`     // 任务内容
+	DueDate    string `json:"dueDate"`     // 截止日期
+	Status     int    `json:"status"`      // 任务状态, 0:未完成, 1:已完成
 }
 
 type TodoQueryDto struct {

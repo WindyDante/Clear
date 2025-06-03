@@ -5,7 +5,7 @@ import { useToast } from '../composables/useToast' // Corrected import
 
 // 分类数据接口
 export interface Category {
-    categoryId: string // 改为只使用字符串类型
+    id: string // 改为使用API实际返回的字段名
     categoryName: string
 }
 
@@ -56,16 +56,16 @@ export const useCategoryStore = defineStore('category', () => {
             // 直接传入分类名称，符合新的API接口参数格式
             const result = await api.addCategory(categoryName)
             // 本地更新分类列表，避免重复请求
-            if (result && result.categoryId) {
+            if (result && result.id) {
                 categories.value.push({
-                    categoryId: result.categoryId.toString(),
+                    id: result.id.toString(),
                     categoryName: categoryName
                 });
 
                 // 标记分类已添加，触发任务列表更新
                 categoryChanged.value = {
                     action: 'add',
-                    categoryId: result.categoryId.toString()
+                    categoryId: result.id.toString()
                 }
             } else {
                 // 如果没有返回ID或其他必要信息，则刷新数据
@@ -90,7 +90,7 @@ export const useCategoryStore = defineStore('category', () => {
         try {
             await api.updateCategory(categoryId, categoryName)
             // 本地更新分类数据，避免重复请求
-            const index = categories.value.findIndex(c => c.categoryId === categoryId)
+            const index = categories.value.findIndex(c => c.id === categoryId)
             if (index !== -1) {
                 categories.value[index].categoryName = categoryName
 
@@ -119,7 +119,7 @@ export const useCategoryStore = defineStore('category', () => {
         try {
             await api.deleteCategory(categoryId)
             // 本地更新分类数据，避免重复请求
-            categories.value = categories.value.filter(c => c.categoryId !== categoryId)
+            categories.value = categories.value.filter(c => c.id !== categoryId)
 
             // 标记分类已删除，触发任务列表更新
             categoryChanged.value = {

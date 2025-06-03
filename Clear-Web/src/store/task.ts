@@ -108,11 +108,12 @@ export const useTaskStore = defineStore('task', () => {
           // 2. 任务从已完成变为未完成，且用户在查看已完成任务
           // 这两种情况下，该任务应该从当前筛选视图中被移除，需要刷新列表
           const newCompletedStatus = updates.completed;
-          const isFilteredOut =
-            (selectedStatus.value === 0 && newCompletedStatus === true) || // 未完成筛选，任务变为已完成
-            (selectedStatus.value === 1 && newCompletedStatus === false);  // 已完成筛选，任务变为未完成
+          // 检查是否需要从当前筛选结果中移除任务
+          const shouldRemoveFromFilter =
+            (selectedStatus.value === 1 && newCompletedStatus === true) || // 进行中筛选，任务变为已完成
+            (selectedStatus.value === 2 && newCompletedStatus === false);  // 已完成筛选，任务变为进行中
 
-          if (isFilteredOut) {
+          if (shouldRemoveFromFilter) {
             showToast(`任务已标记为${updates.completed ? '完成' : '未完成'}`, 'success');
             // 需要刷新列表，因为该任务不再属于当前筛选条件
             return await fetchTasks();

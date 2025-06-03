@@ -41,6 +41,9 @@ const editTask = reactive({
   dueTime: "00:00" as string,
 });
 
+// 添加表单验证状态
+const titleError = ref('');
+
 // 获取当前任务数据
 const currentTask = computed(() => {
   return taskStore.getTaskById(props.taskId);
@@ -132,6 +135,22 @@ function handleTimeChange() {
   }
 }
 
+// 实时验证标题输入
+function validateTitle() {
+  if (!editTask.title.trim()) {
+    titleError.value = '请输入任务标题';
+  } else {
+    titleError.value = '';
+  }
+}
+
+// 监听标题输入变化
+watch(() => editTask.title, () => {
+  if (titleError.value) {
+    validateTitle();
+  }
+});
+
 // 提交编辑
 async function handleSubmit() {
   if (!props.canOperate) {
@@ -141,9 +160,13 @@ async function handleSubmit() {
   }
   
   if (!editTask.title.trim()) {
+    titleError.value = '请输入任务标题';
     showToast('任务标题不能为空', 'error');
     return;
   }
+
+  // 清除标题错误状态
+  titleError.value = '';
 
   // 校验分类是否选择
   if (!editTask.categoryId && categoryStore.categories.length > 0) {
@@ -165,8 +188,8 @@ async function handleSubmit() {
   }
 
   try {
-    // 获取分类名称
-    const category = categoryStore.categories.find(c => c.categoryId === editTask.categoryId);
+    // 获取分类名称 - 修复字段引用
+    const category = categoryStore.categories.find(c => c.id === editTask.categoryId);
     
     await taskStore.updateTask(props.taskId, {
       title: editTask.title,
@@ -195,7 +218,7 @@ watch(() => props.taskId, () => {
 
 // 监听分类变化，更新表单分类信息
 watch(() => editTask.categoryId, (newCategoryId) => {
-  const category = categoryStore.categories.find(c => c.categoryId === newCategoryId);
+  const category = categoryStore.categories.find(c => c.id === newCategoryId);
   if (category) {
     editTask.category = category.categoryName;
   }
@@ -216,6 +239,7 @@ onMounted(() => {
       <div class="task-inputs">
         <input v-model="editTask.title" class="form-control task-title" placeholder="输入任务标题..."
           @keyup.enter="handleSubmit" />
+        <div v-if="titleError" class="error-message">{{ titleError }}</div>
 
         <textarea v-model="editTask.content" class="form-control task-content" placeholder="输入任务内容..."
           :rows="isDrawerMode ? 2 : 3"></textarea>
@@ -229,8 +253,8 @@ onMounted(() => {
             <option v-if="categoryStore.loading" value="" disabled>加载中...</option>
             <option v-else-if="!categoryStore.loading && categoryStore.categories.length === 0" value="" disabled>
               暂无分类，请先添加</option>
-            <option v-for="category in categoryStore.categories" :key="category.categoryId"
-              :value="category.categoryId">
+            <option v-for="category in categoryStore.categories" :key="category.id"
+              :value="category.id">
               {{ category.categoryName }}
             </option>
           </select>

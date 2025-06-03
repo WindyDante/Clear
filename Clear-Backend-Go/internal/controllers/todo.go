@@ -5,7 +5,6 @@ import (
 	"clear/internal/models"
 	"clear/internal/services"
 	"clear/pkg"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -65,8 +64,6 @@ func PageTodo(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, dto.Fail[string](models.InvalidParameterMessage))
 		return
 	}
-
-	fmt.Println("todo:", TodoQueryDto)
 
 	userId, err := pkg.GetCurrentUserId(c)
 	if err != nil {

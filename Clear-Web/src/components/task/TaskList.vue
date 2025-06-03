@@ -43,6 +43,8 @@ function closeAllCategoryInputsAndMenus() {
   openedCategoryMenuId.value = null;
   editingCategoryId.value = null;
   showAddCategoryInput.value = false;
+  editingCategoryName.value = '';
+  newCategoryName.value = '';
 }
 
 function toggleCategoryActionsMenu(categoryId: string) {
@@ -96,7 +98,7 @@ function startEditCategory(category: Category) {
     return;
   }
   closeAllCategoryInputsAndMenus();
-  editingCategoryId.value = category.categoryId;
+  editingCategoryId.value = category.id;
   editingCategoryName.value = category.categoryName;
   nextTick(() => categoryEditInputRef.value?.focus());
 }
@@ -133,8 +135,8 @@ async function handleDeleteCategory(category: Category) {
   openedCategoryMenuId.value = null; // Close menu before confirm dialog
   if (confirm(`确定要删除分类 "${category.categoryName}" 吗？此操作不可恢复。分类下的任务将变为无分类状态。`)) {
     try {
-      await categoryStore.deleteCategory(category.categoryId);
-      if (taskStore.selectedCategoryId === category.categoryId) {
+      await categoryStore.deleteCategory(category.id);
+      if (taskStore.selectedCategoryId === category.id) {
         taskStore.setCategory(undefined);
       }
     } catch (error) {
@@ -211,13 +213,13 @@ const currentFilters = computed(() => {
 
   // 显示分类筛选条件
   if (taskStore.selectedCategoryId !== undefined) {
-    const categoryName = categoryStore.categories.find(c => c.categoryId === taskStore.selectedCategoryId)?.categoryName || '未知分类'
+    const categoryName = categoryStore.categories.find(c => c.id === taskStore.selectedCategoryId)?.categoryName || '未知分类'
     filters.push(`分类: ${categoryName}`)
   }
 
   // 显示状态筛选条件
   if (taskStore.selectedStatus !== undefined) {
-    filters.push(`状态: ${taskStore.selectedStatus === 1 ? '已完成' : '未完成'}`)
+    filters.push(`状态: ${taskStore.selectedStatus === 2 ? '已完成' : '进行中'}`)
   }
 
   // 显示日期筛选条件
@@ -391,9 +393,9 @@ onMounted(() => {
               @click="filterByCategory(undefined)" :disabled="!!editingCategoryId || showAddCategoryInput">
               全部
             </button>
-            <div v-for="category in categoryStore.categories" :key="category.categoryId" class="category-filter-item">
+            <div v-for="category in categoryStore.categories" :key="category.id" class="category-filter-item">
 
-              <div v-if="editingCategoryId === category.categoryId" class="category-edit-mode">
+              <div v-if="editingCategoryId === category.id" class="category-edit-mode">
                 <input v-model="editingCategoryName" class="filter-input category-edit-input" ref="categoryEditInputRef"
                   placeholder="分类名称" @keyup.enter="handleSaveCategory" @keyup.esc="cancelEditCategory" />
                 <button class="btn-action save-icon" @click="handleSaveCategory" title="保存">✓</button>
@@ -401,20 +403,20 @@ onMounted(() => {
               </div>
 
               <button v-else class="filter-btn category-btn"
-                :class="{ 'active': taskStore.selectedCategoryId === category.categoryId }"
-                @click="filterByCategory(category.categoryId)" :disabled="!!editingCategoryId || showAddCategoryInput">
+                :class="{ 'active': taskStore.selectedCategoryId === category.id }"
+                @click="filterByCategory(category.id)" :disabled="!!editingCategoryId || showAddCategoryInput">
                 {{ category.categoryName }}
               </button>
 
-              <div v-if="props.canOperate && editingCategoryId !== category.categoryId"
+              <div v-show="props.canOperate && editingCategoryId !== category.id"
                 class="category-actions-trigger-wrapper">
-                <button class="btn-action category-actions-trigger" :data-category-id="category.categoryId"
-                  @click.stop="toggleCategoryActionsMenu(category.categoryId)" title="更多操作"
+                <button class="btn-action category-actions-trigger" :data-category-id="category.id"
+                  @click.stop="toggleCategoryActionsMenu(category.id)" title="更多操作"
                   :disabled="!!editingCategoryId || showAddCategoryInput">
                   ⋮
                 </button>
-                <div v-if="openedCategoryMenuId === category.categoryId" class="category-actions-menu"
-                  :data-category-id="category.categoryId">
+                <div v-show="openedCategoryMenuId === category.id" class="category-actions-menu"
+                  :data-category-id="category.id">
                   <button @click.stop="startEditCategory(category)">编辑</button>
                   <button @click.stop="handleDeleteCategory(category)">删除</button>
                 </div>
@@ -443,10 +445,10 @@ onMounted(() => {
           <div class="filter-buttons">
             <button class="filter-btn" :class="{ 'active': taskStore.selectedStatus === undefined }"
               @click="filterByStatus(undefined)">全部</button>
-            <button class="filter-btn" :class="{ 'active': taskStore.selectedStatus === 0 }"
-              @click="filterByStatus(0)">未完成</button>
             <button class="filter-btn" :class="{ 'active': taskStore.selectedStatus === 1 }"
-              @click="filterByStatus(1)">已完成</button>
+              @click="filterByStatus(1)">进行中</button>
+            <button class="filter-btn" :class="{ 'active': taskStore.selectedStatus === 2 }"
+              @click="filterByStatus(2)">已完成</button>
           </div>
         </div>
 
@@ -502,7 +504,7 @@ onMounted(() => {
               <span class="task-time">{{ formatCreatedAt(task.createdAt) }}</span>
               <span v-if="task.category" class="task-category">{{ task.category }}</span>
               <span class="task-status" :class="task.completed ? 'status-completed' : 'status-pending'">
-                {{ task.completed ? '已完成' : '未完成' }}
+                {{ task.completed ? '已完成' : '进行中' }}
               </span>
             </div>
             <div class="task-actions">

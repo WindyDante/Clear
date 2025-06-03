@@ -87,7 +87,7 @@ func buildTodoQueryConditions(query *gorm.DB, TodoQueryDto dto.TodoQueryDto) *go
 	}
 
 	// 状态条件：0 表示待办，1 表示已完成
-	if TodoQueryDto.Status >= 0 {
+	if TodoQueryDto.Status > 0 {
 		query = query.Where("status = ?", TodoQueryDto.Status)
 	}
 

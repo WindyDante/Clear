@@ -38,6 +38,7 @@ const (
 	UserExistMessage               = "用户已存在"
 	UserStatusMessage              = "获取用户状态成功"
 	EmailOrCodeRequiredMessage     = "邮箱或验证码不能为空"
+	EmailRequiredMessage           = "邮箱不能为空"
 	ThemeEmptyMessage              = "主题不能为空"
 	InvalidThemeMessage            = "无效的主题值，请选择正确的主题"
 )
@@ -53,16 +54,16 @@ const (
 
 // Todo 相关
 const (
-	TodoCreatedMessage                = "任务操作成功"
-	TodoTitleOrContentNotEmptyMessage = "任务标题或内容不能为空"
-	TodoDeletedMessage                = "任务删除成功"
-	TodoNotExistsMessage              = "任务不存在"
+	TodoCreatedMessage       = "任务操作成功"
+	TodoTitleNotEmptyMessage = "任务标题"
+	TodoDeletedMessage       = "任务删除成功"
+	TodoNotExistsMessage     = "任务不存在"
 )
 
 // Todo 状态枚举
 const (
-	TodoStatusPending   = iota // 0: pending
-	TodoStatusCompleted        // 1: completed
+	TodoStatusPending   = 1
+	TodoStatusCompleted = 2
 )
 
 // Version

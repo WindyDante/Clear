@@ -46,7 +46,7 @@ type Todo struct {
 	ID         string    `gorm:"primaryKey;size:50" json:"id"`
 	Title      string    `gorm:"size:50" json:"title"`
 	Content    string    `gorm:"size:255" json:"content"`
-	Status     int       `gorm:"default:0" json:"status"` // 0: pending, 1: completed
+	Status     int       `gorm:"default:1" json:"status"` // 1:进行中, 2:已完成
 	CategoryId string    `gorm:"size:50" json:"categoryId"`
 	UserId     string    `gorm:"size:50" json:"userId"`
 	DueDate    time.Time `json:"dueDate"`

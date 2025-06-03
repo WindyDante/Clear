@@ -155,7 +155,7 @@ const api = {
     }
 
     return handleApiResponse<any>(
-      () => fetch(`${API_BASE_URL}/category/categories`, {
+      () => fetch(`${API_BASE_URL}/category`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ const api = {
     };
 
     return handleApiResponse<any>(
-      () => fetch(`${API_BASE_URL}/category/add`, {
+      () => fetch(`${API_BASE_URL}/category`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -211,8 +211,8 @@ const api = {
     };
 
     return handleApiResponse<any>(
-      () => fetch(`${API_BASE_URL}/category/update`, {
-        method: 'PUT',
+      () => fetch(`${API_BASE_URL}/category`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -234,7 +234,7 @@ const api = {
     }
 
     return handleApiResponse<any>(
-      () => fetch(`${API_BASE_URL}/category/delete/${categoryId}`, {
+      () => fetch(`${API_BASE_URL}/category/${categoryId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -255,7 +255,7 @@ const api = {
     }
 
     // 构建URL，添加可选的categoryId和status参数
-    let url = `${API_BASE_URL}/todo/page?page=${page}&pageSize=${limit}`;
+    let url = `${API_BASE_URL}/todo?page=${page}&pageSize=${limit}`;
     if (categoryId) {
       url += `&categoryId=${categoryId}`;
     }
@@ -291,7 +291,7 @@ const api = {
             category: task.categoryName || '默认',
             categoryId: task.categoryId || 0,
             dueDate: task.dueDate ? task.dueDate : null,
-            completed: task.status === 1, // Backend status 1 means completed
+            completed: task.status === 2, // Backend status 2 means completed
             createdAt: task.createdAt || new Date().toISOString()
           };
         });
@@ -329,7 +329,7 @@ const api = {
     };
 
     return handleApiResponse<any>(
-      () => fetch(`${API_BASE_URL}/todo/addTodo`, {
+      () => fetch(`${API_BASE_URL}/todo`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -368,7 +368,7 @@ const api = {
 
     // 检查是否为状态更新（完成/未完成）
     if (updates.completed !== undefined && Object.keys(updates).length === 1 && 'completed' in updates) {
-      updatePayload.status = updates.completed ? 1 : 0; // 1表示完成，0表示未完成
+      updatePayload.status = updates.completed ? 2 : 1; // 2表示已完成，1表示进行中
     } else {
       // 其他字段的更新
       if (updates.title !== undefined) {
@@ -384,13 +384,13 @@ const api = {
         updatePayload.dueDate = formatDateToString(updates.dueDate);
       }
       if (updates.completed !== undefined) {
-        updatePayload.status = updates.completed ? 1 : 0;
+        updatePayload.status = updates.completed ? 2 : 1;
       }
     }
 
     return handleApiResponse<any>(
-      () => fetch(`${API_BASE_URL}/todo/updateTodo`, {
-        method: 'PUT',
+      () => fetch(`${API_BASE_URL}/todo`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -411,7 +411,7 @@ const api = {
     }
 
     return handleApiResponse<boolean>(
-      () => fetch(`${API_BASE_URL}/todo/deleteTodo/${taskId}`, {
+      () => fetch(`${API_BASE_URL}/todo/${taskId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -433,10 +433,9 @@ const api = {
     }
 
     return handleApiResponse<string>(
-      () => fetch(`${API_BASE_URL}/user/send/${encodeURIComponent(email)}`, {
+      () => fetch(`${API_BASE_URL}/user/send/${email}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
       }),
@@ -456,10 +455,9 @@ const api = {
     }
 
     return handleApiResponse<string>(
-      () => fetch(`${API_BASE_URL}/user/check/${encodeURIComponent(email)}/${encodeURIComponent(code)}`, {
+      () => fetch(`${API_BASE_URL}/user/check/${email}/${code}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
       }),

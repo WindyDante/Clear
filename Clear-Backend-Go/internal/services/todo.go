@@ -14,20 +14,21 @@ func DelTodo(todoId string) error {
 }
 
 func CreateOrUpdateTodo(userId string, dueDate time.Time, todoCreateDto dto.TodoCreateDto) error {
-	if todoCreateDto.CategoryId == "" {
-		return errors.New(models.CategoryIdNotExistsMessage)
-	}
-	if todoCreateDto.Title == "" || todoCreateDto.Content == "" {
-		return errors.New(models.TodoTitleOrContentNotEmptyMessage)
-	}
 	todo := models.Todo{
 		UserId:     userId,
+		Status:     todoCreateDto.Status,
 		CategoryId: todoCreateDto.CategoryId,
 		Title:      todoCreateDto.Title,
 		Content:    todoCreateDto.Content,
 		DueDate:    dueDate,
 	}
 	if todoCreateDto.Id == "" {
+		if todoCreateDto.CategoryId == "" {
+			return errors.New(models.CategoryIdNotExistsMessage)
+		}
+		if todoCreateDto.Title == "" {
+			return errors.New(models.TodoTitleNotEmptyMessage)
+		}
 		// Create new todo
 		err := repository.CreateTodo(&todo)
 		if err != nil {
