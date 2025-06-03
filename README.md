@@ -24,6 +24,8 @@ Clear 是一款现代化的待办事项管理应用，采用全栈架构设计�
 - **📝 智能管理** - 任务分类、标签系统、优先级设置
 - **🔐 安全可靠** - JWT认证，数据加密存储
 - **⚡ 高性能** - 前后端分离，API响应快速
+- **💾 极低占用** - 仅需 4MB 内存运行，50MB 硬盘空间
+- **🗄️ 数据独立** - SQLite本地存储，数据完全掌控，随时备份迁移
 - **🐳 容器化** - Docker部署，一键启动
 - **📱 全平台** - 桌面端、移动端完美适配
 
@@ -49,49 +51,6 @@ Clear 是一款现代化的待办事项管理应用，采用全栈架构设计�
 - **pnpm** - 高效的包管理器
 
 ## 🚀 快速开始
-
-### 前置要求
-
-- Node.js 18+
-- Go 1.24+
-- Docker & Docker Compose（可选）
-- pnpm（推荐）
-
-### 本地开发
-
-#### 1. 克隆项目
-```bash
-git clone https://github.com/WindyDante/Clear
-cd Clear
-```
-
-#### 2. 前端开发
-```bash
-# 进入前端目录
-cd web
-
-# 安装依赖
-pnpm install
-
-# 启动开发服务器
-pnpm dev
-```
-
-#### 3. 后端开发
-```bash
-# 回到项目根目录
-cd ..
-
-# 安装Go依赖
-go mod tidy
-
-# 启动后端服务
-go run cmd/server/main.go
-```
-
-#### 4. 访问应用
-- 前端地址：http://localhost:5173
-- 后端API：http://localhost:8080
 
 ## 📦 部署指南
 
@@ -172,6 +131,51 @@ JWT_SECRET=Pr0d-Cl3ar-JWT-S3cr3t-K3y-2024!@#$%^&*()
 - **主题切换** - 多种预设主题
 - **布局调整** - 自定义界面布局
 - **响应式** - 适配不同设备尺寸
+
+
+### 前置要求
+
+- Node.js 18+
+- Go 1.24+
+- Docker & Docker Compose（可选）
+- pnpm（推荐）
+
+### 本地开发
+
+#### 1. 克隆项目
+```bash
+git clone https://github.com/WindyDante/Clear
+cd Clear
+```
+
+#### 2. 前端开发
+```bash
+# 进入前端目录
+cd web
+
+# 安装依赖
+pnpm install
+
+# 启动开发服务器
+pnpm dev
+```
+
+#### 3. 后端开发
+```bash
+# 回到项目根目录
+cd ..
+
+# 安装Go依赖
+go mod tidy
+
+# 启动后端服务
+go run cmd/server/main.go
+```
+
+#### 4. 访问应用
+- 前端地址：http://localhost:5173
+- 后端API：http://localhost:8080
+
 
 ## 📚 API文档
 
