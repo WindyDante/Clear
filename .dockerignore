@@ -1,0 +1,41 @@
+# 排除node_modules目录
+**/node_modules
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.pnpm-debug.log*
+
+# 排除构建产物
+**/dist
+**/build
+**/target
+
+# 排除Git相关文件
+**/.git
+**/.gitignore
+
+# 排除IDE文件
+**/.vscode
+**/.idea
+**/*.swp
+**/*.swo
+
+# 排除操作系统文件
+**/.DS_Store
+**/Thumbs.db
+
+# 排除日志文件
+**/*.log
+
+# 排除临时文件
+**/tmp
+**/temp
+
+# 排除数据库文件
+**/*.db
+**/*.sqlite
+
+# 排除环境配置文件
+**/.env
+**/.env.local
+**/.env.*.local

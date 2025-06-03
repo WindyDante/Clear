@@ -1,38 +1,13 @@
+version: '3'
 services:
-  backend:
-    image: eastwind996/clear-java-backend:0.1.7
-    container_name: clear-backend
-    env_file:
-      - ./.env
-    ports:
-      - "5673:8888"  # 添加端口映射，确保服务在Docker网络中可访问
-    networks:
-      - clear-network
-
-  frontend:
-    image: eastwind996/clear-frontend:0.2.2
-    container_name: clear-frontend
-    ports:
-      - "5172:80"
-    networks:
-      - clear-network
-    depends_on:
-      - backend
-
-  nginx:
-    image: nginx:alpine
+  clear:
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: clear
-    restart: always
     ports:
-      - "3668:80"
-    networks:
-      - clear-network
+      - "6277:6633"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - frontend
-      - backend
-
-networks:
-  clear-network:
-    driver: bridge
+      - ./data:/app/data
+    environment:
+      - JWT_SECRET="Welcome to Clear!"

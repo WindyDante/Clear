@@ -6,7 +6,6 @@ import (
 	"clear/internal/models"
 	"clear/internal/vo"
 	"errors"
-	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -119,7 +118,6 @@ func convertToTodoVos(todos []*models.Todo) ([]vo.TodoVo, error) {
 	todoVos := make([]vo.TodoVo, 0, len(todos))
 	for _, todo := range todos {
 		name, err := GetCategoryNameById(todo.CategoryId)
-		fmt.Print(todo)
 		if err != nil {
 			return nil, err
 		}
