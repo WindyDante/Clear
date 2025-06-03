@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://clear.1wind.cn/">🌐 在线体验</a> •
+  <a href="https://clear.1wind.cn/">🌐 在线体验</a> 
 </p>
 
 ---
