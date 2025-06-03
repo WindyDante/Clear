@@ -3,7 +3,6 @@ package database
 import (
 	"clear/config"
 	"clear/internal/models"
-	"fmt"
 	"log"
 	"os"
 
@@ -19,7 +18,7 @@ func InitDB() error {
 	dbPath := config.Config.DataBase.Path
 
 	// 确保数据库目录存在
-	dir := fmt.Sprintf("%s", dbPath[:len(dbPath)-len("clear.db")]) // 提取目录
+	dir := dbPath[:len(dbPath)-len("clear.db")] // 提取目录
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		log.Fatalf(models.DirCreateErrorMessage+": %v", err)
 		return err
@@ -41,7 +40,7 @@ func InitDB() error {
 	}
 
 	if err = models.MigrateDB(DB); err != nil {
-		log.Fatal(models.DatabaseMigrateError+": %v", err)
+		log.Fatalf(models.DatabaseMigrateError+": %v", err)
 	}
 
 	return nil
