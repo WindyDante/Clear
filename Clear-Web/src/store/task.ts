@@ -72,7 +72,7 @@ export const useTaskStore = defineStore('task', () => {
 
     loading.value = true
     try {
-      const addedTask = await api.addTask(task) // Assume api.addTask returns the newly created Task object
+      const addedTask = await api.addTask(task)
 
       // Ensure we are on the first page to see the new task
       if (currentPage.value !== 1) {
@@ -82,11 +82,9 @@ export const useTaskStore = defineStore('task', () => {
       // Refresh the task list from the server
       await fetchTasks()
 
-      showToast(`任务 \"${addedTask.title}\" 添加成功`, 'success') // Use title from the response
+      showToast(`任务 \"${addedTask.title}\" 添加成功`, 'success')
     } catch (error) {
       console.error('Error adding task:', error)
-      // Consider if a specific error toast is needed here, or if it's handled by api.ts
-      // For now, relying on global error handling or existing console log.
     } finally {
       loading.value = false
     }

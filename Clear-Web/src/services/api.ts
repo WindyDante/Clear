@@ -20,7 +20,7 @@ function getToastFunction() {
 async function handleApiResponse<T>(
   apiCall: () => Promise<any>,
   errorMessage = '操作失败',
-  showDataInToast = false // 控制是否在toast中显示data
+  showSuccessToast = false // 改名并默认为false，只在需要时显示成功Toast
 ): Promise<T> {
   const showToast = getToastFunction();
 
@@ -38,16 +38,15 @@ async function handleApiResponse<T>(
       throw error;
     }
 
-    // 成功情况：根据需要选择显示API返回的data或msg
-    if (showDataInToast && result.data) {
-      // 如果需要显示data且data存在，只显示data
-      const dataMessage = typeof result.data === 'string'
-        ? result.data
-        : JSON.stringify(result.data);
-      showToast(dataMessage, 'success');
-    } else if (!showDataInToast && result.msg) {
-      // 否则显示msg(如果存在且不是要显示data的情况)
-      showToast(result.msg, 'success');
+    // 成功情况：只在明确需要时显示Toast
+    if (showSuccessToast) {
+      if (result.data && typeof result.data === 'string') {
+        // 如果data是字符串，显示data内容
+        showToast(result.data, 'success');
+      } else if (result.msg) {
+        // 否则显示msg
+        showToast(result.msg, 'success');
+      }
     }
 
     return result.data;
