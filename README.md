@@ -10,9 +10,6 @@
 
 <p align="center">
   <a href="https://clear.1wind.cn/">🌐 在线体验</a> •
-  <a href="#快速开始">🚀 快速开始</a> •
-  <a href="#部署指南">📦 部署指南</a> •
-  <a href="#api文档">📚 API文档</a>
 </p>
 
 ---
