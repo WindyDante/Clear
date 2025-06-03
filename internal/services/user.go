@@ -24,12 +24,12 @@ func UpdateTheme(userId string, theme int) error {
 func Status(userId string) (vo.UserStatusVo, error) {
 	var err error
 	var numOfDone, numOfUndone int64
-	numOfDone, err = repository.Status(userId, models.TodoStatusPending)
+	numOfDone, err = repository.Status(userId, models.TodoStatusCompleted)
 	if err != nil {
 		return vo.UserStatusVo{}, err
 	}
 
-	numOfUndone, err = repository.Status(userId, models.TodoStatusCompleted)
+	numOfUndone, err = repository.Status(userId, models.TodoStatusPending)
 	if err != nil {
 		return vo.UserStatusVo{}, err
 	}

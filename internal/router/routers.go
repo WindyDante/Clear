@@ -3,11 +3,14 @@ package routers
 import (
 	"clear/internal/middleware"
 
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRouters() *gin.Engine {
 	r := gin.Default()
+
+	r.Use(static.Serve("/", static.LocalFile("./template", true)))
 
 	// 设置CORS
 	r.Use(middleware.Cors())

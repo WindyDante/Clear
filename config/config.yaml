@@ -1,7 +1,7 @@
 server:
   port: 6633
   host: "0.0.0.0"
-  mode: "debug"
+  mode: "release" # 可选值: debug, release
 
 database:
     type: "sqlite"

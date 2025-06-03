@@ -42,17 +42,17 @@ RUN apk add --no-cache gcc musl-dev
 # 设置环境变量启用 cgo
 ENV CGO_ENABLED=1
 
-# 复制Go模块文件
-COPY Clear-Backend-Go/go.mod Clear-Backend-Go/go.sum ./
+# 复制Go模块文件（现在在根目录）
+COPY go.mod go.sum ./
 
 # 下载依赖
 RUN go mod download
 
-# 复制源代码
-COPY Clear-Backend-Go/cmd ./cmd/
-COPY Clear-Backend-Go/internal ./internal/
-COPY Clear-Backend-Go/pkg ./pkg/
-COPY Clear-Backend-Go/config ./config/
+# 复制源代码（现在在根目录）
+COPY cmd ./cmd/
+COPY internal ./internal/
+COPY pkg ./pkg/
+COPY config ./config/
 
 # 创建并设置权限
 RUN mkdir -p /app/data && chmod -R 777 /app/data
@@ -80,7 +80,7 @@ COPY --from=frontend-build /app/template /app/template
 RUN mkdir -p /app/data && chmod -R 777 /app/data
 
 # 暴露端口
-EXPOSE 6277
+EXPOSE 6633
 
 # 运行后端服务
 CMD ["/app/clear"]

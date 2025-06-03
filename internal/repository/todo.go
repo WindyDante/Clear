@@ -11,6 +11,14 @@ import (
 	"gorm.io/gorm"
 )
 
+func DeleteTodoByCategoryId(categoryId string) error {
+	result := database.DB.Where("category_id = ?", categoryId).Delete(&models.Todo{})
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
 func DeleteTodo(id string) error {
 	result := database.DB.Where("id = ?", id).Delete(&models.Todo{})
 	if result.Error != nil {

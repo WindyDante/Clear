@@ -16,7 +16,7 @@ func UpdateTheme(userId string, theme int) error {
 func Status(userId string, todoStatus int) (int64, error) {
 	var status int64
 	err := database.DB.Model(&models.Todo{}).
-		Where("user_id = ?", userId).Where("status = ?", models.TodoStatusPending).
+		Where("user_id = ?", userId).Where("status = ?", todoStatus).
 		Count(&status).Error
 	if err != nil {
 		return 0, err

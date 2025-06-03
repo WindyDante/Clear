@@ -1,80 +1,242 @@
 # Clear
 
 <p align="center">
-  <img alt="Clear" src="./Clear-Web/public/favicon.svg" width="100">
+  <img alt="Clear" src="./docs/img/index.png" width="600">
 </p>
 
-> **简洁之美，效率之选**
+<p align="center">
+  <strong>简洁之美，效率之选</strong>
+</p>
 
-Clear是一款极简而强大的待办事项管理应用，专为注重效率和简洁的用户设计。通过精心打造的界面和强大的功能，帮助您轻松管理日常任务，提高工作效率。
+<p align="center">
+  <a href="https://clear.1wind.cn/">🌐 在线体验</a> •
+  <a href="#快速开始">🚀 快速开始</a> •
+  <a href="#部署指南">📦 部署指南</a> •
+  <a href="#api文档">📚 API文档</a>
+</p>
 
-下图所示为胭脂主题
-![主页预览](./docs/img/index.png)
+---
 
-[预览地址](https://clear.1wind.cn/)
+## 🎯 项目简介
 
-## 为什么选择Clear?
+Clear 是一款现代化的待办事项管理应用，采用全栈架构设计，致力于为用户提供简洁、高效的任务管理体验。无论是个人日常规划还是团队协作，Clear 都能满足您的需求。
 
-- 🚀 **高效简洁** - 专注于核心功能，没有繁琐干扰
-- 🎨 **美观定制** - 多种主题和自定义选项满足个性需求
-- 🔒 **安全可靠** - 数据安全存储，支持账户系统
-- 🔄 **跨平台同步** - 随时随地访问您的任务列表
-- 💡 **智能提醒** - 不错过任何重要待办事项
+### ✨ 核心特性
 
-## 核心功能
+- **🎨 精美界面** - 响应式设计，支持多种主题切换
+- **📝 智能管理** - 任务分类、标签系统、优先级设置
+- **🔐 安全可靠** - JWT认证，数据加密存储
+- **⚡ 高性能** - 前后端分离，API响应快速
+- **🐳 容器化** - Docker部署，一键启动
+- **📱 全平台** - 桌面端、移动端完美适配
 
-- ✨ **任务管理** - 流畅添加、快速编辑与一键删除，高效处理每日待办
-- ✅ **智能完成** - 任务完成状态追踪，清晰展示工作进度与成就
-- 🎨 **精致界面** - 遵循极简设计原则，减少视觉干扰，专注任务本身
-- 🌈 **多彩主题** - 六大视觉主题（天青、墨玉、胭脂、藤黄、紫棠、青碧），满足个性化需求
-- 📊 **分类系统** - 强大的任务分类与标签体系，井然有序地组织工作生活
-- 🔍 **智能检索** - 多维度搜索与筛选功能，快速定位任何任务信息
-- 💾 **安全存储** - 后端采用高效持久化存储策略，数据安全不丢失
-- ⚡ **极速体验** - 优化前端响应速度，带来轻量快速的用户操作体验
-- 📱 **全端适配** - 自适应响应式设计，完美兼容桌面与移动设备
+## 🛠️ 技术栈
 
-## 技术架构
+### 前端技术
+- **Vue 3** - 渐进式JavaScript框架
+- **TypeScript** - 类型安全的JavaScript超集
+- **Vite** - 下一代前端构建工具
+- **Pinia** - Vue.js状态管理库
+- **Element Plus** - Vue 3组件库
 
-### 核心技术栈
-- **前端架构**：Vue 3 + Vite + TypeScript + Pinia
-  *现代化组件框架 + 高效构建工具 + 类型安全 + 状态管理*
-- **后端支撑**：Spring Boot 3 + Redis + MySQL 8
-  *企业级应用框架 + 高性能缓存 + 可靠数据存储*
+### 后端技术
+- **Go 1.24+** - 高性能后端服务
+- **Gin** - 轻量级Web框架
+- **GORM** - Go语言ORM库
+- **SQLite** - 轻量级数据库
+- **JWT** - 身份认证机制
 
-### 即将推出
-- **个人版**: Go + SQLite (极简数据库，低内存占用)[支持个人部署]
-- **邮件在线提醒**
-- **用户的需求[只要我能做到]**
+### 开发工具
+- **Docker** - 容器化部署
+- **Docker Compose** - 多容器应用编排
+- **pnpm** - 高效的包管理器
 
-## 本地运行
+## 🚀 快速开始
 
+### 前置要求
+
+- Node.js 18+
+- Go 1.24+
+- Docker & Docker Compose（可选）
+- pnpm（推荐）
+
+### 本地开发
+
+#### 1. 克隆项目
 ```bash
-# 克隆仓库
-git clone https://github.com/WindyDante/Clear.git
+git clone https://github.com/WindyDante/Clear
 cd Clear
-
-# 前端设置
-cd Clear-Web
-pnpm install
-pnpm run dev
-
-# 后端设置（需要Java 17+和Maven）
-cd ../Clear-Backend
-mvn clean package
-java -jar clear-server/target/clear-server-1.0.0.jar
 ```
 
-## 致谢
+#### 2. 前端开发
+```bash
+# 进入前端目录
+cd web
 
-项目基于[Tika](https://github.com/lin-snow/Tika)模板进行修改开发。在此特别感谢原作者[lin-snow](https://github.com/lin-snow)的开源贡献，提供了这个优秀的项目。
+# 安装依赖
+pnpm install
 
-本项目在Tika的基础上进行了个性化定制和功能扩展，旨在满足特定需求。保留了原项目的精髓，同时融入了新的设计理念和功能特性。
+# 启动开发服务器
+pnpm dev
+```
 
-- 感谢AI
+#### 3. 后端开发
+```bash
+# 回到项目根目录
+cd ..
 
-- 感谢所有开源社区的贡献者与支持者  
+# 安装Go依赖
+go mod tidy
 
-## 支持项目
+# 启动后端服务
+go run cmd/server/main.go
+```
 
-如果您喜欢这个项目，请考虑给我一个Star⭐，这将是对我最大的支持！后续会推出个人版的Go后端+SQLite极简数据库，将极度压缩内存占用，为个人用户提供更轻量级的解决方案。
+#### 4. 访问应用
+- 前端地址：http://localhost:5173
+- 后端API：http://localhost:8080
+
+## 📦 部署指南
+
+### Docker 部署（推荐）
+
+#### 一键部署
+```bash
+# 构建并启动服务
+docker-compose up -d
+
+# 查看服务状态
+docker-compose ps
+
+# 查看日志
+docker-compose logs -f
+```
+
+#### 手动构建
+```bash
+# 构建镜像
+docker-compose build
+```
+
+## 🔧 配置说明
+
+### JWT 安全配置 🔐
+
+Clear 使用 JWT (JSON Web Token) 进行用户身份认证。您可以通过以下方式配置JWT密钥：
+
+#### 选项1：使用环境变量（推荐）
+```bash
+# 在 docker-compose.yml 中设置
+environment:
+  - JWT_SECRET=your-custom-jwt-secret-key
+
+#### 选项2：删除环境变量（自动生成）
+如果您不设置 `JWT_SECRET` 环境变量，系统会自动生成一个随机密钥：
+```yaml
+# docker-compose.yml 中删除或注释掉 JWT_SECRET
+environment:
+  # - JWT_SECRET=your-custom-jwt-secret-key  # 注释掉这行
+```
+
+#### 选项3：修改现有配置
+如果您想更改JWT密钥，只需修改环境变量的值：
+```yaml
+environment:
+  - JWT_SECRET=new-super-secure-jwt-key-here
+```
+
+#### 🚨 安全建议
+
+- **生产环境**：请务必设置复杂的自定义JWT密钥
+- **密钥长度**：建议至少32个字符
+- **密钥复杂性**：包含字母、数字和特殊字符
+- **定期更换**：定期更新JWT密钥提高安全性
+
+**生产环境示例：**
+```bash
+JWT_SECRET=Pr0d-Cl3ar-JWT-S3cr3t-K3y-2024!@#$%^&*()
+```
+
+
+## 📖 使用指南
+
+### 用户管理
+- **注册账户** - 创建新用户账户
+- **用户登录** - JWT身份验证
+- **个人资料** - 修改用户信息
+
+### 任务管理
+- **创建任务** - 添加新的待办事项
+- **任务分类** - 按分类组织任务
+- **状态管理** - 标记任务完成状态
+- **优先级** - 设置任务重要程度
+
+### 界面定制
+- **主题切换** - 多种预设主题
+- **布局调整** - 自定义界面布局
+- **响应式** - 适配不同设备尺寸
+
+## 📚 API文档
+
+### 认证接口
+```
+POST /api/auth/register  # 用户注册
+POST /api/auth/login     # 用户登录
+POST /api/auth/logout    # 用户登出
+GET  /api/auth/profile   # 获取用户信息
+```
+
+### 任务接口
+```
+GET    /api/todos        # 获取任务列表
+POST   /api/todos        # 创建新任务
+PUT    /api/todos/:id    # 更新任务
+DELETE /api/todos/:id    # 删除任务
+```
+
+### 分类接口
+```
+GET    /api/categories   # 获取分类列表
+POST   /api/categories   # 创建新分类
+PUT    /api/categories/:id    # 更新分类
+DELETE /api/categories/:id    # 删除分类
+```
+
+## 🤝 贡献指南
+
+我们欢迎所有形式的贡献！
+
+1. **Fork** 本仓库
+2. 创建您的特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启一个 **Pull Request**
+
+### 开发规范
+- 遵循 Go 官方代码规范
+- 使用 TypeScript 严格模式
+- 提交信息采用约定式提交格式
+- 添加必要的测试用例
+
+## 📄 许可证
+
+本项目采用 [MIT License](LICENSE) 许可证。
+
+## 🙏 致谢
+
+- 项目灵感来源于 [Tika](https://github.com/lin-snow/Tika)
+- 感谢所有开源社区的贡献者
+- 特别感谢 [lin-snow](https://github.com/lin-snow) 的开源贡献
+
+## 📧 联系我们
+
+- 项目主页：https://github.com/WindyDante/Clear
+- 在线体验：https://clear.1wind.cn/
+- 问题反馈：[Issues](https://github.com/WindyDante/Clear/issues)
+
+---
+
+<p align="center">
+  如果这个项目对您有帮助，请考虑给我们一个 ⭐ Star！
+</p>
 

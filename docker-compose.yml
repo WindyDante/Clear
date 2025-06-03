@@ -1,13 +1,11 @@
 version: '3'
 services:
   clear:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: eastwind996/clear:latest
     container_name: clear
     ports:
       - "6277:6633"
     volumes:
       - ./data:/app/data
     environment:
-      - JWT_SECRET="Welcome to Clear!"
+      - JWT_SECRET=Welcome to Clear!

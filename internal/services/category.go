@@ -17,6 +17,12 @@ func DelCategory(id string) error {
 		return err
 	}
 
+	// 删除分类后，删除该分类下的所有todo
+	err = repository.DeleteTodoByCategoryId(id)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
