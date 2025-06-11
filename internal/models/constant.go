@@ -6,6 +6,7 @@ const (
 	LoginSuccessMessage       = "登录成功"
 	RegisterSuccessMessage    = "注册成功"
 	UpdateThemeSuccessMessage = "主题更新成功"
+	UpdatePwdSuccessMessage   = "密码更新成功"
 )
 
 // 失败相关
@@ -41,6 +42,7 @@ const (
 	EmailRequiredMessage           = "邮箱不能为空"
 	ThemeEmptyMessage              = "主题不能为空"
 	InvalidThemeMessage            = "无效的主题值，请选择正确的主题"
+	PasswordEmptyMessage           = "密码不能为空"
 )
 
 // 分类相关

@@ -1,3 +1,4 @@
+data/clear.db
 # Nuxt dev/build outputs
 .output
 .data
@@ -57,5 +58,4 @@ build/
 
 ### VS Code ###
 .vscode/
-
-Clear-Backend-Go/data/clear.db
+data/clear.db

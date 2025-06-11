@@ -9,6 +9,25 @@ import (
 	"errors"
 )
 
+func UpdatePwd(userId string, pwdDto dto.PwdUpdateRequest) error {
+	if pwdDto.OldPassword == "" || pwdDto.NewPassword == "" {
+		return errors.New(models.PasswordEmptyMessage)
+	}
+	encryptPwd := pkg.MD5Encrypt(pwdDto.OldPassword)
+	oldPwd, err := repository.GetPwdByUserId(userId)
+	if err != nil {
+		return errors.New(models.SystemErrorMessage)
+	}
+	if oldPwd != encryptPwd {
+		return errors.New(models.PasswordErrorMessage)
+	}
+	err = repository.UpdatePwd(pkg.MD5Encrypt(pwdDto.NewPassword), userId)
+	if err != nil {
+		return errors.New(models.SystemErrorMessage)
+	}
+	return nil
+}
+
 func UpdateTheme(userId string, theme int) error {
 	if theme == 0 {
 		return errors.New(models.ThemeEmptyMessage)

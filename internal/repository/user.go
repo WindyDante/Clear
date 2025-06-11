@@ -5,6 +5,22 @@ import (
 	"clear/internal/models"
 )
 
+func UpdatePwd(password, userId string) error {
+	return database.DB.Model(&models.User{}).
+		Where("id = ?", userId).
+		Updates(models.User{
+			Password: password}).Error
+}
+
+func GetPwdByUserId(userId string) (string, error) {
+	var password string
+	err := database.DB.Model(&models.User{}).
+		Select("password").
+		Where("id = ?", userId).
+		Scan(&password).Error
+	return password, err
+}
+
 func UpdateTheme(userId string, theme int) error {
 	return database.DB.Model(&models.User{}).
 		Where("id = ?", userId).

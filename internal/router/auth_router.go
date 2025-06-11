@@ -33,4 +33,5 @@ func user(rg *gin.RouterGroup) {
 	rg.POST("/user/check/:email/:code", controllers.CheckEmail)
 	rg.POST("/user/send/:email", controllers.SendMail)
 	rg.PUT("/user/theme/:theme", controllers.UpdateTheme)
+	rg.PUT("/user/pwd", controllers.UpdatePwd)
 }
