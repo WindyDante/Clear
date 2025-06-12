@@ -53,18 +53,19 @@ async function handleChangePassword() {
     }
     settingsForm.loading = true
     try {
-        console.log('Password change attempt:', {
-            currentPassword: settingsForm.currentPassword,
-            newPassword: settingsForm.newPassword
-        })
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        settingsForm.success = '密码修改成功'
-        showToast('密码修改成功', 'success')
+        await api.updatePassword(settingsForm.currentPassword, settingsForm.newPassword)
+        // 成功时API会自动显示后端返回的msg
         settingsForm.currentPassword = ''
         settingsForm.newPassword = ''
         settingsForm.confirmPassword = ''
+        
+        // 密码修改成功后立即登出
+        setTimeout(() => {
+            authStore.logout()
+            router.push('/auth')
+        }, 500) // 延迟1.5秒让用户看到成功提示后再登出
     } catch (error: any) {
-        showToast(error.message || '密码修改失败，请重试', 'error')
+        // 错误时API已经自动显示了toast，无需额外处理
     } finally {
         settingsForm.loading = false
     }

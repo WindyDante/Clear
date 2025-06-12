@@ -26,37 +26,54 @@ async function handleApiResponse<T>(
 
   try {
     const response = await apiCall();
+
+    // 检查HTTP响应状态
+    if (!response.ok) {
+      // 尝试解析响应体以获取错误信息
+      try {
+        const errorResult = await response.json();
+        // 只显示后端返回的msg，如果没有msg则不显示toast
+        if (errorResult.msg) {
+          showToast(errorResult.msg, 'error');
+          throw new Error(errorResult.msg);
+        } else {
+          // 如果后端没有返回msg，抛出错误但不显示toast
+          throw new Error(`HTTP ${response.status}`);
+        }
+      } catch (parseError) {
+        // 如果无法解析JSON，抛出错误但不显示toast
+        throw new Error(`HTTP ${response.status}`);
+      }
+    }
+
     const result = await response.json();
 
+    // 检查业务状态码
     if (result.code !== 1) {
-      // 错误情况：使用API返回的msg，如果不存在则使用默认错误消息
-      const message = result.msg || errorMessage;
-      showToast(message, 'error');
-      // 创建一个特殊的错误对象，标记已经显示过Toast
-      const error = new Error(message);
-      (error as any).toastShown = true;
-      throw error;
+      // 失败情况：只使用后端返回的msg，如果没有msg则不显示toast
+      if (result.msg) {
+        showToast(result.msg, 'error');
+        throw new Error(result.msg);
+      } else {
+        // 如果后端没有返回msg，抛出错误但不显示toast
+        throw new Error('操作失败');
+      }
     }
 
     // 成功情况：只在明确需要时显示Toast
     if (showSuccessToast) {
-      if (result.data && typeof result.data === 'string') {
-        // 如果data是字符串，显示data内容
-        showToast(result.data, 'success');
-      } else if (result.msg) {
-        // 否则显示msg
+      if (result.msg) {
+        // 优先显示msg
         showToast(result.msg, 'success');
+      } else if (result.data && typeof result.data === 'string') {
+        // 如果没有msg但data是字符串，显示data内容
+        showToast(result.data, 'success');
       }
     }
 
     return result.data;
   } catch (error) {
-    // 只有当错误没有显示过Toast时才显示
-    if (!(error as any).toastShown) {
-      showToast(errorMessage, 'error');
-      // 标记这个错误已经显示过Toast
-      (error as any).toastShown = true;
-    }
+    // 对于网络错误等，不显示任何toast，只抛出错误
     throw error;
   }
 }
@@ -488,6 +505,33 @@ const api = {
         }
       }),
       '获取任务统计失败'
+    );
+  },
+
+  // 修改密码
+  async updatePassword(oldPassword: string, newPassword: string) {
+    const token = localStorage.getItem('user')
+      ? JSON.parse(localStorage.getItem('user') || '{}').tk
+      : null;
+
+    if (!token) {
+      throw new Error('未登录!');
+    }
+
+    return handleApiResponse<string>(
+      () => fetch(`${API_BASE_URL}/user/pwd`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          oldPassword,
+          newPassword
+        })
+      }),
+      '修改密码失败',
+      true // 启用展示msg到toast
     );
   },
 }
