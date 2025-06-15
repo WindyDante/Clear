@@ -52,26 +52,6 @@ func UpdateTheme(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.OK(models.UpdateThemeSuccessMessage))
 }
 
-func SendMail(c *gin.Context) {
-	email := c.Param("email")
-	if email == "" {
-		c.JSON(http.StatusBadRequest, dto.Fail[string](models.EmailRequiredMessage))
-		return
-	}
-	// TODO: 实现发送邮件逻辑
-	c.JSON(http.StatusOK, dto.OK(models.MethodDevelopmentErrorMessage))
-}
-
-func CheckEmail(c *gin.Context) {
-	email, code := c.Param("email"), c.Param("code")
-	if email == "" || code == "" {
-		c.JSON(http.StatusBadRequest, dto.Fail[string](models.EmailOrCodeRequiredMessage))
-		return
-	}
-	// TODO: 实现验证邮件逻辑
-	c.JSON(http.StatusOK, dto.OK(models.MethodDevelopmentErrorMessage))
-}
-
 func UserStatus(c *gin.Context) {
 	userId, err := pkg.GetCurrentUserId(c)
 	if err != nil {

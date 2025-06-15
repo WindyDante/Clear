@@ -426,59 +426,14 @@ const api = {
       throw new Error('未登录!');
     }
 
-    return handleApiResponse<boolean>(
-      () => fetch(`${API_BASE_URL}/todo/${taskId}`, {
+    return handleApiResponse<string>(
+      () => fetch(`${API_BASE_URL}/todo/delTodo/${taskId}`, {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
       }),
       '删除任务失败'
-    ).then(() => true);
-  },
-
-  // 发送邮箱验证码
-  async sendEmailCode(email: string) {
-    const token = localStorage.getItem('user')
-      ? JSON.parse(localStorage.getItem('user') || '{}').tk
-      : null;
-
-    if (!token) {
-      throw new Error('未登录!');
-    }
-
-    return handleApiResponse<string>(
-      () => fetch(`${API_BASE_URL}/user/send/${email}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      }),
-      '发送验证码失败',
-      true // 启用展示data数据到toast
-    );
-  },
-
-  // 验证邮箱验证码
-  async verifyEmailCode(email: string, code: string) {
-    const token = localStorage.getItem('user')
-      ? JSON.parse(localStorage.getItem('user') || '{}').tk
-      : null;
-
-    if (!token) {
-      throw new Error('未登录!');
-    }
-
-    return handleApiResponse<string>(
-      () => fetch(`${API_BASE_URL}/user/check/${email}/${code}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      }),
-      '验证码验证失败',
-      true // 启用展示data数据到toast
     );
   },
 
@@ -492,15 +447,10 @@ const api = {
       throw new Error('未登录!');
     }
 
-    return handleApiResponse<{
-      username: string;
-      numOfDone: number;
-      numOfUndone: number;
-    }>(
+    return handleApiResponse<{ numOfDone: number; numOfUndone: number }>(
       () => fetch(`${API_BASE_URL}/user/status`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
       }),
@@ -533,7 +483,7 @@ const api = {
       '修改密码失败',
       true // 启用展示msg到toast
     );
-  },
+  }
 }
 
 export default api

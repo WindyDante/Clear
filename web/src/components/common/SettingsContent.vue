@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, computed, onUnmounted } from 'vue'
+import { reactive, ref } from 'vue'
 import { useAuthStore } from '../../store/auth'
 import { useToast } from '../../composables/useToast'
 import { useRouter } from 'vue-router'
@@ -8,30 +8,14 @@ import api from '../../services/api'
 const authStore = useAuthStore()
 const { showToast } = useToast()
 const router = useRouter()
-const countdownTimer = ref<number | null>(null)
 
 // Form state for user settings
 const settingsForm = reactive({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
-    email: authStore.user?.email || '',
-    verificationCode: '',
-    codeSent: false,
-    countDown: 0,
     loading: false,
     success: ''
-})
-
-// 邮箱格式验证
-function isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
-// 计算属性：邮箱是否有效
-const isEmailValid = computed(() => {
-    return settingsForm.email && isValidEmail(settingsForm.email);
 })
 
 // Function to handle password change
@@ -58,114 +42,18 @@ async function handleChangePassword() {
         settingsForm.currentPassword = ''
         settingsForm.newPassword = ''
         settingsForm.confirmPassword = ''
-        
+
         // 密码修改成功后立即登出
         setTimeout(() => {
             authStore.logout()
             router.push('/auth')
-        }, 500) // 延迟1.5秒让用户看到成功提示后再登出
+        }, 500) // 延迟0.5秒让用户看到成功提示后再登出
     } catch (error: any) {
         // 错误时API已经自动显示了toast，无需额外处理
     } finally {
         settingsForm.loading = false
     }
 }
-
-// Function to handle email change
-async function handleChangeEmail() {
-    if (!authStore.isAuthenticated) {
-        showToast('请先登录再操作', 'warning');
-        router.push('/auth');
-        return;
-    }
-
-    settingsForm.success = ''
-    if (!settingsForm.email) {
-        showToast('请输入邮箱地址', 'error')
-        return
-    }
-
-    if (!settingsForm.codeSent) {
-        sendVerificationCode()
-        return
-    }
-
-    if (!settingsForm.verificationCode) {
-        showToast('请输入验证码', 'error')
-        return
-    }
-
-    settingsForm.loading = true
-    try {
-        await api.verifyEmailCode(settingsForm.email, settingsForm.verificationCode)
-
-        if (authStore.user) {
-            authStore.user.email = settingsForm.email
-            localStorage.setItem('user', JSON.stringify(authStore.user))
-        }
-
-        settingsForm.verificationCode = ''
-        settingsForm.codeSent = false
-        if (countdownTimer.value) {
-            clearInterval(countdownTimer.value)
-            countdownTimer.value = null
-        }
-        settingsForm.countDown = 0
-    } catch (error: any) {
-        // handleApiResponse已处理错误提示
-    } finally {
-        settingsForm.loading = false
-    }
-}
-
-// 发送邮箱验证码
-async function sendVerificationCode() {
-    if (!authStore.isAuthenticated) {
-        showToast('请先登录再操作', 'warning');
-        router.push('/auth');
-        return;
-    }
-
-    if (!settingsForm.email) {
-        showToast('请先输入邮箱地址', 'error')
-        return
-    }
-
-    try {
-        settingsForm.loading = true
-        await api.sendEmailCode(settingsForm.email)
-        settingsForm.codeSent = true
-
-        settingsForm.countDown = 60
-
-        if (countdownTimer.value) {
-            clearInterval(countdownTimer.value)
-        }
-
-        countdownTimer.value = window.setInterval(() => {
-            if (settingsForm.countDown > 0) {
-                settingsForm.countDown--
-            } else {
-                if (countdownTimer.value) {
-                    clearInterval(countdownTimer.value)
-                    countdownTimer.value = null
-                }
-            }
-        }, 1000)
-    } catch (error: any) {
-        // API错误处理已经由handleApiResponse完成
-    } finally {
-        settingsForm.loading = false
-    }
-}
-
-// 在组件卸载时清除定时器
-onUnmounted(() => {
-    if (countdownTimer.value) {
-        clearInterval(countdownTimer.value)
-        countdownTimer.value = null
-    }
-})
 </script>
 
 <template>
@@ -191,36 +79,6 @@ onUnmounted(() => {
                     </div>
                     <button type="submit" class="btn btn-primary" :disabled="settingsForm.loading">
                         {{ settingsForm.loading ? '处理中...' : '修改密码' }}
-                    </button>
-                </form>
-
-                <form @submit.prevent="handleChangeEmail" class="settings-form email-form">
-                    <h3 class="form-section-title">修改邮箱</h3>
-                    <div class="form-group">
-                        <label for="email">邮箱地址</label>
-                        <input id="email" type="email" v-model="settingsForm.email" class="form-control"
-                            placeholder="请输入新的邮箱地址">
-                    </div>
-
-                    <div class="form-group verification-group">
-                        <label for="verification-code">验证码</label>
-                        <div class="verification-input-group">
-                            <input id="verification-code" type="text" v-model="settingsForm.verificationCode"
-                                class="form-control" placeholder="请输入验证码" :disabled="!settingsForm.codeSent">
-                            <button type="button" class="btn send-code-btn"
-                                :class="{ 'btn-secondary': !isEmailValid, 'btn-valid': isEmailValid }"
-                                @click="sendVerificationCode"
-                                :disabled="settingsForm.loading || settingsForm.countDown > 0 || !isEmailValid">
-                                {{ settingsForm.loading && !settingsForm.codeSent ? '发送中...' : (settingsForm.countDown >
-                                    0 ?
-                                    `${settingsForm.countDown}秒` : '获取验证码') }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary"
-                        :disabled="settingsForm.loading || !settingsForm.verificationCode || !settingsForm.codeSent">
-                        {{ settingsForm.loading && settingsForm.codeSent ? '处理中...' : '修改邮箱' }}
                     </button>
                 </form>
             </div>
@@ -257,10 +115,6 @@ onUnmounted(() => {
 
 .settings-form {
     margin-bottom: 18px;
-}
-
-.email-form {
-    margin-top: 18px;
 }
 
 .form-section-title {
@@ -348,46 +202,8 @@ onUnmounted(() => {
 }
 
 .settings-form-content {
-    /* margin-top: 12px;
-    padding-top: 12px; */
-}
-
-.verification-group {
-    margin-bottom: 12px;
-}
-
-.verification-input-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.verification-input-group .form-control {
-    flex: 1;
-}
-
-.verification-input-group .send-code-btn {
-    white-space: nowrap;
-    min-width: 90px;
-    height: 38px;
-    padding: 0 12px;
-    font-size: 14px;
-}
-
-.send-code-btn {
-    background-color: var(--primary-color);
-    color: var(--text-on-primary);
-    transition: background-color 0.3s ease;
-}
-
-.send-code-btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-.btn-valid {
-    background-color: var(--primary-color) !important;
-    color: var(--text-on-primary) !important;
+    margin-top: 12px;
+    padding-top: 12px;
 }
 
 @media (max-width: 767px) {

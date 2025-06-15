@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive, onUnmounted } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import { useTaskStore } from '../store/task'
 import AppHeader from '../components/common/AppHeader.vue'
 import { useAuthStore } from '../store/auth'
@@ -13,7 +13,6 @@ const authStore = useAuthStore()
 const { showToast } = useToast()
 const { themes, activeThemeName, applyTheme } = useTheme() // 使用主题管理
 const router = useRouter()
-const countdownTimer = ref<number | null>(null) // 倒计时定时器引用
 
 // 任务统计数据
 const taskStats = ref({
@@ -40,17 +39,6 @@ async function fetchUserTaskStats() {
     taskStats.value.loading = false
   }
 }
-
-// 邮箱格式验证
-function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-// 计算属性：邮箱是否有效
-const isEmailValid = computed(() => {
-  return settingsForm.email && isValidEmail(settingsForm.email);
-})
 
 // 获取主题预览颜色
 function getThemePreviewColor(theme: any) {
@@ -82,10 +70,6 @@ const settingsForm = reactive({
   currentPassword: '',
   newPassword: '',
   confirmPassword: '',
-  email: authStore.user?.email || '',
-  verificationCode: '',
-  codeSent: false,
-  countDown: 0,
   loading: false,
   success: ''
 })
@@ -118,145 +102,27 @@ async function handleChangePassword() {
   }
   settingsForm.loading = true
   try {
-    // Replace with your actual API call to change password
-    // await api.changePassword(authStore.user.id, settingsForm.currentPassword, settingsForm.newPassword)
-    console.log('Password change attempt:', {
-      currentPassword: settingsForm.currentPassword,
-      newPassword: settingsForm.newPassword
-    })
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    settingsForm.success = '密码修改成功'
-    showToast('密码修改成功', 'success')
+    await api.updatePassword(settingsForm.currentPassword, settingsForm.newPassword)
+    // 成功时API会自动显示后端返回的msg
     settingsForm.currentPassword = ''
     settingsForm.newPassword = ''
     settingsForm.confirmPassword = ''
+
+    // 密码修改成功后立即登出
+    setTimeout(() => {
+      authStore.logout()
+      router.push('/auth')
+    }, 500)
   } catch (error: any) {
-    showToast(error.message || '密码修改失败，请重试', 'error')
+    // 错误时API已经自动显示了toast，无需额外处理
   } finally {
     settingsForm.loading = false
   }
 }
-
-// Function to handle email change
-async function handleChangeEmail() {
-  // 检查是否已登录
-  if (!authStore.isAuthenticated) {
-    showToast('请先登录再操作', 'warning');
-    router.push('/auth');
-    return;
-  }
-
-  settingsForm.success = ''
-  if (!settingsForm.email) {
-    showToast('请输入邮箱地址', 'error')
-    return
-  }
-
-  // 如果还未发送验证码，先触发发送验证码流程
-  if (!settingsForm.codeSent) {
-    sendVerificationCode()
-    return
-  }
-
-  // 验证码不能为空
-  if (!settingsForm.verificationCode) {
-    showToast('请输入验证码', 'error')
-    return
-  }
-
-  settingsForm.loading = true
-  try {
-    // 直接使用验证邮箱验证码的接口完成邮箱验证和更新
-    await api.verifyEmailCode(settingsForm.email, settingsForm.verificationCode)
-
-    // 更新用户信息中的邮箱
-    if (authStore.user) {
-      authStore.user.email = settingsForm.email
-      localStorage.setItem('user', JSON.stringify(authStore.user))
-    }
-
-    // 重置表单状态
-    settingsForm.verificationCode = ''
-    settingsForm.codeSent = false
-    if (countdownTimer.value) {
-      clearInterval(countdownTimer.value)
-      countdownTimer.value = null
-    }
-    settingsForm.countDown = 0
-  } catch (error: any) {
-    // handleApiResponse已处理错误提示
-  } finally {
-    settingsForm.loading = false
-  }
-}
-
-// 发送邮箱验证码
-async function sendVerificationCode() {
-  // 检查是否已登录
-  if (!authStore.isAuthenticated) {
-    showToast('请先登录再操作', 'warning');
-    router.push('/auth');
-    return;
-  }
-
-  if (!settingsForm.email) {
-    showToast('请先输入邮箱地址', 'error')
-    return
-  }
-
-  try {
-    settingsForm.loading = true
-    // 调用发送验证码的API
-    await api.sendEmailCode(settingsForm.email)
-    settingsForm.codeSent = true
-
-    // 设置倒计时60秒
-    settingsForm.countDown = 60
-
-    // 清除可能存在的定时器
-    if (countdownTimer.value) {
-      clearInterval(countdownTimer.value)
-    }
-
-    // 启动新的倒计时定时器
-    countdownTimer.value = window.setInterval(() => {
-      if (settingsForm.countDown > 0) {
-        settingsForm.countDown--
-      } else {
-        // 倒计时结束，清除定时器
-        if (countdownTimer.value) {
-          clearInterval(countdownTimer.value)
-          countdownTimer.value = null
-        }
-      }
-    }, 1000)
-  } catch (error: any) {
-    // API错误处理已经由handleApiResponse完成，这里无需额外处理
-  } finally {
-    settingsForm.loading = false
-  }
-}
-
-// 在组件卸载时清除定时器
-onUnmounted(() => {
-  if (countdownTimer.value) {
-    clearInterval(countdownTimer.value)
-    countdownTimer.value = null
-  }
-})
 
 onMounted(() => {
   // 获取用户任务统计信息
   fetchUserTaskStats()
-
-  // Initialize email from store if not already done
-  if (authStore.user && !settingsForm.email) {
-    settingsForm.email = authStore.user.email || ''
-  }
-
-  // 主题已在应用启动时初始化，这里不需要再次初始化
-  // initTheme() - 移除
 })
 </script>
 
@@ -307,34 +173,6 @@ onMounted(() => {
             </div>
             <button type="submit" class="btn btn-primary" :disabled="settingsForm.loading">
               {{ settingsForm.loading ? '处理中...' : '修改密码' }}
-            </button>
-          </form>
-
-          <form @submit.prevent="handleChangeEmail" class="settings-form email-form">
-            <h3 class="form-section-title">修改邮箱</h3>
-            <div class="form-group">
-              <label for="email">邮箱地址</label>
-              <input id="email" type="email" v-model="settingsForm.email" class="form-control" placeholder="请输入新的邮箱地址">
-            </div>
-
-            <!-- 验证码输入框和按钮组 -->
-            <div class="form-group verification-group">
-              <label for="verification-code">验证码</label>
-              <div class="verification-input-group">
-                <input id="verification-code" type="text" v-model="settingsForm.verificationCode" class="form-control"
-                  placeholder="请输入验证码" :disabled="!settingsForm.codeSent">
-                <button type="button" class="btn send-code-btn"
-                  :class="{ 'btn-secondary': !isEmailValid, 'btn-valid': isEmailValid }" @click="sendVerificationCode"
-                  :disabled="settingsForm.loading || settingsForm.countDown > 0 || !isEmailValid">
-                  {{ settingsForm.loading && !settingsForm.codeSent ? '发送中...' : (settingsForm.countDown > 0 ?
-                    `${settingsForm.countDown}秒` : '获取验证码') }}
-                </button>
-              </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary"
-              :disabled="settingsForm.loading || !settingsForm.verificationCode || !settingsForm.codeSent">
-              {{ settingsForm.loading && settingsForm.codeSent ? '处理中...' : '修改邮箱' }}
             </button>
           </form>
         </div>
@@ -403,12 +241,6 @@ onMounted(() => {
 .settings-form {
   margin-bottom: 18px;
   /* 从24px减少到18px */
-}
-
-.email-form {
-  margin-top: 18px;
-  /* 从24px减少到18px */
-  /* Add some space between forms */
 }
 
 .form-section-title {
@@ -486,59 +318,6 @@ onMounted(() => {
 .theme-option span {
   font-size: 12px;
   color: var(--text-secondary);
-}
-
-/* 验证码相关样式 */
-.standalone-btn {
-  margin: 8px 0 16px 0;
-  width: 100%;
-  max-width: 140px;
-}
-
-.send-code-btn {
-  background-color: var(--primary-color);
-  /* 修改为使用主题的primary-color */
-  color: var(--text-on-primary);
-  /* 确保文字颜色与背景形成对比 */
-  font-size: 14px;
-  transition: background-color 0.3s ease;
-  /* 添加过渡效果 */
-}
-
-.send-code-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-/* 邮箱验证通过的按钮样式 */
-.btn-valid {
-  background-color: var(--primary-color) !important;
-  /* 使用主题的primary-color替换硬编码颜色 */
-  color: var(--text-on-primary) !important;
-  /* 文字颜色与背景形成对比 */
-}
-
-.verification-group {
-  margin-bottom: 12px;
-  /* 从16px减少到12px */
-}
-
-.verification-input-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.verification-input-group .form-control {
-  flex: 1;
-}
-
-.verification-input-group .send-code-btn {
-  white-space: nowrap;
-  min-width: 90px;
-  height: 38px;
-  padding: 0 12px;
-  font-size: 14px;
 }
 
 /* 添加修改密码和修改邮箱按钮的样式 */

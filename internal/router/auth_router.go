@@ -30,8 +30,6 @@ func category(rg *gin.RouterGroup) {
 
 func user(rg *gin.RouterGroup) {
 	rg.GET("/user/status", controllers.UserStatus)
-	rg.POST("/user/check/:email/:code", controllers.CheckEmail)
-	rg.POST("/user/send/:email", controllers.SendMail)
 	rg.PUT("/user/theme/:theme", controllers.UpdateTheme)
 	rg.PUT("/user/pwd", controllers.UpdatePwd)
 }
