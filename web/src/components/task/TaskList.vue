@@ -292,30 +292,39 @@ async function handleDeleteTask(taskId: string) {
   }
 }
 
-// 格式化创建时间的函数
-function formatCreatedAt(dateString: string) {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+// 直接解析后端时间字符串，避免时区转换
+function parseBackendDateTime(dateString: string): { year: string, month: string, day: string, hours: string, minutes: string, seconds: string } {
+  if (!dateString) return { year: '', month: '', day: '', hours: '', minutes: '', seconds: '' };
+
+  // 后端返回格式: "2025-06-16T11:28:00Z" 或 "2025-06-16T10:28:49.8914963+08:00"
+  // 直接解析字符串，不使用 new Date()
+  const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (match) {
+    const [, year, month, day, hours, minutes, seconds] = match;
+    return { year, month, day, hours, minutes, seconds };
+  }
+
+  return { year: '', month: '', day: '', hours: '', minutes: '', seconds: '' };
 }
 
-// 格式化截止日期的函数
+// 格式化创建时间的函数 - 直接解析字符串
+function formatCreatedAt(dateString: string) {
+  if (!dateString) return '';
+
+  const { year, month, day, hours, minutes } = parseBackendDateTime(dateString);
+  if (!year) return '';
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+// 格式化截止日期的函数 - 直接解析字符串
 function formatDueDate(dateString: string) {
   if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
+
+  const { year, month, day, hours, minutes, seconds } = parseBackendDateTime(dateString);
+  if (!year) return '';
+
+  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 }
 
 // For pagination
@@ -545,7 +554,7 @@ onMounted(() => {
 
     <!-- 编辑任务抽屉组件 -->
     <AppDrawer :is-open="showEditTaskDrawer" :title="'编辑任务'" @close="closeEditTaskDrawer">
-      <TaskEditForm v-if="editingTaskId" :task-id="editingTaskId" :can-operate="canOperate" :is-drawer-mode="true" 
+      <TaskEditForm v-if="editingTaskId" :task-id="editingTaskId" :can-operate="canOperate" :is-drawer-mode="true"
         @close="closeEditTaskDrawer" @task-updated="handleTaskUpdated" />
     </AppDrawer>
   </div>

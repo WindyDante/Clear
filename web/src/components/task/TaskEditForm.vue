@@ -107,14 +107,16 @@ function openDatePicker() {
 function handleDateSelect(dateStr: string) {
   // dateStr 格式为 YYYY-MM-DD
   const [year, month, day] = dateStr.split('-').map(Number);
-  const date = new Date(year, month - 1, day); // month is 0-indexed
-
+  
   // 使用当前选择的时间
   const [hours, minutes] = editTask.dueTime.split(':').map(Number);
-  date.setHours(hours, minutes);
-
-  // 格式化为ISO字符串并保存
-  editTask.dueDate = date.toISOString();
+  
+  // 创建本地时间，避免时区转换
+  const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
+  
+  // 直接使用本地时间字符串，避免ISO转换
+  const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+  editTask.dueDate = formattedDate;
   showDatePickerDrawer.value = false;
 }
 
@@ -129,9 +131,19 @@ function handleTimeChange() {
 
   // 如果已经选择了日期，则更新日期时间
   if (editTask.dueDate) {
-    const date = new Date(editTask.dueDate);
-    date.setHours(parseInt(selectedHour.value), parseInt(selectedMinute.value));
-    editTask.dueDate = date.toISOString();
+    // 解析现有日期
+    const existingDate = new Date(editTask.dueDate);
+    const year = existingDate.getFullYear();
+    const month = existingDate.getMonth() + 1;
+    const day = existingDate.getDate();
+    
+    // 使用新的时间
+    const hours = parseInt(selectedHour.value);
+    const minutes = parseInt(selectedMinute.value);
+    
+    // 重新构建日期字符串，避免时区转换
+    const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+    editTask.dueDate = formattedDate;
   }
 }
 

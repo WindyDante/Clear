@@ -78,11 +78,12 @@ async function handleApiResponse<T>(
   }
 }
 
-// 辅助函数：将日期格式化为 "yyyy-MM-dd HH:mm:ss" 格式
+// 辅助函数：将日期格式化为 "yyyy-MM-dd HH:mm:ss" 格式（避免时区转换）
 function formatDateToString(dateString: string | null): string | null {
   if (!dateString) return null;
 
   const date = new Date(dateString);
+  // 使用本地时间而非 UTC 时间，避免时区转换
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
@@ -427,7 +428,7 @@ const api = {
     }
 
     return handleApiResponse<string>(
-      () => fetch(`${API_BASE_URL}/todo/delTodo/${taskId}`, {
+      () => fetch(`${API_BASE_URL}/todo/${taskId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
