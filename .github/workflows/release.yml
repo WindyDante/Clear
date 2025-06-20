@@ -166,13 +166,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-docker:
+   build-docker:
     name: Build and Push Docker Images
     runs-on: ubuntu-latest
     needs: [build-frontend, build-binaries]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up environment variables
+        run: |
+          echo "REPO_OWNER_LOWER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -200,8 +204,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/clear:${{ github.ref_name }}
-            ghcr.io/${{ github.repository_owner }}/clear:latest
+            ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:${{ github.ref_name }}
+            ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:latest
             docker.io/${{ secrets.DOCKERHUB_USERNAME }}/clear:${{ github.ref_name }}
             docker.io/${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
           cache-from: type=gha
