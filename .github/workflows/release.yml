@@ -137,47 +137,43 @@ jobs:
 
       - name: Package backend binary
         run: |
-          cd dist
-          
-          # 再次检查二进制文件
           echo "Files in dist before packaging:"
-          ls -la
+          ls -la dist/
           
+          # 🔧 修复：在根目录操作，不要 cd 到 dist
           if [ "${{ matrix.goos }}" = "windows" ]; then
-            if [ -f "clear.exe" ]; then
+            if [ -f "dist/clear.exe" ]; then
               echo "Packaging Windows binary..."
-              zip -r clear-${{ matrix.goos }}-${{ matrix.goarch }}.zip clear.exe
-              echo "✅ Created: clear-${{ matrix.goos }}-${{ matrix.goarch }}.zip"
+              (cd dist && zip -r clear-${{ matrix.goos }}-${{ matrix.goarch }}.zip clear.exe)
+              echo "✅ Created: dist/clear-${{ matrix.goos }}-${{ matrix.goarch }}.zip"
             else
-              echo "❌ clear.exe not found for packaging"
+              echo "❌ clear.exe not found"
               exit 1
             fi
           else
-            if [ -f "clear" ]; then
+            if [ -f "dist/clear" ]; then
               echo "Packaging Unix binary..."
-              tar -czvf clear-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz clear
-              echo "✅ Created: clear-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz"
+              (cd dist && tar -czvf clear-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz clear)
+              echo "✅ Created: dist/clear-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz"
             else
-              echo "❌ clear binary not found for packaging"
+              echo "❌ clear binary not found"
               exit 1
             fi
           fi
           
           echo "Final files in dist:"
-          ls -la
+          ls -la dist/
           
-          # 🔧 修复：验证压缩文件确实存在
+          # 验证压缩文件
           echo "Checking packaged files:"
-          ls -la *.tar.gz *.zip 2>/dev/null || echo "No archive files found"
+          ls -la dist/*.tar.gz dist/*.zip 2>/dev/null || echo "No archive files found"
 
       - name: Upload backend artifact
         uses: actions/upload-artifact@v4
         with:
           name: clear-${{ matrix.goos }}-${{ matrix.goarch }}-asset
-          # 🔧 修复：因为我们 cd 到了 dist 目录，所以压缩文件在 dist/ 下
-          path: |
-            dist/*.tar.gz
-            dist/*.zip
+          # 🔧 修复：确保路径正确
+          path: dist/*.tar.gz dist/*.zip
           retention-days: 1
 
   create-release:
