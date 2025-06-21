@@ -140,7 +140,6 @@ jobs:
           echo "Files in dist before packaging:"
           ls -la dist/
           
-          # 🔧 修复：在根目录操作，不要 cd 到 dist
           if [ "${{ matrix.goos }}" = "windows" ]; then
             if [ -f "dist/clear.exe" ]; then
               echo "Packaging Windows binary..."
@@ -164,16 +163,22 @@ jobs:
           echo "Final files in dist:"
           ls -la dist/
           
-          # 验证压缩文件
-          echo "Checking packaged files:"
-          ls -la dist/*.tar.gz dist/*.zip 2>/dev/null || echo "No archive files found"
+          # 🔧 详细验证压缩文件
+          echo "Verifying archive files:"
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            ls -la dist/clear-${{ matrix.goos }}-${{ matrix.goarch }}.zip
+          else
+            ls -la dist/clear-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+          fi
 
       - name: Upload backend artifact
         uses: actions/upload-artifact@v4
         with:
           name: clear-${{ matrix.goos }}-${{ matrix.goarch }}-asset
-          # 🔧 修复：确保路径正确
-          path: dist/*.tar.gz dist/*.zip
+          # 🔧 修复：使用具体的文件路径，而不是通配符
+          path: |
+            dist/clear-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+            dist/clear-${{ matrix.goos }}-${{ matrix.goarch }}.zip
           retention-days: 1
 
   create-release:
@@ -236,22 +241,49 @@ jobs:
         run: |
           echo "REPO_OWNER_LOWER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      # 🔧 下载所有构建产物
-      - name: Download all artifacts
+      # 🔧 下载 Linux 构建产物（Docker 只需要 Linux）
+      - name: Download Linux AMD64 binary
         uses: actions/download-artifact@v4
         with:
-          path: ./artifacts
+          name: clear-linux-amd64-asset
+          path: ./linux-amd64/
+
+      - name: Download Linux ARM64 binary
+        uses: actions/download-artifact@v4
+        with:
+          name: clear-linux-arm64-asset
+          path: ./linux-arm64/
+
+      - name: Download frontend assets
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-asset
+          path: ./frontend/
 
       - name: Prepare Docker context
         run: |
           echo "Preparing Docker build context..."
           
-          # 验证下载的文件
-          echo "Artifacts structure:"
-          find artifacts -type f -name "*.tar.gz" -o -name "*.zip"
+          # 解压二进制文件到对应目录
+          echo "Extracting AMD64 binary..."
+          cd linux-amd64 && tar -xzf clear-linux-amd64.tar.gz && cd ..
           
-          # 确保目录结构正确
-          ls -la artifacts/
+          echo "Extracting ARM64 binary..."
+          cd linux-arm64 && tar -xzf clear-linux-arm64.tar.gz && cd ..
+          
+          # 解压前端文件
+          echo "Extracting frontend assets..."
+          mkdir -p web/dist
+          cd web/dist && tar -xzf ../../frontend/frontend.tar.gz && cd ../..
+          
+          # 验证文件
+          echo "Verifying extracted files:"
+          echo "AMD64 binary:"
+          ls -la linux-amd64/
+          echo "ARM64 binary:"
+          ls -la linux-arm64/
+          echo "Frontend files count:"
+          ls -1 web/dist/ | wc -l
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -272,12 +304,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 🔧 使用优化的 Dockerfile
       - name: Build and push Docker images
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile.optimized  # 指定使用优化版本
+          file: ./Dockerfile.optimized  # 使用优化的 Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |

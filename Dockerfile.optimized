@@ -14,17 +14,17 @@ RUN mkdir -p /app/data && \
     mkdir -p /app/template && \
     mkdir -p /app/config
 
-# 将所有平台的 clear 二进制和前端资源复制进镜像
-COPY /artifacts/clear-linux-amd64-asset/* /tmp/
-COPY /artifacts/clear-linux-arm64-asset/* /tmp/
-COPY /artifacts/frontend-asset/frontend.tar.gz /tmp/
-COPY /config/ /app/config/
+# 🔧 修复：使用正确的路径
+COPY linux-amd64/ /tmp/linux-amd64/
+COPY linux-arm64/ /tmp/linux-arm64/
+COPY frontend/frontend.tar.gz /tmp/
+COPY config/ /app/config/
 
-# 解压对应平台的 clear 二进制
+# 🔧 修复：解压对应平台的 clear 二进制
 RUN if [ "$TARGETOS" = "linux" ] && [ "$TARGETARCH" = "amd64" ]; then \
-       tar -xzf /tmp/clear-linux-amd64.tar.gz -C /tmp && mv /tmp/clear /app/clear; \
+       tar -xzf /tmp/linux-amd64/clear-linux-amd64.tar.gz -C /tmp && mv /tmp/clear /app/clear; \
     elif [ "$TARGETOS" = "linux" ] && [ "$TARGETARCH" = "arm64" ]; then \
-       tar -xzf /tmp/clear-linux-arm64.tar.gz -C /tmp && mv /tmp/clear /app/clear; \
+       tar -xzf /tmp/linux-arm64/clear-linux-arm64.tar.gz -C /tmp && mv /tmp/clear /app/clear; \
     else \
        echo "Unsupported platform: $TARGETOS/$TARGETARCH$TARGETVARIANT" && exit 1; \
     fi && \
