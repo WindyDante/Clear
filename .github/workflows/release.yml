@@ -8,7 +8,6 @@ on:
 permissions:
   contents: write
   packages: write
-
 jobs:
   build-frontend:
     name: Build Frontend
@@ -144,7 +143,6 @@ jobs:
           
           # 复制配置文件
           cp -r config release/
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
