@@ -1,0 +1,61 @@
+# =================== 构建阶段 ===================
+FROM alpine:latest AS builder
+
+WORKDIR /app
+ENV TZ=Asia/Shanghai
+
+# 获取构建平台信息
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETVARIANT
+
+# 创建必要的目录
+RUN mkdir -p /app/data && \
+    mkdir -p /app/template && \
+    mkdir -p /app/config
+
+# 将所有平台的 clear 二进制和前端资源复制进镜像
+COPY /artifacts/clear-linux-amd64-asset/* /tmp/
+COPY /artifacts/clear-linux-arm64-asset/* /tmp/
+COPY /artifacts/frontend-asset/frontend.tar.gz /tmp/
+COPY /config/ /app/config/
+
+# 解压对应平台的 clear 二进制
+RUN if [ "$TARGETOS" = "linux" ] && [ "$TARGETARCH" = "amd64" ]; then \
+       tar -xzf /tmp/clear-linux-amd64.tar.gz -C /tmp && mv /tmp/clear /app/clear; \
+    elif [ "$TARGETOS" = "linux" ] && [ "$TARGETARCH" = "arm64" ]; then \
+       tar -xzf /tmp/clear-linux-arm64.tar.gz -C /tmp && mv /tmp/clear /app/clear; \
+    else \
+       echo "Unsupported platform: $TARGETOS/$TARGETARCH$TARGETVARIANT" && exit 1; \
+    fi && \
+    # 解压前端静态资源到 /app/template
+    tar -xzf /tmp/frontend.tar.gz -C /app/template && \
+    # 清理临时文件
+    rm -rf /tmp/*
+
+# =================== 最终镜像 ===================
+FROM alpine:latest
+
+WORKDIR /app
+ENV TZ=Asia/Shanghai
+
+# 安装运行时依赖
+RUN apk add --no-cache ca-certificates tzdata
+
+# 从构建阶段复制文件
+COPY --from=builder /app /app
+
+# 验证文件
+RUN ls -lh /app
+
+# 设置 clear 二进制文件的权限
+RUN chmod +x /app/clear
+
+# 创建数据目录并设置权限
+RUN mkdir -p /app/data && chmod -R 777 /app/data
+
+# 暴露端口
+EXPOSE 6633
+
+# 运行后端服务
+CMD ["/app/clear"]

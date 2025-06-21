@@ -118,29 +118,53 @@ jobs:
             BINARY_NAME="clear.exe"
           fi
           
-          # 根据平台选择编译方式
-          if [ "${{ matrix.goos }}" = "linux" ] && [ "${{ matrix.goarch }}" = "arm64" ]; then
-            echo "Building for linux/arm64 with musl-gcc..."
-            CC=aarch64-linux-musl-gcc CGO_ENABLED=1 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
-            go build -o dist/${BINARY_NAME} ./cmd/server/main.go
-          elif [ "${{ matrix.goos }}" = "linux" ]; then
-            echo "Building for linux/amd64 with CGO..."
-            CGO_ENABLED=1 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
-            go build -o dist/${BINARY_NAME} ./cmd/server/main.go
+          echo "Building for ${{ matrix.goos }}/${{ matrix.goarch }}..."
+          
+          # 🔧 简化：所有平台都使用 CGO_ENABLED=0
+          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
+          go build -v -o dist/${BINARY_NAME} ./cmd/server/main.go
+          
+          # 检查构建结果
+          if [ -f "dist/${BINARY_NAME}" ]; then
+            echo "✅ Binary built successfully: dist/${BINARY_NAME}"
+            ls -la dist/${BINARY_NAME}
+            file dist/${BINARY_NAME}
           else
-            echo "Building for ${{ matrix.goos }}/${{ matrix.goarch }}..."
-            CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
-            go build -o dist/${BINARY_NAME} ./cmd/server/main.go
+            echo "❌ Binary build failed"
+            ls -la dist/
+            exit 1
           fi
 
       - name: Package backend binary
         run: |
           cd dist
+          
+          # 再次检查二进制文件
+          echo "Files in dist before packaging:"
+          ls -la
+          
           if [ "${{ matrix.goos }}" = "windows" ]; then
-            zip -r clear-${{ matrix.goos }}-${{ matrix.goarch }}.zip clear.exe
+            if [ -f "clear.exe" ]; then
+              echo "Packaging Windows binary..."
+              zip -r clear-${{ matrix.goos }}-${{ matrix.goarch }}.zip clear.exe
+              echo "✅ Created: clear-${{ matrix.goos }}-${{ matrix.goarch }}.zip"
+            else
+              echo "❌ clear.exe not found for packaging"
+              exit 1
+            fi
           else
-            tar -czvf clear-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz clear
+            if [ -f "clear" ]; then
+              echo "Packaging Unix binary..."
+              tar -czvf clear-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz clear
+              echo "✅ Created: clear-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz"
+            else
+              echo "❌ clear binary not found for packaging"
+              exit 1
+            fi
           fi
+          
+          echo "Final files in dist:"
+          ls -la
 
       - name: Upload backend artifact
         uses: actions/upload-artifact@v4
@@ -209,6 +233,23 @@ jobs:
         run: |
           echo "REPO_OWNER_LOWER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
+      # 🔧 下载所有构建产物
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Prepare Docker context
+        run: |
+          echo "Preparing Docker build context..."
+          
+          # 验证下载的文件
+          echo "Artifacts structure:"
+          find artifacts -type f -name "*.tar.gz" -o -name "*.zip"
+          
+          # 确保目录结构正确
+          ls -la artifacts/
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         
@@ -228,10 +269,12 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # 🔧 使用优化的 Dockerfile
       - name: Build and push Docker images
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ./Dockerfile.optimized  # 指定使用优化版本
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
@@ -239,10 +282,5 @@ jobs:
             ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:latest
             docker.io/${{ secrets.DOCKERHUB_USERNAME }}/clear:${{ github.ref_name }}
             docker.io/${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
-          # 🔧 优化：增强的缓存策略
-          cache-from: |
-            type=gha
-            type=registry,ref=ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:buildcache
-          cache-to: |
-            type=gha,mode=max
-            type=registry,ref=ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:buildcache,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
