@@ -210,7 +210,6 @@ jobs:
             cp "$file" release/
           done
           
-          # 🔧 修复：只打包 config.yaml，排除 Go 源码文件
           if [ -f "config/config.yaml" ]; then
             mkdir -p tmp-config
             cp config/config.yaml tmp-config/
