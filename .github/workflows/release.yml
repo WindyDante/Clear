@@ -165,12 +165,19 @@ jobs:
           
           echo "Final files in dist:"
           ls -la
+          
+          # 🔧 修复：验证压缩文件确实存在
+          echo "Checking packaged files:"
+          ls -la *.tar.gz *.zip 2>/dev/null || echo "No archive files found"
 
       - name: Upload backend artifact
         uses: actions/upload-artifact@v4
         with:
           name: clear-${{ matrix.goos }}-${{ matrix.goarch }}-asset
-          path: dist/*.tar.gz dist/*.zip
+          # 🔧 修复：因为我们 cd 到了 dist 目录，所以压缩文件在 dist/ 下
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
           retention-days: 1
 
   create-release:
