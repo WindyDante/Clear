@@ -221,8 +221,26 @@ jobs:
             - `config/` - 配置文件
             
             ### 🐳 Docker 使用
+            
+            #### GitHub Container Registry
             ```bash
             docker pull ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:${{ github.ref_name }}
+            docker pull ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:latest
+            ```
+            
+            #### Docker Hub
+            ```bash
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/clear:${{ github.ref_name }}
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
+            ```
+            
+            ### 🚀 快速启动
+            ```bash
+            # 使用 Docker Hub (推荐)
+            docker run -d -p 6633:6633 ${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
+            
+            # 或使用 GitHub Container Registry
+            docker run -d -p 6633:6633 ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:latest
             ```
           draft: false
           prerelease: false
