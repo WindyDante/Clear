@@ -210,12 +210,15 @@ jobs:
             cp "$file" release/
           done
           
-          # 🔧 添加：打包配置文件
-          if [ -d "config" ]; then
-            tar -czvf release/config.tar.gz config/
-            echo "✅ Config files packaged"
+          # 🔧 修复：只打包 config.yaml，排除 Go 源码文件
+          if [ -f "config/config.yaml" ]; then
+            mkdir -p tmp-config
+            cp config/config.yaml tmp-config/
+            tar -czvf release/config.tar.gz -C tmp-config config.yaml
+            rm -rf tmp-config
+            echo "✅ Config file (config.yaml) packaged"
           else
-            echo "⚠️ Config directory not found"
+            echo "⚠️ config/config.yaml not found"
           fi
           
           echo "Release files:"
@@ -235,10 +238,14 @@ jobs:
             #### 🐳 Docker 部署（推荐）
             ```bash
             # Docker Hub (推荐)
-            docker run -d -p 6633:6633 ${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
+            docker run -d \
+              --name clear-app \
+              -p 6277:6633 \
+              -v $(pwd)/data:/app/data \
+              -e JWT_SECRET="Welcome to Clear!" \
+              ${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
             
-            # GitHub Container Registry
-            docker run -d -p 6633:6633 ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:latest
+            # 访问地址: http://localhost:6277
             ```
             
             #### 📁 二进制部署用户
@@ -246,7 +253,7 @@ jobs:
             **所需文件：**
             - `frontend.tar.gz` - 前端静态文件
             - `clear-*-*.tar.gz` - 各平台后端二进制文件
-            - `config.tar.gz` - 配置文件
+            - `config.tar.gz` - 配置文件 (只包含 config.yaml)
             
             **部署步骤：**
             ```bash
@@ -260,27 +267,14 @@ jobs:
             
             # 3. 解压所有文件
             tar -xzf clear-linux-amd64.tar.gz              # 解压二进制文件
-            tar -xzf config.tar.gz                         # 解压配置文件
+            tar -xzf config.tar.gz                         # 解压配置文件 (config.yaml)
             mkdir -p template && tar -xzf frontend.tar.gz -C template/  # 解压前端文件
             
             # 4. 设置权限并启动
             chmod +x clear
             ./clear
-            ```
             
-            **其他平台：**
-            ```bash
-            # Linux ARM64 (树莓派、ARM 服务器)
-            wget https://github.com/${{ github.repository }}/releases/latest/download/clear-linux-arm64.tar.gz
-            
-            # macOS Intel
-            wget https://github.com/${{ github.repository }}/releases/latest/download/clear-darwin-amd64.tar.gz
-            
-            # macOS Apple Silicon (M1/M2)
-            wget https://github.com/${{ github.repository }}/releases/latest/download/clear-darwin-arm64.tar.gz
-            
-            # Windows
-            wget https://github.com/${{ github.repository }}/releases/latest/download/clear-windows-amd64.zip
+            # 访问地址: http://localhost:6633 (默认端口)
             ```
             
             ### 🐳 Docker 使用详情
@@ -288,73 +282,57 @@ jobs:
             #### Docker Hub (推荐)
             ```bash
             # 拉取镜像
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/clear:${{ github.event.inputs.tag || github.ref_name }}
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
             
             # 运行容器
             docker run -d \
               --name clear-app \
               --restart unless-stopped \
-              -p 6633:6633 \
+              -p 6277:6633 \
               -v $(pwd)/data:/app/data \
+              -e JWT_SECRET="Welcome to Clear!" \
               ${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
+            ```
+            
+            #### Docker Compose (推荐)
+            ```yaml
+            version: '3'
+            services:
+              clear:
+                image: ${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
+                container_name: clear
+                ports:
+                  - "6277:6633"
+                volumes:
+                  - ./data:/app/data
+                environment:
+                  - JWT_SECRET=Welcome to Clear!
+                restart: unless-stopped
             ```
             
             #### GitHub Container Registry
             ```bash
-            # 拉取镜像
-            docker pull ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:${{ github.event.inputs.tag || github.ref_name }}
-            docker pull ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:latest
-            
-            # 运行容器
+            # 使用 GitHub 镜像
             docker run -d \
               --name clear-app \
               --restart unless-stopped \
-              -p 6633:6633 \
+              -p 6277:6633 \
               -v $(pwd)/data:/app/data \
+              -e JWT_SECRET="Welcome to Clear!" \
               ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:latest
             ```
             
-            #### Docker Compose
-            ```yaml
-            version: '3.8'
-            services:
-              clear:
-                image: ${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
-                container_name: clear-app
-                ports:
-                  - "6633:6633"
-                volumes:
-                  - ./data:/app/data
-                restart: unless-stopped
-            ```
-            
-            ### 📋 架构选择指南
-            
-            **确定你的架构：**
-            ```bash
-            # Linux/macOS
-            uname -m
-            # x86_64 → 选择 amd64 版本
-            # aarch64/arm64 → 选择 arm64 版本
-            
-            # Windows
-            echo %PROCESSOR_ARCHITECTURE%
-            # AMD64 → 选择 amd64 版本
-            ```
-            
-            **平台对应关系：**
-            - `clear-linux-amd64.tar.gz` - Linux Intel/AMD 64位
-            - `clear-linux-arm64.tar.gz` - Linux ARM 64位 (树莓派等)
-            - `clear-darwin-amd64.tar.gz` - macOS Intel 芯片
-            - `clear-darwin-arm64.tar.gz` - macOS Apple Silicon (M1/M2)
-            - `clear-windows-amd64.zip` - Windows 64位
-            
             ### 🔧 配置说明
             
-            - **Docker 用户**: 配置文件已内置，可通过环境变量或挂载卷覆盖
-            - **二进制用户**: 请下载 `config.tar.gz` 并解压到应用目录
-            - **配置文件位置**: `./config/config.yaml`
+            - **Docker 用户**: 
+              - 配置通过环境变量设置 (如 `JWT_SECRET`)
+              - 数据持久化通过卷挂载 `./data:/app/data`
+              - 访问地址: http://localhost:6277
+            
+            - **二进制用户**: 
+              - 下载 `config.tar.gz` 获取 `config.yaml` 配置文件
+              - 可编辑 `config.yaml` 自定义配置
+              - 默认访问地址: http://localhost:6633
             
             ### 📊 文件说明
             
@@ -366,7 +344,7 @@ jobs:
             | `clear-darwin-amd64.tar.gz` | ~8.4MB | macOS Intel 二进制 |
             | `clear-darwin-arm64.tar.gz` | ~7.9MB | macOS Apple Silicon 二进制 |
             | `clear-windows-amd64.zip` | ~8.7MB | Windows 二进制 |
-            | `config.tar.gz` | <1MB | 配置文件 |
+            | `config.tar.gz` | <1KB | 配置文件 (config.yaml) |
           draft: false
           prerelease: false
         env:
