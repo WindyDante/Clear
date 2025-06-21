@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'  # 当推送 v1.0.0 这样的标签时触发
+  workflow_dispatch:  # 允许手动触发
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
 
 permissions:
   contents: write
@@ -48,7 +54,7 @@ jobs:
   build-binaries:
     name: Build Binaries
     runs-on: ubuntu-latest
-    needs: build-frontend
+    # 🔧 优化：移除依赖，与前端并行构建
     strategy:
       matrix:
         include:
@@ -69,12 +75,37 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.24.3'
+          # 🔧 优化：添加 Go 缓存
+          cache: true
+          cache-dependency-path: go.sum
+
+      # 🔧 优化：添加 Go 模块缓存
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ matrix.goos }}-${{ matrix.goarch }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.goos }}-${{ matrix.goarch }}-
+            ${{ runner.os }}-go-
+
+      # 🔧 优化：缓存 musl 编译器
+      - name: Cache musl compiler
+        if: matrix.goos == 'linux' && matrix.goarch == 'arm64'
+        uses: actions/cache@v4
+        with:
+          path: aarch64-linux-musl-cross
+          key: musl-aarch64-2025-06-21
 
       - name: Setup musl.cc for ARM64
         if: matrix.goos == 'linux' && matrix.goarch == 'arm64'
         run: |
-          wget https://github.com/WindyDante/musl-compilers/releases/download/2025-06-21/aarch64-linux-musl-cross.tgz
-          tar -xf aarch64-linux-musl-cross.tgz
+          if [ ! -d "aarch64-linux-musl-cross" ]; then
+            wget https://github.com/WindyDante/musl-compilers/releases/download/2025-06-21/aarch64-linux-musl-cross.tgz
+            tar -xf aarch64-linux-musl-cross.tgz
+          fi
           echo "$(pwd)/aarch64-linux-musl-cross/bin" >> $GITHUB_PATH
 
       - name: Build backend binary
@@ -208,5 +239,10 @@ jobs:
             ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:latest
             docker.io/${{ secrets.DOCKERHUB_USERNAME }}/clear:${{ github.ref_name }}
             docker.io/${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # 🔧 优化：增强的缓存策略
+          cache-from: |
+            type=gha
+            type=registry,ref=ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:buildcache
+          cache-to: |
+            type=gha,mode=max
+            type=registry,ref=ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:buildcache,mode=max
