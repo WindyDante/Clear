@@ -52,6 +52,51 @@ Clear 是一款现代化的待办事项管理应用，采用全栈架构设计�
 
 ## 🚀 快速开始
 
+### 📦 生产环境部署（推荐）
+
+**👉 [前往 Releases 页面获取最新版本并部署](https://github.com/WindyDante/Clear/releases/latest)**
+
+Releases 页面为您提供：
+
+#### 🐳 Docker 部署
+- ✅ **一键启动** - 复制粘贴即可运行
+- ✅ **多架构支持** - 自动适配 AMD64/ARM64
+- ✅ **生产就绪** - 完整的 Docker Compose 配置
+
+#### 🖥️ 二进制部署  
+- ✅ **Linux 服务器** - 支持 AMD64 和 ARM64 架构
+- ✅ **详细步骤** - 包含完整的部署指南
+- ✅ **轻量高效** - 无需额外依赖，直接运行
+
+> 💡 **为什么选择 Releases 部署？**  
+> Releases 提供经过测试的稳定版本，包含预编译的二进制文件和优化的 Docker 镜像，部署更简单、更可靠。
+
+### 🛠️ 本地开发体验
+
+如果您想快速体验或进行本地开发，可以使用本仓库的开发环境：
+
+```bash
+# 快速体验（Docker）
+git clone https://github.com/WindyDante/Clear.git
+cd Clear
+docker-compose up -d
+
+# 访问地址: http://localhost:6277
+```
+
+**开发 vs 生产部署对比：**
+
+| 方式 | 适用场景 | 优势 | 劣势 |
+|------|----------|------|------|
+| 📦 Releases 部署 | 生产环境、正式使用 | 稳定、优化、简单 | - |
+| 🛠️ 本地开发 | 体验功能、二次开发 | 最新代码、可定制 | 需要构建环境 |
+
+---
+
+**🎯 准备部署？[立即前往 Releases 页面](https://github.com/WindyDante/Clear/releases/latest)**
+
+---
+
 ## 🔮 未来功能规划
 
 我们致力于持续改进 Clear，以下是即将推出的功能特性：

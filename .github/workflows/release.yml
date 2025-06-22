@@ -177,11 +177,12 @@ jobs:
           # 复制前端资源
           cp artifacts/frontend-asset/frontend.tar.gz release/
           
-          # 复制所有后端二进制文件
-          find artifacts -name "*.tar.gz" -o -name "*.zip" | while read file; do
-            cp "$file" release/
-          done
+          # 🔧 修复：只复制 Linux 平台的二进制文件
+          echo "Copying Linux binaries..."
+          cp artifacts/clear-linux-amd64-asset/clear-linux-amd64.tar.gz release/
+          cp artifacts/clear-linux-arm64-asset/clear-linux-arm64.tar.gz release/
           
+          # 打包配置文件
           if [ -f "config/config.yaml" ]; then
             mkdir -p tmp-config
             cp config/config.yaml tmp-config/
@@ -202,71 +203,95 @@ jobs:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           files: release/*
           body: |
-            ## 🚀 Release ${{ github.event.inputs.tag || github.ref_name }}
+            ## 🚀 Clear ${{ github.event.inputs.tag || github.ref_name }}
             
-            ### 📦 快速开始
+            简洁高效的待办事项管理应用，支持 Linux 多架构部署。
             
-            #### 🐳 Docker 部署（推荐）
+            ### 🐳 Docker 部署（推荐）
+            
+            #### 方法一：Docker Compose
             ```bash
-            # Docker Hub (推荐)
-            docker run -d \
-              --name clear-app \
-              -p 6277:6633 \
-              -v $(pwd)/data:/app/data \
-              -e JWT_SECRET="Welcome to Clear!" \
-              ${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
+            # 下载并启动
+            wget https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.yml
+            docker-compose up -d
             
             # 访问地址: http://localhost:6277
             ```
             
-            #### 📁 Linux 服务器部署
-            
-            **所需文件：**
-            - `frontend.tar.gz` - 前端静态文件
-            - `clear-linux-*.tar.gz` - Linux 二进制文件 (AMD64/ARM64)
-            - `config.tar.gz` - 配置文件
-            
-            **部署步骤：**
+            #### 方法二：Docker Run
             ```bash
-            # 1. 创建应用目录
+            docker run -d \
+              --name clear \
+              -p 6277:6633 \
+              -v $(pwd)/data:/app/data \
+              -e JWT_SECRET="Welcome to Clear!" \
+              ${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
+            ```
+            
+            ### 🖥️ 二进制部署
+            
+            #### AMD64 服务器（Intel/AMD）
+            ```bash
             mkdir clear-app && cd clear-app
             
-            # 2. 下载对应架构的文件
-            # AMD64 服务器：
+            # 下载文件
             wget https://github.com/${{ github.repository }}/releases/latest/download/clear-linux-amd64.tar.gz
-            # ARM64 服务器：
-            # wget https://github.com/${{ github.repository }}/releases/latest/download/clear-linux-arm64.tar.gz
-            
-            # 下载前端和配置
             wget https://github.com/${{ github.repository }}/releases/latest/download/frontend.tar.gz
             wget https://github.com/${{ github.repository }}/releases/latest/download/config.tar.gz
             
-            # 3. 解压所有文件
-            tar -xzf clear-linux-amd64.tar.gz              # 解压二进制文件
-            tar -xzf config.tar.gz                         # 解压配置文件
-            mkdir -p template && tar -xzf frontend.tar.gz -C template/  # 解压前端文件
-            
-            # 4. 设置权限并启动
-            chmod +x clear
-            ./clear
+            # 解压启动
+            tar -xzf clear-linux-amd64.tar.gz && tar -xzf config.tar.gz
+            mkdir -p template && tar -xzf frontend.tar.gz -C template/
+            chmod +x clear && ./clear
             
             # 访问地址: http://localhost:6633
             ```
             
-            ### 📊 文件说明
+            #### ARM64 服务器（树莓派等）
+            ```bash
+            mkdir clear-app && cd clear-app
             
-            | 文件 | 架构 | 大小 | 说明 |
-            |------|------|------|------|
-            | `frontend.tar.gz` | - | ~1.3MB | 前端静态文件 |
-            | `clear-linux-amd64.tar.gz` | x86_64 | ~8.5MB | Linux AMD64 二进制 |
-            | `clear-linux-arm64.tar.gz` | ARM64 | ~7.9MB | Linux ARM64 二进制 |
-            | `config.tar.gz` | - | <1KB | 配置文件 |
+            # 下载文件
+            wget https://github.com/${{ github.repository }}/releases/latest/download/clear-linux-arm64.tar.gz
+            wget https://github.com/${{ github.repository }}/releases/latest/download/frontend.tar.gz
+            wget https://github.com/${{ github.repository }}/releases/latest/download/config.tar.gz
             
-            ### 🖥️ 服务器架构支持
+            # 解压启动
+            tar -xzf clear-linux-arm64.tar.gz && tar -xzf config.tar.gz
+            mkdir -p template && tar -xzf frontend.tar.gz -C template/
+            chmod +x clear && ./clear
             
-            - ✅ **Linux AMD64** - Intel/AMD 服务器
-            - ✅ **Linux ARM64** - ARM 服务器 (如树莓派、云服务器 ARM 实例)
-            - 🐳 **Docker** - 多架构支持 (AMD64/ARM64)
+            # 访问地址: http://localhost:6633
+            ```
+            
+            ### 📦 文件说明
+            
+            | 文件 | 大小 | 说明 |
+            |------|------|------|
+            | `clear-linux-amd64.tar.gz` | ~8MB | Intel/AMD 服务器二进制 |
+            | `clear-linux-arm64.tar.gz` | ~8MB | ARM 服务器二进制（树莓派等） |
+            | `frontend.tar.gz` | ~1MB | 前端静态文件 |
+            | `config.tar.gz` | <1KB | 配置文件模板 |
+            
+            ### ✨ 特性
+            
+            - 🎨 简洁美观的 Vue 3 界面
+            - 📝 智能任务分类和标签管理  
+            - 🔐 JWT 安全认证
+            - 💾 SQLite 本地存储，数据自主可控
+            - 🐳 Docker 多架构支持
+            - ⚡ 轻量高效，仅需 4MB 内存
+            
+            ### 🔧 配置
+            
+            - **JWT密钥**：建议生产环境修改 `JWT_SECRET` 环境变量
+            - **数据目录**：`./data/` （可备份整个目录）
+            - **端口**：默认 6633，可通过 `PORT` 环境变量修改
+            
+            ---
+            
+            **📖 完整文档**：[README.md](https://github.com/${{ github.repository }})  
+            **🌐 在线体验**：[https://clear.1wind.cn](https://clear.1wind.cn)
           draft: false
           prerelease: false
         env:
@@ -351,13 +376,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile.optimized  # 使用优化的 Dockerfile
+          file: ./Dockerfile.optimized
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:${{ github.ref_name }}
+            ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:${{ github.event.inputs.tag || github.ref_name }}
             ghcr.io/${{ env.REPO_OWNER_LOWER }}/clear:latest
-            docker.io/${{ secrets.DOCKERHUB_USERNAME }}/clear:${{ github.ref_name }}
+            docker.io/${{ secrets.DOCKERHUB_USERNAME }}/clear:${{ github.event.inputs.tag || github.ref_name }}
             docker.io/${{ secrets.DOCKERHUB_USERNAME }}/clear:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
