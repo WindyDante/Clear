@@ -1,8 +1,8 @@
 import { Task } from '../store/task'
 import { useToast } from '../composables/useToast'
 
-// 从环境变量获取API基础URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+// 从环境变量获取API基础URL，如果未定义则使用默认值
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 // 全局的Toast函数 - 由于组合API不能在模块作用域直接调用，我们将延迟获取它
 let _showToast: ReturnType<typeof useToast>['showToast'] | null = null;
