@@ -70,7 +70,7 @@ const (
 
 // Version
 const (
-	Version = "1.0.5" // 当前版本号
+	Version = "1.0.4" // 当前版本号
 )
 
 // console Banner
