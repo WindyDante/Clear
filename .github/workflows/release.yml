@@ -108,6 +108,14 @@ jobs:
           fi
           echo "$(pwd)/aarch64-linux-musl-cross/bin" >> $GITHUB_PATH
 
+      # 为 Windows 添加 MinGW 编译器
+      - name: Install cross-compilation tools
+        run: |
+          sudo apt-get update
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            sudo apt-get install -y gcc-mingw-w64
+          fi
+
       - name: Build backend binary
         run: |
           mkdir -p dist
@@ -120,9 +128,32 @@ jobs:
           
           echo "Building for ${{ matrix.goos }}/${{ matrix.goarch }}..."
           
-          # 🔧 简化：所有平台都使用 CGO_ENABLED=0
-          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
-          go build -v -o dist/${BINARY_NAME} ./cmd/server/main.go
+          # 🔧 修复：根据平台设置 CGO
+          if [ "${{ matrix.goos }}" = "linux" ]; then
+            if [ "${{ matrix.goarch }}" = "arm64" ]; then
+              # Linux ARM64: 使用 musl 编译器，启用 CGO
+              echo "Building Linux ARM64 with CGO and musl..."
+              CC=aarch64-linux-musl-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 \
+              go build -v -ldflags "-linkmode external -extldflags '-static'" \
+              -o dist/${BINARY_NAME} ./cmd/server/main.go
+            else
+              # Linux AMD64: 启用 CGO，静态链接
+              echo "Building Linux AMD64 with CGO..."
+              CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
+              go build -v -ldflags "-linkmode external -extldflags '-static'" \
+              -o dist/${BINARY_NAME} ./cmd/server/main.go
+            fi
+          elif [ "${{ matrix.goos }}" = "windows" ]; then
+            # Windows: 启用 CGO
+            echo "Building Windows with CGO..."
+            CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
+            go build -v -o dist/${BINARY_NAME} ./cmd/server/main.go
+          else
+            # macOS: 启用 CGO
+            echo "Building ${{ matrix.goos }}/${{ matrix.goarch }} with CGO..."
+            CGO_ENABLED=1 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
+            go build -v -o dist/${BINARY_NAME} ./cmd/server/main.go
+          fi
           
           # 检查构建结果
           if [ -f "dist/${BINARY_NAME}" ]; then
