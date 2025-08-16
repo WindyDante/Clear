@@ -10,6 +10,7 @@
 
 <p align="center">
   <a href="https://clear.1wind.cn/">🌐 在线体验</a> 
+  <a href="https://github.com/WindyDante/Clear-Desktop">Clear Desktop</a>
 </p>
 
 ---
