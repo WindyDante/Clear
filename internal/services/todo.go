@@ -49,7 +49,7 @@ func GetTodoList(userId string, TodoQueryDto dto.TodoQueryDto) (vo.PgaeResult[vo
 		TodoQueryDto.Page = 1
 	}
 	if TodoQueryDto.PageSize < 1 || TodoQueryDto.PageSize > 100 {
-		TodoQueryDto.PageSize = 3
+		TodoQueryDto.PageSize = 100
 	}
 
 	todoListVo, err := repository.PageTodo(userId, TodoQueryDto)
