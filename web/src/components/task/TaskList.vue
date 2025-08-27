@@ -336,6 +336,27 @@ function goToNextPage() {
   taskStore.nextPage()
 }
 
+// 新增：页码跳转相关
+const jumpToPage = ref('')
+
+function handleJumpToPage() {
+  const page = parseInt(jumpToPage.value)
+  if (page && page > 0 && page <= taskStore.totalPages) {
+    taskStore.goToPage(page)
+    jumpToPage.value = ''
+  } else {
+    showToast('请输入有效的页码', 'warning')
+  }
+}
+
+function handlePageSizeChange(event: Event) {
+  const target = event.target as HTMLSelectElement
+  const size = parseInt(target.value)
+  if (size > 0) {
+    taskStore.setPageSize(size)
+  }
+}
+
 // 设置分类筛选
 function filterByCategory(categoryId: number | string | undefined) {
   if (!props.canOperate && categoryId !== undefined) {
@@ -483,6 +504,35 @@ onMounted(() => {
           <input type="text" v-model="keywordInput" placeholder="输入关键字" @keyup.enter="applyKeywordFilter"
             @blur="applyKeywordFilter" class="filter-input keyword-input">
         </div>
+
+        <!-- 分页设置 -->
+        <div class="filter-group">
+          <label>分页设置:</label>
+          <div class="pagination-controls">
+            <div class="page-size-control">
+              <label class="page-size-label">每页</label>
+              <select class="page-size-select" :value="taskStore.pageSize" @change="handlePageSizeChange">
+                <option value="5">5条</option>
+                <option value="10">10条</option>
+                <option value="15">15条</option>
+                <option value="20">20条</option>
+                <option value="50">50条</option>
+              </select>
+            </div>
+            <div class="pagination-nav" v-if="taskStore.totalPages > 1">
+              <button class="pagination-btn" :disabled="taskStore.currentPage === 1" @click="goToPreviousPage">
+                ‹
+              </button>
+              <span class="page-info">{{ taskStore.currentPage }}/{{ taskStore.totalPages }}</span>
+              <button class="pagination-btn" :disabled="taskStore.currentPage === taskStore.totalPages" @click="goToNextPage">
+                ›
+              </button>
+              <input class="jump-input" v-model="jumpToPage" type="number" min="1" :max="taskStore.totalPages" 
+                placeholder="跳转" @keyup.enter="handleJumpToPage">
+              <button class="jump-btn" @click="handleJumpToPage">跳转</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 显示当前筛选 -->
@@ -532,17 +582,6 @@ onMounted(() => {
           <p v-if="task.content" class="task-description">{{ task.content }}</p>
           <p v-if="task.dueDate" class="task-due-date">截止日期: {{ formatDueDate(task.dueDate) }}</p>
         </div>
-      </div>
-
-      <!-- Pagination -->
-      <div class="pagination" v-if="taskStore.totalPages > 1">
-        <button class="pagination-btn" :disabled="taskStore.currentPage === 1" @click="goToPreviousPage">
-          &lt;
-        </button>
-        <span class="current-page">{{ taskStore.currentPage }}</span>
-        <button class="pagination-btn" :disabled="taskStore.currentPage === taskStore.totalPages" @click="goToNextPage">
-          &gt;
-        </button>
       </div>
     </div>
 
@@ -970,19 +1009,46 @@ onMounted(() => {
   margin: 4px 0 0 0;
 }
 
-.pagination {
+/* 分页控件样式 */
+.pagination-controls {
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin-top: 16px;
   gap: 12px;
-  flex-shrink: 0;
-  padding: 8px 0;
+  flex-wrap: wrap;
+}
+
+.page-size-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-size-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.page-size-select {
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--background-color);
+  color: var(--text-primary);
+  min-width: 60px;
+}
+
+.pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .pagination-btn {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -991,6 +1057,12 @@ onMounted(() => {
   border: 1px solid var(--border-color);
   cursor: pointer;
   color: var(--primary-color);
+  font-size: 14px;
+  transition: all var(--transition-speed);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: var(--primary-light);
 }
 
 .pagination-btn:disabled {
@@ -998,9 +1070,41 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-.current-page {
-  font-weight: 600;
+.page-info {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  min-width: 50px;
+  text-align: center;
+}
+
+.jump-input {
+  width: 60px;
+  height: 28px;
+  padding: 0 6px;
+  font-size: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--background-color);
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.jump-btn {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--card-color);
   color: var(--primary-color);
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  white-space: nowrap;
+}
+
+.jump-btn:hover {
+  background-color: var(--primary-light);
 }
 
 /* Category specific styles */
@@ -1173,6 +1277,26 @@ onMounted(() => {
 
   .keyword-input {
     max-width: none;
+  }
+
+  /* 移动端分页控件调整 */
+  .pagination-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .page-size-control {
+    justify-content: center;
+  }
+
+  .pagination-nav {
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .jump-input {
+    width: 50px;
   }
 
   .task-item {
