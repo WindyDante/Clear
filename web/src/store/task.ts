@@ -20,9 +20,9 @@ export const useTaskStore = defineStore('task', () => {
   const loading = ref(false)
   const currentPage = ref(1)
   const totalPages = ref(1)
-  // 每页条数可配置，默认从本地存储读取，回退到10
+  // 每页条数可配置，默认从本地存储读取，回退到5
   const persistedPageSize = localStorage.getItem('task.pageSize')
-  const pageSize = ref(persistedPageSize ? parseInt(persistedPageSize) : 10)
+  const pageSize = ref(persistedPageSize ? parseInt(persistedPageSize) : 5)
   const selectedCategoryId = ref<string | number | undefined>(undefined)
   const selectedStatus = ref<number | undefined>(undefined)
   const selectedStartDate = ref<string | undefined>(undefined) // 新增：开始日期筛选
@@ -225,9 +225,11 @@ export const useTaskStore = defineStore('task', () => {
 
   // 新增：设置每页条数
   function setPageSize(size: number) {
-    if (size > 0 && size !== pageSize.value) {
-      pageSize.value = size
-      localStorage.setItem('task.pageSize', size.toString())
+    // 限制范围在 1-200 之间
+    const validSize = Math.max(1, Math.min(200, Math.floor(size)))
+    if (validSize !== pageSize.value && validSize > 0) {
+      pageSize.value = validSize
+      localStorage.setItem('task.pageSize', validSize.toString())
       currentPage.value = 1 // 重置到第一页
       fetchTasks()
     }

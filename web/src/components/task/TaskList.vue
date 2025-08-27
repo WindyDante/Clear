@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, onUnmounted, nextTick } from 'vue' // 引入 onUnmounted and nextTick
+import { computed, onMounted, ref, onUnmounted, nextTick, watch } from 'vue' // 引入 onUnmounted and nextTick
 import { useTaskStore } from '../../store/task'
 import { useCategoryStore, type Category } from '../../store/category' // Import Category type
 import { useToast } from '../../composables/useToast'
@@ -338,6 +338,7 @@ function goToNextPage() {
 
 // 新增：页码跳转相关
 const jumpToPage = ref('')
+const pageSizeInput = ref(taskStore.pageSize.toString())
 
 function handleJumpToPage() {
   const page = parseInt(jumpToPage.value)
@@ -349,12 +350,21 @@ function handleJumpToPage() {
   }
 }
 
-function handlePageSizeChange(event: Event) {
-  const target = event.target as HTMLSelectElement
-  const size = parseInt(target.value)
-  if (size > 0) {
+function handlePageSizeChange() {
+  const size = parseInt(pageSizeInput.value)
+  if (size && size > 0) {
     taskStore.setPageSize(size)
+  } else {
+    showToast('请输入有效的页数（1-200）', 'warning')
+    // 恢复到当前有效值
+    pageSizeInput.value = taskStore.pageSize.toString()
   }
+}
+
+function handlePageSizeInput() {
+  // 实时验证输入，只允许数字
+  const value = pageSizeInput.value.replace(/[^\d]/g, '')
+  pageSizeInput.value = value
 }
 
 // 设置分类筛选
@@ -402,6 +412,11 @@ function clearAllFilters() {
 onMounted(() => {
   // 数据初始化已移至App.vue中集中处理
   console.log('TaskList: 组件已挂载，数据将由App.vue集中初始化');
+})
+
+// 监听 store 中 pageSize 的变化，同步到输入框
+watch(() => taskStore.pageSize, (newSize) => {
+  pageSizeInput.value = newSize.toString()
 })
 </script>
 
@@ -511,13 +526,18 @@ onMounted(() => {
           <div class="pagination-controls">
             <div class="page-size-control">
               <label class="page-size-label">每页</label>
-              <select class="page-size-select" :value="taskStore.pageSize" @change="handlePageSizeChange">
-                <option value="5">5条</option>
-                <option value="10">10条</option>
-                <option value="15">15条</option>
-                <option value="20">20条</option>
-                <option value="50">50条</option>
-              </select>
+              <input 
+                type="number" 
+                class="page-size-input" 
+                v-model="pageSizeInput"
+                min="1" 
+                max="200"
+                @input="handlePageSizeInput"
+                @blur="handlePageSizeChange"
+                @keyup.enter="handlePageSizeChange"
+                placeholder="5"
+              />
+              <span class="page-size-label">条</span>
             </div>
             <div class="pagination-nav" v-if="taskStore.totalPages > 1">
               <button class="pagination-btn" :disabled="taskStore.currentPage === 1" @click="goToPreviousPage">
@@ -1029,14 +1049,15 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.page-size-select {
+.page-size-input {
+  width: 60px;
   padding: 4px 8px;
   font-size: 12px;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   background-color: var(--background-color);
   color: var(--text-primary);
-  min-width: 60px;
+  text-align: center;
 }
 
 .pagination-nav {
