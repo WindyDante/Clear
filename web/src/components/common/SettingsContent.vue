@@ -4,10 +4,12 @@ import { useAuthStore } from '../../store/auth'
 import { useToast } from '../../composables/useToast'
 import { useRouter } from 'vue-router'
 import api from '../../services/api'
+import { useSettingsStore } from '../../store/settings'
 
 const authStore = useAuthStore()
 const { showToast } = useToast()
 const router = useRouter()
+const settingsStore = useSettingsStore()
 
 // Form state for user settings
 const settingsForm = reactive({
@@ -81,6 +83,12 @@ async function handleChangePassword() {
                         {{ settingsForm.loading ? '处理中...' : '修改密码' }}
                     </button>
                 </form>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" v-model="settingsStore.redirectToLoginWhenNotAuth" @change="settingsStore.setRedirectToLogin(settingsStore.redirectToLoginWhenNotAuth)" />
+                        未登录时自动跳转到登录页
+                    </label>
+                </div>
             </div>
         </div>
     </div>

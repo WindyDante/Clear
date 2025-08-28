@@ -8,6 +8,7 @@ import DatePickerDrawer from '../common/DatePickerDrawer.vue'
 import TaskEditForm from './TaskEditForm.vue'
 import AppDrawer from '../common/AppDrawer.vue'
 import SvgIcon from '../common/SvgIcon.vue'
+import { useSettingsStore } from '../../store/settings';
 
 const props = defineProps<{
   title: string
@@ -18,6 +19,7 @@ const taskStore = useTaskStore()
 const categoryStore = useCategoryStore()
 const { showToast } = useToast()
 const router = useRouter();
+const settingsStore = useSettingsStore();
 
 // --- 编辑任务状态 ---
 const editingTaskId = ref<string | null>(null)
@@ -194,6 +196,10 @@ function closeCategoryMenuOnClickOutside(event: MouseEvent) {
 
 onMounted(() => {
   document.addEventListener('click', closeCategoryMenuOnClickOutside, true);
+
+  if (!props.canOperate && settingsStore.redirectToLoginWhenNotAuth) {
+    router.push('/auth');
+  }
 });
 
 onUnmounted(() => {

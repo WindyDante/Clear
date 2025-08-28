@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, watch } from "vue";
+import { ref, reactive, onMounted, watch } from "vue";
 import { useTaskStore } from "../../store/task";
 import { useCategoryStore } from "../../store/category";
 import { useToast } from "../../composables/useToast";
@@ -170,6 +170,11 @@ onMounted(() => {
 // 添加表单验证状态
 const titleError = ref('');
 
+// 新增：快速创建分类相关状态
+const showAddCategoryInput = ref(false);
+const newCategoryName = ref('');
+const isAddingCategory = ref(false);
+
 // 实时验证标题输入
 function validateTitle() {
   if (!newTask.title.trim()) {
@@ -185,6 +190,58 @@ watch(() => newTask.title, () => {
     validateTitle();
   }
 });
+
+// 新增：快速创建分类相关函数
+function toggleAddCategoryInput() {
+  if (!props.canOperate) {
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
+  showAddCategoryInput.value = !showAddCategoryInput.value;
+  if (showAddCategoryInput.value) {
+    newCategoryName.value = '';
+  }
+}
+
+async function handleAddCategory() {
+  if (!props.canOperate) {
+    router.push('/auth');
+    showToast('请先登录再操作', 'warning');
+    return;
+  }
+  
+  if (!newCategoryName.value.trim()) {
+    showToast('请输入分类名称', 'error');
+    return;
+  }
+
+  isAddingCategory.value = true;
+  try {
+    await categoryStore.addCategory(newCategoryName.value.trim());
+    
+    // 创建成功后，自动选择新创建的分类
+    const newCategory = categoryStore.categories.find(cat => cat.categoryName === newCategoryName.value.trim());
+    if (newCategory) {
+      newTask.category = newCategory.categoryName;
+      newTask.categoryId = newCategory.id;
+    }
+    
+    // 重置输入状态
+    newCategoryName.value = '';
+    showAddCategoryInput.value = false;
+    showToast('分类创建成功', 'success');
+  } catch (error) {
+    console.error('创建分类失败:', error);
+  } finally {
+    isAddingCategory.value = false;
+  }
+}
+
+function cancelAddCategory() {
+  showAddCategoryInput.value = false;
+  newCategoryName.value = '';
+}
 
 async function handleSubmit() {
   if (!props.canOperate) {
@@ -281,7 +338,20 @@ async function handleSubmit() {
       </div>
 
       <div class="form-section">
-        <p class="field-label">选择分类：</p>
+        <div class="field-header">
+          <p class="field-label">选择分类：</p>
+          <button 
+            type="button" 
+            class="add-category-btn"
+            @click="toggleAddCategoryInput"
+            :disabled="!canOperate"
+            title="快速创建分类"
+          >
+            <span v-if="!showAddCategoryInput">+ 新建</span>
+            <span v-else>取消</span>
+          </button>
+        </div>
+        
         <div class="category-selector">
           <select class="form-control select-control"
             :disabled="categoryStore.loading || categoryStore.categories.length === 0" v-model="newTask.categoryId">
@@ -294,6 +364,37 @@ async function handleSubmit() {
             </option>
           </select>
           <span class="select-arrow">▼</span>
+        </div>
+        
+        <!-- 快速创建分类输入区域 -->
+        <div v-if="showAddCategoryInput" class="quick-add-category">
+          <div class="quick-add-input-group">
+            <input 
+              v-model="newCategoryName"
+              type="text" 
+              placeholder="输入分类名称"
+              class="form-control"
+              maxlength="50"
+              @keyup.enter="handleAddCategory"
+              @keyup.esc="cancelAddCategory"
+            />
+            <button 
+              type="button"
+              class="confirm-btn"
+              @click="handleAddCategory"
+              :disabled="isAddingCategory || !newCategoryName.trim()"
+            >
+              {{ isAddingCategory ? '创建中...' : '确定' }}
+            </button>
+            <button 
+              type="button"
+              class="cancel-btn"
+              @click="cancelAddCategory"
+              :disabled="isAddingCategory"
+            >
+              取消
+            </button>
+          </div>
         </div>
       </div>
 
@@ -381,6 +482,109 @@ async function handleSubmit() {
   margin-bottom: 6px;
   font-size: 14px;
   color: var(--text-secondary);
+}
+
+/* 分类字段头部样式 */
+.field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.add-category-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-category-btn:hover:not(:disabled) {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+.add-category-btn:disabled {
+  background: #6c757d;
+  color: #ffffff;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
+}
+
+/* 快速创建分类区域样式 */
+.quick-add-category {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.quick-add-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.quick-add-input-group .form-control {
+  flex: 1;
+  min-width: 0;
+}
+
+.confirm-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.confirm-btn:hover:not(:disabled) {
+  background: #1e7e34;
+  transform: translateY(-1px);
+}
+
+.confirm-btn:disabled {
+  background: #6c757d;
+  color: #ffffff;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
+}
+
+.cancel-btn {
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  color: #495057;
+}
+
+.cancel-btn:disabled {
+  background: #e9ecef;
+  color: #6c757d;
+  border-color: #dee2e6;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .category-selector,
@@ -719,5 +923,65 @@ select {
   background-color: var(--card-bg) !important;
   color: var(--text-color) !important;
   opacity: 1 !important;
+}
+
+/* 快速创建分类按钮移动端适配 */
+@media (max-width: 480px) {
+  .field-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .add-category-btn {
+    background: #007bff !important;
+    color: white !important;
+    opacity: 1 !important;
+  }
+  
+  .add-category-btn:hover:not(:disabled) {
+    background: #0056b3 !important;
+  }
+  
+  .quick-add-input-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .quick-add-input-group .form-control {
+    width: 100%;
+  }
+  
+  .confirm-btn,
+  .cancel-btn {
+    width: 100%;
+    padding: 10px;
+    opacity: 1 !important;
+  }
+  
+  .confirm-btn {
+    background: #28a745 !important;
+    color: white !important;
+  }
+  
+  .confirm-btn:hover:not(:disabled) {
+    background: #1e7e34 !important;
+  }
+  
+  .cancel-btn {
+    background: #f8f9fa !important;
+    color: #6c757d !important;
+    border: 1px solid #dee2e6 !important;
+  }
+  
+  .cancel-btn:hover:not(:disabled) {
+    background: #e9ecef !important;
+    color: #495057 !important;
+  }
+  
+  .quick-add-category {
+    background: #f8f9fa !important;
+    border: 1px solid #e9ecef !important;
+  }
 }
 </style>
