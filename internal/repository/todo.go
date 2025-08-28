@@ -32,6 +32,14 @@ func DeleteTodo(id string) error {
 
 func UpdateTodo(id string, todo *models.Todo) error {
 	result := database.DB.Where("id = ?", id).Updates(todo)
+	if todo.Content == "" {
+		if err := database.DB.Model(&models.Todo{}).
+			Where("id = ?", id).
+			Update("content", "").Error; err != nil {
+			return err
+		}
+	}
+
 	if result.Error != nil {
 		return result.Error
 	}
